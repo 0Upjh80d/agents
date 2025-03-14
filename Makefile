@@ -1,9 +1,13 @@
+ifeq ($(OS),Windows_NT)
+    SCRIPT_SUFFIX = ps1
+	SCRIPT_RUNNER = pwsh -ExecutionPolicy Bypass -File
+else
+    SCRIPT_SUFFIX = sh
+	SCRIPT_RUNNER =
+endif
+
 lint:
 	pre-commit run --all-files
 
 run-server: # Run the server
-ifeq ($(OS),Windows_NT)
-	powershell -ExecutionPolicy Bypass -File scripts/start.ps1
-else
-	./scripts/start.sh
-endif
+	@$(SCRIPT_RUNNER) ./scripts/start.$(SCRIPT_SUFFIX)
