@@ -1,10 +1,14 @@
 name: Validate Markdown
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
       - staging
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   detect-changes:
@@ -13,17 +17,16 @@ jobs:
     outputs:
       should_skip: ${{ steps.detect.outputs.should_skip }}
     steps:
-      - name: Checkout Repo
+      - name: Checkout Base Repo (Safe Merge Commit)
         uses: actions/checkout@v4
         with:
-          # Ensure we have the actual PR commit
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
 
       - name: Detect .md or .ipynb Changes
         id: detect
         run: |
           git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}
-          CHANGED_FILES="$(git diff --name-only --diff-filter=AM HEAD origin/${{ github.base_ref }})"
+          CHANGED_FILES="$(git diff --name-only --diff-filter=AM origin/${{ github.base_ref }})"
 
           echo "Changed files:"
           echo "$CHANGED_FILES"
@@ -40,10 +43,10 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.should_skip == 'false' }}
     steps:
-      - name: Checkout Repo
+      - name: Checkout Base Repo (Safe Merge Commit)
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
       - name: Check broken Paths
         id: check-broken-paths
         uses: john0isaac/action-check-markdown@v1.1.0
@@ -59,10 +62,10 @@ jobs:
     needs: [detect-changes, check-broken-paths]
     if: ${{ needs.detect-changes.outputs.should_skip == 'false' }}
     steps:
-      - name: Checkout Repo
+      - name: Checkout Base Repo (Safe Merge Commit)
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
       - name: Run Check URLs Country Locale
         id: check-urls-locale
         uses: john0isaac/action-check-markdown@v1.1.0
@@ -78,10 +81,10 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.should_skip == 'false' }}
     steps:
-      - name: Checkout Repo
+      - name: Checkout Base Repo (Safe Merge Commit)
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
       - name: Run Linkspector
         uses: umbrelladocs/action-linkspector@v1
         with:
