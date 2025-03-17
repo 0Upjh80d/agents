@@ -26,7 +26,7 @@ To get a better sense of our project, here is the project structure:
 
       - [`schema/`](../app/backend/app/schema/): contains the schema for the application.
 
-      - [`test/`](../app/backend/app/test/): contains the tests for the application.
+      - [`tests/`](../app/backend/app/tests/): contains the tests for the application.
 
   - [`frontend`](../app/frontend/): contains the frontend logic.
 

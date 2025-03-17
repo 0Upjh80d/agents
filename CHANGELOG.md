@@ -20,7 +20,7 @@
 ## March 13, 2025
 
 - Setup virtual environment with uv
-  - Added [documentation](README.md#create-a-virtual-environment) on virtual environment setup
+  - Added [documentation](./README.md#create-a-virtual-environment) on virtual environment setup
   - Added [documentation](./docs/ALTERNATIVE_PYTHON_PACKAGE_MANAGERS.md) on alternative Python package and project managers
 - Setup project structure
   - Added [documentation](./docs/PROJECT_STRUCTURE.md) on project structure
