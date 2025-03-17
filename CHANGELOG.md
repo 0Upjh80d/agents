@@ -3,10 +3,14 @@
 ## March 17, 2025
 
 - Setup Bicep Infrastructure-as-Code (IaC)
-- SQLite database versioned controlled into Azure Storage Account
+  - Added tests to validate that the Azure OpenAI infrastructures have been properly deployed
+  - Added [script](./scripts/test.sh) that runs the test when trigger by [post-provision hook](azure.yaml)
+- SQLite database [version-controlled](./data/vaccination_db.sqlite.dvc) into Azure Blob Storage
 - Set up SAS token for DVC
 - Store SAS token as secret in Azure Key Vault
-- Added scripts to set up DVC, fetch SAS token, and get data
+- Added [scripts](./scripts/) to set up DVC, fetch SAS token, and get data
+- Added [documentation](./docs/DEVELOPMENT.md) on retrieving the synthetic data version-controlled in Azure Blob Storage for development
+- Updated [documentation](./docs/PROJECT_STRUCTURE.md) on project structure
 
 ## March 14, 2025
 
