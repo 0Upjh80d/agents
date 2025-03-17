@@ -17,16 +17,17 @@ jobs:
     outputs:
       should_skip: ${{ steps.detect.outputs.should_skip }}
     steps:
-      - name: Checkout Base Repo (Safe Merge Commit)
+      - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          # Ensure we have the actual PR commit
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Detect .md or .ipynb Changes
         id: detect
         run: |
           git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}
-          CHANGED_FILES="$(git diff --name-only --diff-filter=AM origin/${{ github.base_ref }})"
+          CHANGED_FILES="$(git diff --name-only --diff-filter=AM HEAD origin/${{ github.base_ref }})"
 
           echo "Changed files:"
           echo "$CHANGED_FILES"
@@ -43,10 +44,10 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.should_skip == 'false' }}
     steps:
-      - name: Checkout Base Repo (Safe Merge Commit)
+      - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Check broken Paths
         id: check-broken-paths
         uses: john0isaac/action-check-markdown@v1.1.0
@@ -62,10 +63,10 @@ jobs:
     needs: [detect-changes, check-broken-paths]
     if: ${{ needs.detect-changes.outputs.should_skip == 'false' }}
     steps:
-      - name: Checkout Base Repo (Safe Merge Commit)
+      - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Run Check URLs Country Locale
         id: check-urls-locale
         uses: john0isaac/action-check-markdown@v1.1.0
@@ -81,10 +82,10 @@ jobs:
     needs: detect-changes
     if: ${{ needs.detect-changes.outputs.should_skip == 'false' }}
     steps:
-      - name: Checkout Base Repo (Safe Merge Commit)
+      - name: Checkout Repo
         uses: actions/checkout@v4
         with:
-          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Run Linkspector
         uses: umbrelladocs/action-linkspector@v1
         with:
