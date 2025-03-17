@@ -5,17 +5,46 @@ on:
     branches:
       - main
       - staging
-    paths:
-      - "**.md"
 
 jobs:
-  lint-markdown:
-    name: Check for Markdown Linting Errors
+  detect-changes:
+    name: Detect Changed Markdown
     runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.detect.outputs.should_skip }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-      - name: Run markdownlint
+        with:
+          # Ensure we have the actual PR commit
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Detect .md Changes
+        id: detect
+        run: |
+          git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}
+          CHANGED_FILES="$(git diff --name-only --diff-filter=AM HEAD origin/${{ github.base_ref }})"
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          if echo "$CHANGED_FILES" | grep -E '\.md$'; then
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  lint-markdown:
+    name: Check for Markdown Linting Errors
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.should_skip == 'false' }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Run Markdownlint
         uses: articulate/actions-markdownlint@v1
         with:
           config: .markdownlint.jsonc
