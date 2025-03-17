@@ -1,0 +1,29 @@
+// https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.jsonc
+{
+  // Default state for all rules
+  "default": true,
+
+  // MD013/line-length : Line length : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md013.md
+  "MD013": false,
+
+  // MD025/single-title/single-h1 : Multiple top-level headings in the same document : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md025.md
+  "MD025": false,
+
+  // MD028/no-blanks-blockquote : Blank line inside blockquote : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md028.md
+  "MD028": false,
+
+  // MD029/ol-prefix : Ordered list item prefix : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md029.md
+  "MD029": false,
+
+  //MD033/no-inline-html : Inline HTML : https://github.com/DavidAnson/markdownlint/blob/v0.32.1/doc/md033.md
+  "MD033": { "allowed_elements": ["a", "br", "details", "summary"] },
+
+  // MD036/no-emphasis-as-heading : Emphasis used instead of a heading : https://github.com/DavidAnson/markdownlint/blob/v0.32.1/doc/md036.md
+  "MD036": false,
+
+  // MD041/first-line-heading/first-line-h1 : First line in a file should be a top-level heading : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md041.md
+  "MD041": false,
+
+  //MD051/link-fragments : Link fragments should be valid : https://github.com/DavidAnson/markdownlint/blob/v0.34.0/doc/md051.md
+  "MD051": false
+}

@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+
+# Example commit-msg hook using commitlint
+# 1) Ensure commitlint is installed (npm i -D @commitlint/config-conventional @commitlint/cli).
+# 2) Make sure this file is executable (chmod +x .githooks/commit-msg).
+# 3) Configure Git to use .githooks as the hook path (see next step).
+
+# "$1" is the path to the file containing the commit message.
+npx commitlint --edit "$1"
+exit_code=$?
+
+if [ $exit_code -ne 0 ]; then
+  echo "❌ Error: Commit message does not follow Conventional Commits. Please see CONTRIBUTING for more details."
+  echo "Please use one of the following patterns:"
+  echo "  - feat: ..."
+  echo "  - fix: ..."
+  echo "  - docs: ..."
+  echo "  - styles: ..."
+  echo "  - refactor: ..."
+  echo "  - test: ..."
+  echo "  - chore: ..."
+  exit 1
+fi
+
+echo "✅ Commit message follows Conventional Commits."
+exit 0

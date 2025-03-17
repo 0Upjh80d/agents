@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=ai.yaml.json
+deployments:
+  - name: embedding
+    platform: openai
+    model:
+      format: OpenAI
+      api: embeddings
+      name: text-embedding-3-small
+      version: 1
+    sku:
+      name: Standard
+      capacity: 300
+
+  - name: chat
+    platform: openai
+    model:
+      api: chat
+      format: OpenAI
+      name: gpt-4o-mini
+      version: 2024-07-18
+    sku:
+      name: GlobalStandard
+      capacity: 300

@@ -1,0 +1,2 @@
+['remote "vaccination_db"']
+    url = azure://default/vaccination_db

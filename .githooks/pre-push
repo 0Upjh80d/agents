@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Retrieve the current branch name
+BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
+
+# Define the regex pattern for valid branch names
+VALID_BRANCH_REGEX="^(main|staging|feature\/.+|bugfix\/.+|hotfix\/.+)$"
+
+# Check if the branch name matches the valid pattern
+if [[ ! $BRANCH_NAME =~ $VALID_BRANCH_REGEX ]]; then
+    echo "❌ Error: Branch name '$BRANCH_NAME' does not follow the naming convention. Please see CONTRIBUTING for more details."
+    echo "Please use one of the following patterns:"
+    echo "  - main"
+    echo "  - staging"
+    echo "  - feature/xxx"
+    echo "  - bugfix/xxx"
+    echo "  - hotfix/xxx"
+    exit 1
+fi
+
+echo "✅ Branch name is valid. Proceeding with push."
+exit 0
