@@ -181,9 +181,9 @@ git push
 1. `cd` to root folder
 2. Run the following command in your terminal
 
-    ```bash
-    make run-server
-    ```
+   ```bash
+   make run-server
+   ```
 
 3. This will install the `uv` package, syunc the dependencies and run the FastAPI server
 4. Navigate to url shown in terminal
