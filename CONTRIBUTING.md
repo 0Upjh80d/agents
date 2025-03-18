@@ -269,7 +269,7 @@ Code reviews via pull requests (PRs) are a cornerstone of our development proces
 
   - Some PRs, like hotfixes or merge-from-staging-to-main, might be merged with a regular merge commit to preserve context. In general, stick to squash merges for daily development branches.
 
-  - When squashing, format the commit message in **Conventional Commits** style (see commit conventions [below](issue-tracking--commit-message-conventions)). For example, a merged PR for adding a feature might end up with a commit message: `feat: support rescheduling appointments (Closes #42)`.
+  - When squashing, format the commit message in **Conventional Commits** style (see commit conventions [below](#issue-tracking--commit-message-conventions)). For example, a merged PR for adding a feature might end up with a commit message: `feat: support rescheduling appointments (Closes #42)`.
 
   - Do not use **"Rebase and merge"** unless you are comfortable with rebasing and ensuring a linear history. Rebase merging will put your commits on the branch without a merge commit, but since we usually squash, rebase merges are less common in our flow.
 
