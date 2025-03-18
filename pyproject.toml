@@ -8,8 +8,10 @@ dependencies = [
     "aiohttp>=3.11.13",
     "azure-identity>=1.21.0",
     "azure-keyvault>=4.2.0",
+    "fastapi>=0.115.11",
     "openai>=1.66.3",
     "python-dotenv>=1.0.1",
+    "uvicorn>=0.34.0",
 ]
 
 [dependency-groups]
