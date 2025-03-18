@@ -1,5 +1,9 @@
 # Changelog
 
+## March 18, 2025
+
+- Added scripts to assign RBAC roles to Azure security group
+
 ## March 17, 2025
 
 - Setup Bicep Infrastructure-as-Code (IaC)

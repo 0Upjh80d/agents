@@ -46,6 +46,8 @@ To get a better sense of our project, here is the project structure:
 
 - [`scripts/`](../scripts): contains scripts for the project.
 
+  - [`rolesgroup.*`](../scripts/rolesgroup.sh): contains the bash and PowerShell scripts for assigning roles to Azure security group.
+
   - [`setup_hooks.*`](../scripts/setup_hooks.sh): contains the bash and PowerShell scripts for setting up Git hooks.
 
   - [`start.*`](../scripts/start.sh): contains the bash and PowerShell scripts for starting up the application locally.
