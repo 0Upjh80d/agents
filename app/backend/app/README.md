@@ -1,14 +1,14 @@
 # Backend
 
 ## Table of Contents
-- [File structure](#file-structure)
- - [Main.py](#main.py)
- - [Core](#core)
- - [Models](#models)
- - [Routers](#routers)
- - [Schemas](#schemas)
- - [Tests](#tests)
 
+- [File structure](#file-structure)
+- [Main.py](#main.py)
+- [Core](#core)
+- [Models](#models)
+- [Routers](#routers)
+- [Schemas](#schemas)
+- [Tests](#tests)
 
 ## File structure <a id="File structure"></a>
 
@@ -35,6 +35,3 @@ This directory contains Pydantic schemas that will be used to validate request a
 ## Tests <a id="tests"></a>
 
 This directory contains tests for the application.
-
-```
-
