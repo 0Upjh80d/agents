@@ -1,0 +1,30 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+jobs:
+  validate-pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure PR Title Matches Conventional Commits Spec
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            styles
+            refactor
+            test
+            chore
+          validateSingleCommit: false # set to true if you want single-commit validation
+          subjectPattern: .+
