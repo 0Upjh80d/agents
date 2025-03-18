@@ -6,3 +6,5 @@ set -e
 echo "🚀 Running postprovision.sh..."
 
 ./scripts/test.sh
+
+./scripts/rolesgroup.sh
