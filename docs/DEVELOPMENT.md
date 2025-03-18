@@ -10,6 +10,7 @@
 - [Data Versioning](#data-versioning)
   - [Data Updates](#data-updates)
   - [Revert Data Version](#revert-data-version)
+- [Running locally](#running-locally)
 
 ## Prerequisites <a id="prerequisites"></a>
 
@@ -174,3 +175,15 @@ git add .
 git commit -m "chore: revert data version; version control previous .dvc file"
 git push
 ```
+
+## Running locally <a id="running-locally"></a>
+
+1. `cd` to root folder
+2. Run the following command in your terminal
+
+   ```bash
+   make run-server
+   ```
+
+3. This will install the `uv` package, syunc the dependencies and run the FastAPI server
+4. Navigate to url shown in terminal
