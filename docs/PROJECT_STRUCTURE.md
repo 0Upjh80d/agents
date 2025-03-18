@@ -56,6 +56,8 @@ To get a better sense of our project, here is the project structure:
 
   - [`postprovision.*`](../scripts/postprovision.sh): contains the bash and PowerShell scripts for that runs after provisioning the Azure resources.
 
+  - [`rolesgroup.*`](../scripts/rolesgroup.sh): contains the bash and PowerShell scripts for assigning roles to Azure security group.
+
   - [`setup_dvc.*`](../scripts/setup_dvc.sh): contains the bash and PowerShell scripts for setting up DVC.
 
   - [`setup_hooks.*`](../scripts/setup_hooks.sh): contains the bash and PowerShell scripts for setting up Git hooks.
