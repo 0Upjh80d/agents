@@ -99,7 +99,7 @@
 
 - Setup Bicep Infrastructure-as-Code (IaC)
   - Added tests to validate that the Azure OpenAI infrastructures have been properly deployed
-  - Added [scripts](./scripts/test.sh) that runs the test when trigger by [post-provision hook](azure.yaml)
+  - Added [script](./scripts/test.sh) that runs the test when trigger by [post-provision hook](azure.yaml)
 - SQLite database [version-controlled](./data/vaccination_db.sqlite.dvc) into Azure Blob Storage
 - Set up SAS token for DVC
 - Store SAS token as secret in Azure Key Vault
@@ -114,8 +114,8 @@
 
 ## March 13, 2025
 
-- Set up virtual environment with uv
-  - Added [documentation](README.md#create-a-virtual-environment-) on virtual environment set up
+- Setup virtual environment with uv
+  - Added [documentation](./README.md#create-a-virtual-environment-) on virtual environment setup
   - Added [documentation](./docs/ALTERNATIVE_PYTHON_PACKAGE_MANAGERS.md) on alternative Python package and project managers
 - Set up project structure
   - Added [documentation](./docs/PROJECT_STRUCTURE.md) on project structure
