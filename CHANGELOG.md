@@ -8,6 +8,10 @@
 - Updated [Git hook](./.githooks/commit-msg) to include `chore(release): vX.Y.Z` commit message as valid
 - Added optional Bump My Version dependency in [prerequisite section](README.md#prerequisites-) to manage project versioning
 
+## March 18, 2025
+
+- Added scripts to assign RBAC roles to Azure security group
+
 ## March 17, 2025
 
 - Setup Bicep Infrastructure-as-Code (IaC)
