@@ -1,5 +1,13 @@
 # Changelog
 
+## March 19, 2025
+
+- Updated [Git hook](./.githooks/pre-push) to include additional regular expression check for `release/yyyy-mm-dd` and `fix/xxx` branches
+  - `release` branches are for merging cherry-picked commits from `staging` to `main` (e.g., `release/2022-06-30`)
+  - `fix` branches are for general administrative fixes (e.g., `fix/xxx`) that are neither bug fixes nor hotfixes
+- Updated [Git hook](./.githooks/commit-msg) to include `chore(release): vX.Y.Z` commit message as valid
+- Added optional Bump My Version dependency in [prerequisite section](README.md#prerequisites-) to manage project versioning
+
 ## March 17, 2025
 
 - Setup Bicep Infrastructure-as-Code (IaC)
@@ -20,7 +28,7 @@
   - Added [documentation](./docs/ALTERNATIVE_PYTHON_PACKAGE_MANAGERS.md) on alternative Python package and project managers
 - Setup project structure
   - Added [documentation](./docs/PROJECT_STRUCTURE.md) on project structure
-- Setup pre-commit and pre-push hooks
+- Setup [pre-commit](./.githooks/commit-msg) and [pre-push](./.githooks/pre-push) hooks
   - Added scripts to set up Git hooks
 - Added [Contributing](CONTRIBUTING.md) guidelines documenting steps and best practices for contributing to the project
 
