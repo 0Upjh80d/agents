@@ -123,7 +123,7 @@ _Steps to Generate SAS Token_
 8. Click on **Generate SAS token and URL** > Copy the SAS token
 
 > [!CAUTION]
-> Once you exit the Azure page, you can no longer find the SAS token as Azure does not store it. It is important for [**Data Controllers**](#data-controllers) to note down the following details of the latest SAS token:
+> Once you exit the Azure page, you can no longer find the SAS token as Azure does not store it. It is important for [**Data Controllers**](#data-controller) to note down the following details of the latest SAS token:
 >
 > 1. Creation Date
 > 2. Expiration Date
