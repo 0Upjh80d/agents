@@ -19,6 +19,7 @@ if [ $exit_code -ne 0 ]; then
   echo "  - refactor: ..."
   echo "  - test: ..."
   echo "  - chore: ..."
+  echo "  - chore(release): vX.Y.Z"
   exit 1
 fi
 
