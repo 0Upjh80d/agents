@@ -72,7 +72,7 @@ For Windows, run:
 After execution, you should see all the data in the [`data`](../data/) folder. It may take a while for all the data to be downloaded if this is your first time pulling them in. For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/azure-blob-storage) on how to integrate DVC with Microsoft Azure Blob Storage.
 
 > [!NOTE]
-> If you encounter any issues, please consult a [Data Controller](#data-controller). Usually, an error occurs when the SAS token has expired.
+> If you encounter any issues, please consult a [Data Controller](#data-controller). Usually, an error occurs when the SAS token has expired. If so, please consult the [Managing SAS Token](#managing-sas-token) section to generate a new SAS token.
 
 ## Azure Integration <a id="azure-integration"></a>
 
@@ -80,7 +80,7 @@ We are using Azure Blob Storage as our remote storage for DVC.
 
 1. **Data Controller** (Maintains Remote Storage + Google Drive) <a id="data-controller"></a>
 
-   - Controls the raw and primary data version in Azure.
+   - Controls the data version in Azure.
    - Versions the `.dvc` files with Git (i.e. `git push`) so that [Data Users](#data-user) can retrieve the correct data version from the remote storage.
    - Updates the data files in Google Drive, for [Data Viewers](#data-viewer) to view the data.
    - Manages the Azure resources.
@@ -100,7 +100,7 @@ We are using Azure Blob Storage as our remote storage for DVC.
 
 3. **Data Viewer** (Interacts with Google Drive) <a id="data-viewer"></a>
 
-   - View raw data found in the Google Drive.
+   - Views raw data found in the Google Drive.
 
 ### Managing SAS Token <a id="managing-sas-token"></a>
 
@@ -122,7 +122,7 @@ _Steps to Generate SAS Token_
 8. Click on **Generate SAS token and URL** > Copy the SAS token
 
 > [!CAUTION]
-> Once you exit the Azure page, you can no longer find the SAS token as Azure does not store it. It is important for [**Data Controllers**](#data-controllers) to note down the following details of the latest SAS token:
+> Once you exit the Azure page, you can no longer find the SAS token as Azure does not store it. It is important for [**Data Controllers**](#data-controller) to note down the following details of the latest SAS token:
 >
 > 1. Creation Date
 > 2. Expiration Date
