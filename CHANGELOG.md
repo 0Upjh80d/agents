@@ -10,6 +10,7 @@
 
 ## March 18, 2025
 
+- Modified GitHub Actions workflow files to fix stuck PR
 - Added scripts to assign RBAC roles to Azure security group
 - Added GitHub Actions workflow file to validate PR title adhere to Conventional Commits specification
 - Updated SQLite database with more rows of development data
