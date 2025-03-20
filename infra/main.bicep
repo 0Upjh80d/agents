@@ -196,7 +196,7 @@ output AZURE_LOCATION string = location
 output AZURE_PRINCIPAL_ID string = principalId
 output AZURE_GROUP_PRINCIPAL_ID string = groupPrincipalId
 output AZURE_TENANT_ID string = tenantId
-output AZURE_RESOURCE_GROUP_NAME string = resourceGroup.name
+output AZURE_RESOURCE_GROUP string = resourceGroup.name
 
 output AZURE_AI_FOUNDRY_HUB_NAME string = aiEnvironment.outputs.hubName
 output AZURE_AI_FOUNDRY_PROJECT_NAME string = aiEnvironment.outputs.projectName

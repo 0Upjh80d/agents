@@ -30,6 +30,8 @@ To get a better sense of our project, here is the project structure:
 
   - [`frontend`](../app/frontend/): contains the frontend logic.
 
+- [`data/`](../data): contains data files — usually `.dvc` files — for the project.
+
 - [`docs/`](../docs): contains documentation for the project.
 
 - [`infra/`](../infra): contains infrastructure files and code for the project.
@@ -46,8 +48,26 @@ To get a better sense of our project, here is the project structure:
 
 - [`scripts/`](../scripts): contains scripts for the project.
 
+  - [`fetch_sas_token.py`](../scripts/fetch_sas_token.py): contains the Python executable script for fetching the SAS token from Azure Key Vault.
+
+  - [`format_bicep.*`](../scripts/format_bicep.sh): contains the bash and PowerShell scripts for formatting Bicep files.
+
+  - [`get_data.*`](../scripts/get_data.sh): contains the bash and PowerShell scripts for getting the version-controlled data.
+
+  - [`postprovision.*`](../scripts/postprovision.sh): contains the bash and PowerShell scripts for that runs after provisioning the Azure resources.
+
+  - [`rolesgroup.*`](../scripts/rolesgroup.sh): contains the bash and PowerShell scripts for assigning roles to Azure security group.
+
+  - [`setup_dvc.*`](../scripts/setup_dvc.sh): contains the bash and PowerShell scripts for setting up DVC.
+
   - [`setup_hooks.*`](../scripts/setup_hooks.sh): contains the bash and PowerShell scripts for setting up Git hooks.
 
   - [`start.*`](../scripts/start.sh): contains the bash and PowerShell scripts for starting up the application locally.
 
-- [`tests/`](../tests): contains tests for the project.
+  - [`test.*`](../scripts/test.sh): contains the bash and PowerShell scripts to run tests on the Azure infrastructure.
+
+- [`tests/`](../tests): contains Azure infrastructure tests for the project.
+
+  - [`test_deployments.py`](../tests/test_deployments.py): Python script containing the tests to ensure the Azure deployments have been deployed successfully.
+
+  - [`utils.py`](../tests/utils.py): Python script containing utility functions for the tests.
