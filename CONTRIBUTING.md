@@ -190,7 +190,7 @@ _Figure: The contribution process, highlighting the key actions for both contrib
 
    - If changes are requested, push additional commits to your branch to address them. Those commits will automatically show up in the same PR.
    - Keep the discussion civil and focused on the code. The goal is to improve the quality of the codebase, so try not to take feedback personally.
-   - Ensure all automated checks pass (our repository may have Continuous Integration (CI) set up to run tests and linters on PRs).
+   - Ensure all automated checks pass (our repository may have Continuous Integration (CI) setup to run tests and linters on PRs).
 
 8. **Merge the Pull Request**: Once your PR is approved by at least the required number of reviewers (usually 1-2) and all checks pass, it's time to merge:
 
@@ -438,7 +438,7 @@ In addition to Git and workflow specifics, here are some general best practices 
 
 - **Continuous Integration (CI)**:
 
-  - We likely have CI jobs (like GitHub Actions) set up to run tests and linters on each PR. If a CI job fails, please check the logs, fix the issues, and push updates. Common failures might be lint errors or test failures. The PR should not be merged until CI is green.
+  - We have CI jobs (like GitHub Actions) set up to run tests and linters on each PR. If a CI job fails, please check the logs, fix the issues, and push updates. Common failures might be lint errors or test failures. The PR should not be merged until CI is green.
 
   - If you suspect the CI is failing for an unrelated reason (flaky test or infrastructure issue), you can retrigger the build (by pushing an empty commit or closing/reopening the PR, or via the CI interface if permitted). But generally, fix the root cause of failures.
 
