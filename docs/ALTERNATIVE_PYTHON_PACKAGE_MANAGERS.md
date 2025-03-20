@@ -68,7 +68,7 @@ pip install -r requirements.txt
 > [!IMPORTANT]
 > If you're using Python's native virtual environment `venv`, please confirm with the repository adminstrator that the [`requirements.txt`](../requirements.txt) is in sync with [`pyproject.toml`](../pyproject.toml).
 
-You can use Python's native virtual environment `venv` to setup the project
+You can use Python's native virtual environment `venv` to set up the project
 
 ```bash
 # Create a virtual environment
