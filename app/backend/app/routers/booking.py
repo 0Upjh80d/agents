@@ -18,7 +18,34 @@ router = APIRouter(prefix="/bookings", tags=["Booking"])
 
 
 @router.get(
-    "/available",
+    "/{id}",
+    status_code=status.HTTP_200_OK,
+    response_model=BookingSlotResponse,
+)
+async def get_booking_slot(id: int, db: AsyncSession = Depends(get_db)):
+    stmt = (
+        select(BookingSlot)
+        .options(
+            selectinload(BookingSlot.polyclinic),
+            selectinload(BookingSlot.vaccine),
+        )
+        .filter_by(id=id)
+    )
+
+    result = await db.execute(stmt)
+    slot = result.scalars().first()
+
+    if not slot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Slot with booking id {id} not found.",
+        )
+
+    return slot
+
+
+@router.get(
+    "/available/{vaccine_name}",
     status_code=status.HTTP_200_OK,
     response_model=list[AvailableSlotResponse],
 )
@@ -71,33 +98,6 @@ async def get_available_booking_slots(
             polyclinic_slot_count[slot.polyclinic_id] += 1
 
     return final_slots
-
-
-@router.get(
-    "/{id}",
-    status_code=status.HTTP_200_OK,
-    response_model=BookingSlotResponse,
-)
-async def get_booking_slot(id: int, db: AsyncSession = Depends(get_db)):
-    stmt = (
-        select(BookingSlot)
-        .options(
-            selectinload(BookingSlot.polyclinic),
-            selectinload(BookingSlot.vaccine),
-        )
-        .filter_by(id=id)
-    )
-
-    result = await db.execute(stmt)
-    slot = result.scalars().first()
-
-    if not slot:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Slot with booking id {id} not found.",
-        )
-
-    return slot
 
 
 @router.post(
