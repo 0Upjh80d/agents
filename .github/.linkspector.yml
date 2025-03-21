@@ -1,8 +1,0 @@
-dirs:
-  - ./
-
-ignorePatterns:
-  - pattern: "^http://localhost.*$"
-  - pattern: "^https://technical-docs-ddfre4b9ebbbaza8.scm.southeastasia-01.azurewebsites.net/.*$"
-  - pattern: "^../.*#.*$" # Ignore anchor links as there are bugs in the linkspector
-  - pattern: "^#.*$" # Ignore anchor links as there are bugs in the linkspector
