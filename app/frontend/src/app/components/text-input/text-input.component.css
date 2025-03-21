@@ -1,0 +1,31 @@
+.input-text-container {
+    padding: 0.5rem 0.75rem; /* Equivalent to tw-px-3 and tw-py-2 */
+    border-radius: 12px; /* Rounded corners */
+    border: 1px solid #d1d5db; /* Border color similar to tw-border-gray-200 */
+    background-color: white; /* Background color */
+}
+
+.flex-form {
+    display: flex; /* Flexbox layout */
+    flex-direction: row; /* Align items in a row */
+    align-items: flex-end; /* Align items to the bottom */
+    width: 100%; /* Full width */
+    gap: 0.25rem; /* Gap between elements */
+}
+
+.textarea {
+    width: 100%; /* Full width */
+    flex-grow: 1; /* Allow textarea to grow */
+    overflow-y: auto; /* Enable vertical scrolling */
+    max-height: 90px; /* Max height for the textarea */
+    resize: none; /* Disable resizing */
+}
+
+.send-button {
+    background-color: #1d4ed8; /* Primary button color */
+    color: white; /* Text color */
+    border: none; /* No border */
+    padding: 0.5rem 1rem; /* Padding for button */
+    cursor: pointer; /* Pointer cursor on hover */
+    opacity: 1; /* Default opacity */
+}

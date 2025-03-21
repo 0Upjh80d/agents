@@ -1,0 +1,10 @@
+<div appStickyBottom class="tw-w-full tw-flex-grow tw-relative tw-flex tw-flex-col tw-justify-between tw-items-center tw-pt-4 tw-px-4">
+  <div #scrollableTextContent id="scrollableTextContent" class="tw-w-full tw-max-w-[800px] tw-flex tw-overflow-y-auto tw-flex-col tw-items-stretch tw-gap-2">
+    <div *ngFor="let message of messages" [ngClass]="{ 'user-message': message.role === 'user', 'system-message': message.role === 'system' }">
+      <p>{{ message.text }}</p>
+    </div>
+  </div>
+  <div class="background-colour tw-px-2 tw-fixed tw-bottom-0 tw-left-auto tw-right-auto tw-w-full tw-max-w-[860px]">
+    <app-text-input />
+  </div>
+</div>

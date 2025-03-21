@@ -1,0 +1,31 @@
+<p class="red-disclaimer-text">
+  <span class="icon-container">
+    <i class="fas fa-info-circle"></i>
+  </span>
+  <span class="disclaimer-link" (click)="showDisclaimer()"> Responses should not be taken as professional medical advice </span>
+</p>
+
+<p-dialog
+  [(visible)]="isDisclaimerVisible"
+  [header]="'important notice'"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '70vw' }"
+  (onHide)="closeDisclaimer()"
+  [ngClass]="'custom-disclaimer-dialog'"
+>
+  <div #disclaimerContent class="disclaimer-scrollbar tw-overflow-y-auto tw-flex tw-flex-col">
+    <div>
+      <p class="tw-mb-3 tw-font-medium">important notice", "Generative Technology</p>
+      <p class="tw-mb-3 tw-font-medium">important notice", "Beta Testing Feedback</p>
+      <p class="tw-mb-3 tw-font-medium">important notice", "Not Professional Advice</p>
+      <p class="tw-mb-3 tw-font-medium">
+        <span [innerHTML]="translatedHtml"></span>
+      </p>
+    </div>
+
+    <div class="tw-mt-4 tw-flex tw-justify-center">
+      <button (click)="closeDisclaimer()" class="disclaimer-button" tabindex="-1">important notice", "Get Started"</button>
+    </div>
+  </div>
+</p-dialog>
