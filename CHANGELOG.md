@@ -1,5 +1,15 @@
 # Changelog
 
+## March 21, 2025
+
+- Integrated SQLAlchemy as the ORM framework for the project
+- Implemented FastAPI endpoints
+  - **User**: `get_user`, `get_user_vaccination_records`, `get_vaccination_recommendation_for_user`
+  - **Booking**: `get_booking_slot`, `get_available_booking_slots`, `schedule_vaccination_slot`, `cancel_vaccination_slot`
+  - **Stock**: `get_vaccine_stock`
+  - **Record**: `get_vaccine_record`
+- Version-controlled update to SQLite DVC file for development data
+
 ## March 18, 2025
 
 - Added scripts to assign RBAC roles to Azure security group
