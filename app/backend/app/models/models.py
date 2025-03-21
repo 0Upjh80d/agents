@@ -1,14 +1,5 @@
 from models.database import Base
-from sqlalchemy import (
-    Column,
-    Date,
-    DateTime,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    func,
-)
+from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship
 
