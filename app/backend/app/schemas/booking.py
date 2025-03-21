@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from openai import BaseModel
+from pydantic import BaseModel
 from schemas.base import BookingSlotBase
 from schemas.polyclinic import PolyclinicResponse
 from schemas.vaccine import VaccineResponse
