@@ -1,15 +1,20 @@
 from datetime import date, datetime
+from enum import Enum
 
 from pydantic import BaseModel, EmailStr
 
 
+class Gender(str, Enum):
+    Male = "Male"
+    Female = "Female"
+
+
 class UserBase(BaseModel):
-    id: int
     first_name: str
     last_name: str
     email: EmailStr
     date_of_birth: date
-    gender: str
+    gender: Gender
 
 
 class BookingSlotBase(BaseModel):

@@ -1,6 +1,8 @@
 from datetime import datetime
 
+from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from models.database import get_db
 from models.models import BookingSlot, User, Vaccine, VaccineRecord
 from schemas.record import VaccineRecordResponse
@@ -14,9 +16,11 @@ from sqlalchemy.orm import selectinload
 router = APIRouter(prefix="/users", tags=["User"])
 
 
-@router.get("/{id}", status_code=status.HTTP_200_OK, response_model=UserResponse)
-async def get_user(id: int, db: AsyncSession = Depends(get_db)):
-    stmt = select(User).filter_by(id=id)
+@router.get("", status_code=status.HTTP_200_OK, response_model=UserResponse)
+async def get_user(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
+    stmt = select(User).filter_by(id=current_user.id)
 
     result = await db.execute(stmt)
     user = result.scalars().first()
@@ -24,18 +28,20 @@ async def get_user(id: int, db: AsyncSession = Depends(get_db)):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with user id {id} not found.",
+            detail=f"User with user id {current_user.id} not found.",
         )
 
     return user
 
 
 @router.get(
-    "/records/{id}",
+    "/records",
     status_code=status.HTTP_200_OK,
     response_model=list[VaccineRecordResponse],
 )
-async def get_user_vaccination_records(id: int, db: AsyncSession = Depends(get_db)):
+async def get_user_vaccination_records(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
     stmt = (
         select(VaccineRecord)
         .join(User, onclause=VaccineRecord.user_id == User.id)
@@ -46,7 +52,7 @@ async def get_user_vaccination_records(id: int, db: AsyncSession = Depends(get_d
                 BookingSlot.polyclinic
             ),
         )
-        .filter(User.id == id)
+        .filter(User.id == current_user.id)
         .order_by(BookingSlot.datetime.desc())
     )
 
@@ -62,14 +68,14 @@ async def get_user_vaccination_records(id: int, db: AsyncSession = Depends(get_d
 
 
 @router.get(
-    "/recommend/{id}",
+    "/recommendations",
     status_code=status.HTTP_200_OK,
     response_model=list[VaccineResponse],
 )
 async def get_vaccine_recommendations_for_user(
-    id: int, db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
-    stmt = select(User).filter_by(id=id)
+    stmt = select(User).filter_by(id=current_user.id)
 
     result = await db.execute(stmt)
     user = result.scalars().first()
@@ -77,7 +83,7 @@ async def get_vaccine_recommendations_for_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with user id {id} not found.",
+            detail=f"User with user id {current_user.id} not found.",
         )
 
     user_age = (datetime.today().date() - user.date_of_birth).days // 365
@@ -107,3 +113,24 @@ async def get_vaccine_recommendations_for_user(
         )
 
     return available_vaccines
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(id: int, db: AsyncSession = Depends(get_db)):
+    stmt = select(User).filter_by(id=id)
+
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with user id {id} not found.",
+        )
+
+    # Delete the user in the database
+    await db.delete(user)
+    # Finally commit the transaction
+    await db.commit()
+
+    return JSONResponse(content={"detail": "User successfully deleted."})
