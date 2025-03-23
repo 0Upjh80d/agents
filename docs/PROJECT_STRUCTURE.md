@@ -18,13 +18,15 @@ To get a better sense of our project, here is the project structure:
 
     - [`app/`](../app/backend/app): contains the backend application code.
 
+      - [`main.py`](../app/backend/app/main.py): the main file of the FastAPI application. It contains the FastAPI app instance and the main entry point of the application.
+
       - [`core/`](../app/backend/app/core/): contains the configuration for the application.
 
-      - [`models/`](../app/backend/app/models/): contains the models for the application.
+      - [`models/`](../app/backend/app/models/): contains the models for the application that will be stored in the database.
 
       - [`routers/`](../app/backend/app/routers/): contains the routers for the application.
 
-      - [`schema/`](../app/backend/app/schema/): contains the schema for the application.
+      - [`schemas/`](../app/backend/app/schemas/): contains Pydantic schemas that will be used to validate request and response data.
 
       - [`tests/`](../app/backend/app/tests/): contains the tests for the application.
 
