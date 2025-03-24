@@ -1,11 +1,13 @@
 from datetime import datetime
+from uuid import UUID
 
-from openai import BaseModel
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr
+from schemas.address import AddressResponse
 from schemas.base import UserBase
 
 
 class UserResponse(UserBase):
+    address: AddressResponse | None
     created_at: datetime
     updated_at: datetime
 
@@ -14,16 +16,17 @@ class UserResponse(UserBase):
 
 
 class UserCreate(UserBase):
+    postal_code: str
     password: str
     password_confirm: str
 
 
 class UserUpdate(UserBase):
-    pass
+    postal_code: str
 
 
 class UserCreateResponse(BaseModel):
-    id: int
+    id: UUID
     email: EmailStr
     created_at: datetime
 
@@ -32,9 +35,8 @@ class UserCreateResponse(BaseModel):
 
 
 class UserUpdateResponse(BaseModel):
-    id: int
+    id: UUID
     email: EmailStr
-    created_at: datetime
     updated_at: datetime
 
     class Config:
