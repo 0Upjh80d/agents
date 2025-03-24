@@ -1,5 +1,5 @@
 outs:
-- md5: f7f5cfff45e58fe7699d672c20bc8566
-  size: 360448
+- md5: 249b05349dad54c38932e28ea2d2ca3d
+  size: 1433600
   hash: md5
   path: vaccination_db.sqlite
