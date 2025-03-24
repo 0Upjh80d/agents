@@ -43,7 +43,7 @@ async def get_available_booking_slots(
             Vaccine.name == vaccine_name,
             BookingSlot.datetime
             >= datetime(2025, 3, 10),  # TODO: Hardcoded for development
-            ~BookingSlot.id.in_(booked_slots_subquery),
+            BookingSlot.id.notin_(booked_slots_subquery),
         )
         .order_by(BookingSlot.datetime.asc())
     )
@@ -79,6 +79,37 @@ async def get_available_booking_slots(
             polyclinic_slot_count[slot.polyclinic_id] += 1
 
     return final_slots
+
+
+@router.get(
+    "/{id}",
+    status_code=status.HTTP_200_OK,
+    response_model=BookingSlotResponse,
+)
+async def get_booking_slot(
+    id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = (
+        select(BookingSlot)
+        .options(
+            selectinload(BookingSlot.polyclinic),
+            selectinload(BookingSlot.vaccine),
+        )
+        .filter_by(id=id)
+    )
+
+    result = await db.execute(stmt)
+    slot = result.scalars().first()
+
+    if not slot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Slot with booking id {id} not found.",
+        )
+
+    return slot
 
 
 @router.post(
@@ -159,7 +190,7 @@ async def cancel_vaccination_slot(
     # Step 2: Validate that the current user owns this VaccineRecord
     if vaccine_record.user_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="You are not authorized to cancel this vaccination slot.",
         )
 
@@ -176,34 +207,3 @@ async def cancel_vaccination_slot(
     await db.commit()
 
     return JSONResponse(content={"detail": "Vaccination slot successfully cancelled."})
-
-
-@router.get(
-    "/{id}",
-    status_code=status.HTTP_200_OK,
-    response_model=BookingSlotResponse,
-)
-async def get_booking_slot(
-    id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    stmt = (
-        select(BookingSlot)
-        .options(
-            selectinload(BookingSlot.polyclinic),
-            selectinload(BookingSlot.vaccine),
-        )
-        .filter_by(id=id)
-    )
-
-    result = await db.execute(stmt)
-    slot = result.scalars().first()
-
-    if not slot:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Slot with booking id {id} not found.",
-        )
-
-    return slot
