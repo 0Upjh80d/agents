@@ -1,6 +1,6 @@
 -- Users table with unique email and audit timestamps
 CREATE TABLE users (
-    id TEXT PRIMARY KEY, -- UUID stored as text
+    id TEXT PRIMARY KEY,
     nric VARCHAR(9) UNIQUE NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE users (
 
 -- Vaccines table including eligibility criteria and audit timestamps
 CREATE TABLE vaccines (
-    id TEXT PRIMARY KEY, -- UUID stored as text
+    id TEXT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     doses_required INTEGER NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE vaccines (
 
 -- Polyclinics table with basic location info and audit timestamps
 CREATE TABLE polyclinics (
-    id TEXT PRIMARY KEY, -- UUID stored as text
+    id TEXT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     postal_code VARCHAR(6) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -36,7 +36,7 @@ CREATE TABLE polyclinics (
 
 -- GeneralPractitioners table with basic location info and audit timestamps
 CREATE TABLE general_practitioners (
-    id TEXT PRIMARY KEY, -- UUID stored as text
+    id TEXT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     postal_code VARCHAR(6) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -45,7 +45,7 @@ CREATE TABLE general_practitioners (
 
 -- Addresses table with location info and audit timestamps
 CREATE TABLE addresses (
-    id TEXT PRIMARY KEY, -- UUID stored as text
+    id TEXT PRIMARY KEY,
     postal_code VARCHAR(6) NOT NULL,
     address VARCHAR(100) NOT NULL,
     latitude DECIMAL(9,6) NOT NULL,
@@ -56,9 +56,9 @@ CREATE TABLE addresses (
 
 -- BookingSlots table representing available slots for appointments
 CREATE TABLE booking_slots (
-    id TEXT PRIMARY KEY, -- UUID stored as text
-    polyclinic_id TEXT NOT NULL,  -- UUID stored as text
-    vaccine_id TEXT NOT NULL,     -- UUID stored as text
+    id TEXT PRIMARY KEY,
+    polyclinic_id TEXT NOT NULL,
+    vaccine_id TEXT NOT NULL,
     datetime DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -69,9 +69,9 @@ CREATE TABLE booking_slots (
 
 -- VaccineRecords table representing booked appointments (or vaccinations)
 CREATE TABLE vaccine_records (
-    id TEXT PRIMARY KEY, -- UUID stored as text
-    user_id TEXT NOT NULL,  -- UUID stored as text
-    booking_slot_id TEXT UNIQUE NOT NULL,  -- UUID stored as text
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    booking_slot_id TEXT UNIQUE NOT NULL,
     status VARCHAR(20) NOT NULL, -- 'booked', 'completed'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
