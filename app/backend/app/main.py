@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from routers import authentication, booking, chat, record, stock, user, vaccine
+from routers import authentication, booking, chat, record, user, vaccine
 
 
 def create_app():
@@ -10,7 +10,6 @@ def create_app():
     app.include_router(booking.router)
     app.include_router(chat.router)
     app.include_router(record.router)
-    app.include_router(stock.router)
     app.include_router(user.router)
     app.include_router(vaccine.router)
     return app
