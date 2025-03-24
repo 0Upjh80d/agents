@@ -1,14 +1,34 @@
+import uuid
+
 from models.database import Base
-from sqlalchemy import Column, Date, DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import (
+    Column,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    func,
+)
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship
 
 
 # Define ORM models (existing tables)
 class User(AsyncAttrs, Base):
-    __tablename__ = "users"
+    __tablename__ = "Users"
 
-    id = Column("id", Integer, primary_key=True, nullable=False)
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
+    address_id = Column("address_id", String, ForeignKey("Addresses.id"), nullable=True)
+    nric = Column("nric", String, nullable=False, unique=True)
     first_name = Column("first_name", String, nullable=False)
     last_name = Column("last_name", String, nullable=False)
     email = Column("email", String, nullable=False)
@@ -21,12 +41,88 @@ class User(AsyncAttrs, Base):
     )
 
     vaccine_record = relationship("VaccineRecord", back_populates="user")
+    address = relationship("Address", back_populates="user")
+
+
+class Polyclinic(AsyncAttrs, Base):
+    __tablename__ = "Polyclinics"
+
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
+    address_id = Column(
+        "address_id", String, ForeignKey("Addresses.id"), nullable=False
+    )
+    name = Column("name", String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    address = relationship("Address", back_populates="polyclinic")
+    booking_slot = relationship("BookingSlot", back_populates="polyclinic")
+
+
+class GeneralPractitioner(AsyncAttrs, Base):
+    __tablename__ = "GeneralPractitioners"
+
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
+    address_id = Column(
+        "address_id", String, ForeignKey("Addresses.id"), nullable=False
+    )
+    name = Column("name", String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    address = relationship("Address", back_populates="general_practitioner")
+
+
+class Address(AsyncAttrs, Base):
+    __tablename__ = "Addresses"
+
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
+    postal_code = Column("postal_code", String, nullable=False)
+    address = Column("address", String, nullable=False)
+    latitude = Column("latitude", Numeric(9, 6), nullable=False)
+    longitude = Column("longitude", Numeric(9, 6), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    user = relationship("User", back_populates="address")
+    polyclinic = relationship("Polyclinic", back_populates="address")
+    general_practitioner = relationship("GeneralPractitioner", back_populates="address")
 
 
 class Vaccine(AsyncAttrs, Base):
-    __tablename__ = "vaccines"
+    __tablename__ = "Vaccines"
 
-    id = Column("id", Integer, primary_key=True, nullable=False)
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
     name = Column("name", String, unique=True, nullable=False)
     price = Column("price", Float(precision=2), nullable=False)
     doses_required = Column("doses_required", Integer, nullable=False)
@@ -38,33 +134,23 @@ class Vaccine(AsyncAttrs, Base):
     )
 
     booking_slot = relationship("BookingSlot", back_populates="vaccine")
-    vaccine_stock = relationship("VaccineStock", back_populates="vaccine")
-
-
-class Polyclinic(AsyncAttrs, Base):
-    __tablename__ = "polyclinics"
-
-    id = Column("id", Integer, primary_key=True, nullable=False)
-    name = Column("name", String, nullable=False)
-    address = Column("address", String, nullable=False)
-    created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    booking_slot = relationship("BookingSlot", back_populates="polyclinic")
-    vaccine_stock = relationship("VaccineStock", back_populates="polyclinic")
 
 
 class BookingSlot(AsyncAttrs, Base):
-    __tablename__ = "booking_slots"
+    __tablename__ = "BookingSlots"
 
-    id = Column("id", Integer, primary_key=True, nullable=False)
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
     polyclinic_id = Column(
-        "polyclinic_id", Integer, ForeignKey("polyclinics.id"), nullable=False
+        "polyclinic_id", Integer, ForeignKey("Polyclinics.id"), nullable=False
     )
     vaccine_id = Column(
-        "vaccine_id", Integer, ForeignKey("vaccines.id"), nullable=False
+        "vaccine_id", Integer, ForeignKey("Vaccines.id"), nullable=False
     )
     datetime = Column("datetime", DateTime, nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
@@ -78,12 +164,18 @@ class BookingSlot(AsyncAttrs, Base):
 
 
 class VaccineRecord(AsyncAttrs, Base):
-    __tablename__ = "vaccine_records"
+    __tablename__ = "VaccineRecords"
 
-    id = Column("id", Integer, primary_key=True, nullable=False)
-    user_id = Column("user_id", Integer, ForeignKey("users.id"), nullable=False)
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
+    user_id = Column("user_id", Integer, ForeignKey("Users.id"), nullable=False)
     booking_slot_id = Column(
-        "booking_slot_id", Integer, ForeignKey("booking_slots.id"), nullable=False
+        "booking_slot_id", Integer, ForeignKey("BookingSlots.id"), nullable=False
     )
     status = Column("status", String, nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
@@ -93,23 +185,3 @@ class VaccineRecord(AsyncAttrs, Base):
 
     user = relationship("User", back_populates="vaccine_record")
     booking_slot = relationship("BookingSlot", back_populates="vaccine_record")
-
-
-class VaccineStock(AsyncAttrs, Base):
-    __tablename__ = "vaccine_stock_inventory"
-
-    id = Column("id", Integer, primary_key=True, nullable=False)
-    polyclinic_id = Column(
-        "polyclinic_id", Integer, ForeignKey("polyclinics.id"), nullable=False
-    )
-    vaccine_id = Column(
-        "vaccine_id", Integer, ForeignKey("vaccines.id"), nullable=False
-    )
-    stock_quantity = Column("stock_quantity", Integer, nullable=False)
-    created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    updated_at = Column(
-        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    polyclinic = relationship("Polyclinic", back_populates="vaccine_stock")
-    vaccine = relationship("Vaccine", back_populates="vaccine_stock")
