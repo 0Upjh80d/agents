@@ -5,8 +5,8 @@ from pydantic import BaseModel, EmailStr
 
 
 class Gender(str, Enum):
-    Male = "Male"
-    Female = "Female"
+    Male = "M"
+    Female = "F"
 
 
 class UserBase(BaseModel):
