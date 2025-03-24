@@ -1,12 +1,14 @@
+from datetime import datetime, timezone
+
 from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from models.database import get_db
-from models.models import User
+from models.models import Address, User
 from schemas.user import UserResponse, UserUpdate, UserUpdateResponse
-from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/users", tags=["User"])
 
@@ -15,7 +17,12 @@ router = APIRouter(prefix="/users", tags=["User"])
 async def get_user(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
-    stmt = select(User).filter_by(id=current_user.id)
+    stmt = (
+        select(User)
+        .outerjoin(Address, onclause=Address.id == User.address_id)
+        .options(selectinload(User.address))
+        .filter(User.id == str(current_user.id))
+    )
 
     result = await db.execute(stmt)
     user = result.scalars().first()
@@ -29,32 +36,37 @@ async def get_user(
     return user
 
 
-@router.put("/{id}", status_code=status.HTTP_200_OK, response_model=UserUpdateResponse)
+@router.put("", status_code=status.HTTP_200_OK, response_model=UserUpdateResponse)
 async def update_user(
-    id: int,
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if current_user.id != id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="You are not authorized to update this user.",
-        )
+    stmt = select(User).filter_by(id=current_user.id)
 
-    result = await db.execute(select(User).filter_by(id=id))
+    result = await db.execute(stmt)
     user = result.scalars().first()
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {id} not found.",
+            detail=f"User with id {current_user.id} not found.",
         )
 
-    for key, value in user_update.model_dump().items():
-        setattr(user, key, value)
+    stmt = select(Address).filter_by(postal_code=user_update.postal_code)
 
-    user.updated_at = func.now()
+    result = await db.execute(stmt)
+    address = result.scalars().first()
+    address_id = address.id if address else None
+
+    data = user_update.model_dump()
+    for key, value in data.items():
+        if key == "postal_code":
+            setattr(user, "address_id", address_id)
+        elif hasattr(user, key):
+            setattr(user, key, value)
+
+    user.updated_at = datetime.now(timezone.utc)
 
     db.add(user)
     # Flush inserts the object so it gets an ID, etc.
@@ -68,7 +80,7 @@ async def update_user(
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(id: int, db: AsyncSession = Depends(get_db)):
+async def delete_user(id: str, db: AsyncSession = Depends(get_db)):
     stmt = select(User).filter_by(id=id)
 
     result = await db.execute(stmt)

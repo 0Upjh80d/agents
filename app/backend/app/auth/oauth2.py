@@ -45,7 +45,7 @@ def verify_access_token(token: str, credentials_exception: Exception) -> TokenDa
         if id is None or refresh:
             raise credentials_exception
 
-        token_data = TokenData(id=int(id))
+        token_data = TokenData(id=id)
 
     except InvalidTokenError:
         raise credentials_exception
@@ -79,7 +79,7 @@ async def get_current_user(
 
     token_data = verify_access_token(token, credentials_exception)
 
-    stmt = select(User).filter_by(id=token_data.id)
+    stmt = select(User).filter_by(id=str(token_data.id))
 
     result = await db.execute(stmt)
     user = result.scalars().first()
@@ -87,7 +87,7 @@ async def get_current_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with user id {id} not found.",
+            detail=f"User with user id {str(token_data.id)} not found.",
         )
 
     return user

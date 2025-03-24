@@ -10,9 +10,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from models.database import get_db
-from models.models import User
+from models.models import Address, User
 from schemas.oauth2 import Token
 from schemas.user import UserCreate, UserCreateResponse
+from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -24,7 +25,7 @@ router = APIRouter(tags=["Authentication"])
 )
 async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
-    stmt = select(User).filter_by(email=user.email)
+    stmt = select(User).filter(or_(User.email == user.email, User.nric == user.nric))
 
     result = await db.execute(stmt)
     existing_user = result.scalars().first()
@@ -32,7 +33,7 @@ async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"User with email {user.email} already exists.",
+            detail="User with email or NRIC already exists.",
         )
 
     if user.password != user.password_confirm:
@@ -41,12 +42,20 @@ async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
             detail="Password and password confirmation do not match.",
         )
 
+    stmt = select(Address).filter_by(postal_code=user.postal_code)
+
+    result = await db.execute(stmt)
+    address = result.scalars().first()
+
     # Hash the password
     hashed_password = hash_password(user.password)
     # Set password to hashed password
     user.password = hashed_password
 
     data = user.model_dump()
+    if address:
+        data["address"] = address
+    data.pop("postal_code", None)
     data.pop("password_confirm", None)  # Don't raise error if it's not there
 
     new_user = User(**data)

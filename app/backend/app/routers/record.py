@@ -49,7 +49,7 @@ async def get_user_vaccination_records(
     response_model=VaccineRecordResponse,
 )
 async def get_user_vaccination_record(
-    id: int,
+    id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
