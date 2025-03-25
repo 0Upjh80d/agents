@@ -1,0 +1,17 @@
+::-webkit-scrollbar {
+  display: none;
+}
+
+.error-message {
+  color: red;
+  align-self: flex-end;
+}
+
+.suggestion-card {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.suggestion-card:hover {
+  transform: scale(1.05);
+}

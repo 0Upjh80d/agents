@@ -1,0 +1,26 @@
+<div class="navbar tw-flex tw-flex-row tw-justify-between tw-items-center tw-pl-2 tw-gap-5 tw-w-screen tw-bg-white">
+  <div class="text-center logo-container">
+    <img src="assets/healthhub-logo.png" class="logo" style="display: inline" />
+    <span class="custom-text-ai">AI</span>
+    <span class="beta-tag">Beta</span>
+  </div>
+
+  <div class="tw-flex tw-items-center tw-gap-1">
+    <p-dropdown
+      id="navbar-language-dropdown"
+   
+      [style]="{ width: '100px', height: '32px' }"
+    >
+      >
+      <ng-template pTemplate="selectedItem">
+        <span class="tw-text-sm" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%">
+          chosenNativeLanguage
+        </span>
+      </ng-template>
+    </p-dropdown>
+    <i class="pi pi-bars sidebar-button"></i>
+  </div>
+</div>
+
+
+<!-- <app-user-guide></app-user-guide> -->
