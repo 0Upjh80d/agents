@@ -3,8 +3,8 @@
 echo "🚀 Pulling data..."
 
 # Define parallel arrays for paths and their corresponding remotes
-file_paths=("data/vaccination_db.sqlite.dvc")
-remotes=("vaccination_db")
+file_paths=("data/vaccination_db.sqlite.dvc" "data/get_instituitions_response.json.dvc")
+remotes=("vaccination_db" "get_instituitions_response")
 
 # Loop through each file and remote using indexed arrays
 for i in "${!file_paths[@]}"; do
