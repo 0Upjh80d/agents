@@ -1,6 +1,7 @@
+from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.database import get_db
-from models.models import BookingSlot, VaccineRecord
+from models.models import BookingSlot, User, VaccineRecord
 from schemas.record import VaccineRecordResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -14,7 +15,11 @@ router = APIRouter(prefix="/records", tags=["Record"])
     status_code=status.HTTP_200_OK,
     response_model=VaccineRecordResponse,
 )
-async def get_vaccine_record(id: int, db: AsyncSession = Depends(get_db)):
+async def get_vaccine_record(
+    id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     stmt = (
         select(VaccineRecord)
         .join(BookingSlot)

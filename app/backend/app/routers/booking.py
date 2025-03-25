@@ -1,12 +1,13 @@
 from datetime import datetime
 
+from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 from models.database import get_db
-from models.models import BookingSlot, Vaccine, VaccineRecord
+from models.models import BookingSlot, User, Vaccine, VaccineRecord
 from schemas.booking import (
     AvailableSlotResponse,
     BookingSlotResponse,
-    CancelSlotRequest,
     ScheduleSlotRequest,
 )
 from schemas.record import VaccineRecordResponse
@@ -18,34 +19,7 @@ router = APIRouter(prefix="/bookings", tags=["Booking"])
 
 
 @router.get(
-    "/{id}",
-    status_code=status.HTTP_200_OK,
-    response_model=BookingSlotResponse,
-)
-async def get_booking_slot(id: int, db: AsyncSession = Depends(get_db)):
-    stmt = (
-        select(BookingSlot)
-        .options(
-            selectinload(BookingSlot.polyclinic),
-            selectinload(BookingSlot.vaccine),
-        )
-        .filter_by(id=id)
-    )
-
-    result = await db.execute(stmt)
-    slot = result.scalars().first()
-
-    if not slot:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Slot with booking id {id} not found.",
-        )
-
-    return slot
-
-
-@router.get(
-    "/available/{vaccine_name}",
+    "/available",
     status_code=status.HTTP_200_OK,
     response_model=list[AvailableSlotResponse],
 )
@@ -53,6 +27,7 @@ async def get_available_booking_slots(
     vaccine_name: str,
     polyclinic_limit: int = 3,
     timeslot_limit: int = 1,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     # Step 1: Create a query to exclude already-booked slots
@@ -75,6 +50,12 @@ async def get_available_booking_slots(
 
     result = await db.execute(stmt)
     slots = result.scalars().all()
+
+    if not slots:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No available slots for {vaccine_name}.",
+        )
 
     # Step 3: Group results by polyclinic (up to polyclinic_limit), each with up to timeslot_limit slots
     from collections import defaultdict
@@ -106,7 +87,9 @@ async def get_available_booking_slots(
     response_model=VaccineRecordResponse,
 )
 async def schedule_vaccination_slot(
-    request: ScheduleSlotRequest, db: AsyncSession = Depends(get_db)
+    request: ScheduleSlotRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     # Step 1: Check if the booking slot already exists and isn't booked
     booking_slot_query = await db.execute(
@@ -135,7 +118,7 @@ async def schedule_vaccination_slot(
 
     # Step 3: Create new VaccineRecord
     new_vaccine_record = VaccineRecord(
-        user_id=request.user_id,
+        user_id=current_user.id,
         booking_slot_id=request.booking_slot_id,
         status="booked",
     )
@@ -152,26 +135,35 @@ async def schedule_vaccination_slot(
     return new_vaccine_record
 
 
-@router.post(
-    "/cancel",
-    status_code=status.HTTP_200_OK,
+@router.delete(
+    "/cancel/{record_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 async def cancel_vaccination_slot(
-    request: CancelSlotRequest, db: AsyncSession = Depends(get_db)
+    record_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     # Step 1: Check if the VaccineRecord exists
     vaccine_record_query = await db.execute(
-        select(VaccineRecord).where(VaccineRecord.id == request.vaccine_record_id)
+        select(VaccineRecord).where(VaccineRecord.id == record_id)
     )
     vaccine_record = vaccine_record_query.scalar_one_or_none()
 
     if not vaccine_record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Vaccine record with id {request.vaccine_record_id} not found.",
+            detail=f"Vaccine record with id {record_id} not found.",
         )
 
-    # Step 2: Only allow deletion if status is 'booked'
+    # Step 2: Validate that the current user owns this VaccineRecord
+    if vaccine_record.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to cancel this vaccination slot.",
+        )
+
+    # Step 3: Only allow deletion if status is 'booked'
     if vaccine_record.status != "booked":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -180,6 +172,38 @@ async def cancel_vaccination_slot(
 
     # Step 3: Delete the record from the database
     await db.delete(vaccine_record)
+    # Finally commit the transaction
     await db.commit()
 
-    return {"detail": "Vaccination slot successfully cancelled."}
+    return JSONResponse(content={"detail": "Vaccination slot successfully cancelled."})
+
+
+@router.get(
+    "/{id}",
+    status_code=status.HTTP_200_OK,
+    response_model=BookingSlotResponse,
+)
+async def get_booking_slot(
+    id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = (
+        select(BookingSlot)
+        .options(
+            selectinload(BookingSlot.polyclinic),
+            selectinload(BookingSlot.vaccine),
+        )
+        .filter_by(id=id)
+    )
+
+    result = await db.execute(stmt)
+    slot = result.scalars().first()
+
+    if not slot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Slot with booking id {id} not found.",
+        )
+
+    return slot

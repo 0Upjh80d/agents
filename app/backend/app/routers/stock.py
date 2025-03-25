@@ -1,6 +1,7 @@
+from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.database import get_db
-from models.models import Polyclinic, Vaccine, VaccineStock
+from models.models import Polyclinic, User, Vaccine, VaccineStock
 from schemas.stock import StockResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/stock", tags=["Stock"])
 async def get_vaccine_stock(
     vaccine_name: str,
     polyclinic_name: str,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     stmt = (
