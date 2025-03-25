@@ -4,7 +4,7 @@ from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from models.database import get_db
-from models.models import BookingSlot, Polyclinic, User, Vaccine, VaccineRecord
+from models.models import BookingSlot, Clinic, User, Vaccine, VaccineRecord
 from schemas.booking import (
     AvailableSlotResponse,
     BookingSlotResponse,
@@ -38,7 +38,7 @@ async def get_available_booking_slots(
         select(BookingSlot)
         .join(BookingSlot.vaccine)
         .join(BookingSlot.polyclinic)
-        .options(selectinload(BookingSlot.polyclinic).selectinload(Polyclinic.address))
+        .options(selectinload(BookingSlot.polyclinic).selectinload(Clinic.address))
         .where(
             Vaccine.name == vaccine_name,
             BookingSlot.datetime
@@ -94,7 +94,7 @@ async def get_booking_slot(
     stmt = (
         select(BookingSlot)
         .options(
-            selectinload(BookingSlot.polyclinic).selectinload(Polyclinic.address),
+            selectinload(BookingSlot.polyclinic).selectinload(Clinic.address),
             selectinload(BookingSlot.vaccine),
         )
         .filter_by(id=id)

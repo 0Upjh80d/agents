@@ -4,7 +4,7 @@ from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from models.database import get_db
-from models.models import Address, User
+from models.models import Address, Clinic, User
 from schemas.user import UserResponse, UserUpdate, UserUpdateResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -13,14 +13,22 @@ from sqlalchemy.orm import selectinload
 router = APIRouter(prefix="/users", tags=["User"])
 
 
-@router.get("", status_code=status.HTTP_200_OK, response_model=UserResponse)
+@router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    response_model=UserResponse,
+)
 async def get_user(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     stmt = (
         select(User)
         .outerjoin(Address, onclause=Address.id == User.address_id)
-        .options(selectinload(User.address))
+        .outerjoin(Clinic, onclause=Clinic.id == User.enrolled_clinic_id)
+        .options(
+            selectinload(User.address),
+            selectinload(User.enrolled_clinic).selectinload(Clinic.address),
+        )
         .filter(User.id == str(current_user.id))
     )
 
@@ -53,16 +61,31 @@ async def update_user(
             detail=f"User with id {current_user.id} not found.",
         )
 
+    # Step 1: Get the address, if available
     stmt = select(Address).filter_by(postal_code=user_update.postal_code)
 
     result = await db.execute(stmt)
     address = result.scalars().first()
+
+    # Step 2: Get the address of the enrolled clinic, if available
+    stmt = (
+        select(Clinic)
+        .join(Address)
+        .filter(Address.postal_code == user_update.enrolled_clinic_postal_code)
+    )
+
+    result = await db.execute(stmt)
+    clinic = result.scalars().first()
+
     address_id = address.id if address else None
+    clinic_id = clinic.id if clinic else None
 
     data = user_update.model_dump()
     for key, value in data.items():
         if key == "postal_code":
             setattr(user, "address_id", address_id)
+        elif key == "enrolled_clinic_postal_code":
+            setattr(user, "enrolled_clinic_id", clinic_id)
         elif hasattr(user, key):
             setattr(user, key, value)
 

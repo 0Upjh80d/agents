@@ -3,7 +3,7 @@ from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from schemas.polyclinic import PolyclinicResponse
+from schemas.clinic import PolyclinicResponse
 
 
 class Gender(str, Enum):

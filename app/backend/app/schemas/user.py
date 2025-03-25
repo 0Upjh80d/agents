@@ -4,10 +4,12 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr
 from schemas.address import AddressResponse
 from schemas.base import UserBase
+from schemas.clinic import EnrolledClinicResponse
 
 
 class UserResponse(UserBase):
     address: AddressResponse | None
+    enrolled_clinic: EnrolledClinicResponse | None
     created_at: datetime
     updated_at: datetime
 
@@ -23,6 +25,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(UserBase):
     postal_code: str
+    enrolled_clinic_postal_code: str
 
 
 class UserCreateResponse(BaseModel):
