@@ -14,6 +14,7 @@ class User(AsyncAttrs, Base):
     email = Column("email", String, nullable=False)
     date_of_birth = Column("date_of_birth", Date, nullable=False)
     gender = Column("gender", String, nullable=False)
+    password = Column(String, nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False

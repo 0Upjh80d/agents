@@ -7,7 +7,6 @@ from schemas.vaccine import VaccineResponse
 
 
 class ScheduleSlotRequest(BaseModel):
-    user_id: int
     booking_slot_id: int
 
 
