@@ -1,16 +1,17 @@
 import uvicorn
 from fastapi import FastAPI
-from routers import authentication, booking, chat, record, stock, user
+from fastapi.responses import JSONResponse
+from routers import authentication, booking, chat, record, user, vaccine
 
 
 def create_app():
     app = FastAPI()
-    app.include_router(chat.router)
-    app.include_router(user.router)
-    app.include_router(booking.router)
-    app.include_router(stock.router)
-    app.include_router(record.router)
     app.include_router(authentication.router)
+    app.include_router(booking.router)
+    app.include_router(chat.router)
+    app.include_router(record.router)
+    app.include_router(user.router)
+    app.include_router(vaccine.router)
     return app
 
 
@@ -18,8 +19,8 @@ app = create_app()
 
 
 @app.get("/")
-def root():
-    return {"message": "Hello World", "detail": "Successfully deployed CI/CD pipeline"}
+async def root():
+    return JSONResponse(content={"detail": "Hello World!"})
 
 
 if __name__ == "__main__":

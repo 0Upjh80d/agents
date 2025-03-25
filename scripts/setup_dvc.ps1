@@ -52,7 +52,7 @@ Get-Content $envFile | ForEach-Object {
 echo "✨ Environment variables set!"
 
 # Define your remote names in an array
-$remotes = @("vaccination_db")
+$remotes = @("vaccination_db", "get_instituitions_response")
 
 foreach ($remote in $remotes) {
     Write-Host "⚙️  Configuring remote: $remote."

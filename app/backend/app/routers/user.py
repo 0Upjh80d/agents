@@ -1,14 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from models.database import get_db
-from models.models import BookingSlot, User, Vaccine, VaccineRecord
-from schemas.record import VaccineRecordResponse
-from schemas.user import UserResponse
-from schemas.vaccine import VaccineResponse
-from sqlalchemy import and_, or_
+from models.models import Address, Clinic, User
+from schemas.user import UserResponse, UserUpdate, UserUpdateResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -16,11 +13,24 @@ from sqlalchemy.orm import selectinload
 router = APIRouter(prefix="/users", tags=["User"])
 
 
-@router.get("", status_code=status.HTTP_200_OK, response_model=UserResponse)
+@router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    response_model=UserResponse,
+)
 async def get_user(
     current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
-    stmt = select(User).filter_by(id=current_user.id)
+    stmt = (
+        select(User)
+        .outerjoin(Address, onclause=Address.id == User.address_id)
+        .outerjoin(Clinic, onclause=Clinic.id == User.enrolled_clinic_id)
+        .options(
+            selectinload(User.address),
+            selectinload(User.enrolled_clinic).selectinload(Clinic.address),
+        )
+        .filter(User.id == str(current_user.id))
+    )
 
     result = await db.execute(stmt)
     user = result.scalars().first()
@@ -34,46 +44,11 @@ async def get_user(
     return user
 
 
-@router.get(
-    "/records",
-    status_code=status.HTTP_200_OK,
-    response_model=list[VaccineRecordResponse],
-)
-async def get_user_vaccination_records(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
-):
-    stmt = (
-        select(VaccineRecord)
-        .join(User, onclause=VaccineRecord.user_id == User.id)
-        .join(BookingSlot, onclause=VaccineRecord.booking_slot_id == BookingSlot.id)
-        .options(
-            selectinload(VaccineRecord.booking_slot).selectinload(BookingSlot.vaccine),
-            selectinload(VaccineRecord.booking_slot).selectinload(
-                BookingSlot.polyclinic
-            ),
-        )
-        .filter(User.id == current_user.id)
-        .order_by(BookingSlot.datetime.desc())
-    )
-
-    result = await db.execute(stmt)
-    records = result.scalars().all()
-
-    if not records:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No records found."
-        )
-
-    return records
-
-
-@router.get(
-    "/recommendations",
-    status_code=status.HTTP_200_OK,
-    response_model=list[VaccineResponse],
-)
-async def get_vaccine_recommendations_for_user(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+@router.put("", status_code=status.HTTP_200_OK, response_model=UserUpdateResponse)
+async def update_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     stmt = select(User).filter_by(id=current_user.id)
 
@@ -83,40 +58,52 @@ async def get_vaccine_recommendations_for_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with user id {current_user.id} not found.",
+            detail=f"User with id {current_user.id} not found.",
         )
 
-    user_age = (datetime.today().date() - user.date_of_birth).days // 365
-
-    age_filters = or_(
-        Vaccine.age_criteria.is_(None),
-        and_(Vaccine.age_criteria == "18+ years old", user_age >= 18),
-        and_(Vaccine.age_criteria == "65+ years old", user_age >= 65),
-        and_(Vaccine.age_criteria == "18-26 years old", 18 <= user_age <= 26),
-        and_(Vaccine.age_criteria == "27-64 years old", 27 <= user_age <= 64),
-    )
-
-    gender_filters = or_(
-        Vaccine.gender_criteria.is_("None"),
-        and_(Vaccine.gender_criteria == "Female", user.gender == "F"),
-        and_(Vaccine.gender_criteria == "Male", user.gender == "M"),
-    )
-
-    stmt = select(Vaccine).filter(age_filters, gender_filters)
+    # Step 1: Get the address, if available
+    stmt = select(Address).filter_by(postal_code=user_update.postal_code)
 
     result = await db.execute(stmt)
-    available_vaccines = result.scalars().all()
+    address = result.scalars().first()
 
-    if not available_vaccines:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No vaccine recommendations."
-        )
+    # Step 2: Get the address of the enrolled clinic, if available
+    stmt = (
+        select(Clinic)
+        .join(Address)
+        .filter(Address.postal_code == user_update.enrolled_clinic_postal_code)
+    )
 
-    return available_vaccines
+    result = await db.execute(stmt)
+    clinic = result.scalars().first()
+
+    address_id = address.id if address else None
+    clinic_id = clinic.id if clinic else None
+
+    data = user_update.model_dump()
+    for key, value in data.items():
+        if key == "postal_code":
+            setattr(user, "address_id", address_id)
+        elif key == "enrolled_clinic_postal_code":
+            setattr(user, "enrolled_clinic_id", clinic_id)
+        elif hasattr(user, key):
+            setattr(user, key, value)
+
+    user.updated_at = datetime.now(timezone.utc)
+
+    db.add(user)
+    # Flush inserts the object so it gets an ID, etc.
+    await db.flush()
+    # Refresh loads up-to-date data (like auto-generated IDs)
+    await db.refresh(user)
+    # Finally commit the transaction
+    await db.commit()
+
+    return user
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(id: int, db: AsyncSession = Depends(get_db)):
+async def delete_user(id: str, db: AsyncSession = Depends(get_db)):
     stmt = select(User).filter_by(id=id)
 
     result = await db.execute(stmt)

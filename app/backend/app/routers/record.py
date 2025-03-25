@@ -11,12 +11,45 @@ router = APIRouter(prefix="/records", tags=["Record"])
 
 
 @router.get(
+    "",
+    status_code=status.HTTP_200_OK,
+    response_model=list[VaccineRecordResponse],
+)
+async def get_user_vaccination_records(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
+    stmt = (
+        select(VaccineRecord)
+        .join(User, onclause=VaccineRecord.user_id == User.id)
+        .join(BookingSlot, onclause=VaccineRecord.booking_slot_id == BookingSlot.id)
+        .options(
+            selectinload(VaccineRecord.booking_slot).selectinload(BookingSlot.vaccine),
+            selectinload(VaccineRecord.booking_slot).selectinload(
+                BookingSlot.polyclinic
+            ),
+        )
+        .filter(User.id == current_user.id)
+        .order_by(BookingSlot.datetime.desc())
+    )
+
+    result = await db.execute(stmt)
+    records = result.scalars().all()
+
+    if not records:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No records found."
+        )
+
+    return records
+
+
+@router.get(
     "/{id}",
     status_code=status.HTTP_200_OK,
     response_model=VaccineRecordResponse,
 )
-async def get_vaccine_record(
-    id: int,
+async def get_user_vaccination_record(
+    id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):

@@ -49,7 +49,7 @@ done < "$ENV_FILE"
 echo "✨ Environment variables set!"
 
 # Define your remote names in an array
-remotes=("vaccination_db")
+remotes=("vaccination_db" "get_instituitions_response")
 
 # Loop through each remote and execute the DVC commands
 for remote in "${remotes[@]}"; do
