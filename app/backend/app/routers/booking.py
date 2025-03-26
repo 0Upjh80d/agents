@@ -280,12 +280,9 @@ async def reschedule_vaccination_slot(
 
     # Step 6: Update the VaccineRecord with the new booking slot
     vaccine_record.booking_slot_id = str(request.new_slot_id)
-
-    print(vaccine_record)
     await db.flush()
     await db.refresh(vaccine_record)
     await db.commit()
-    print(vaccine_record)
 
-    # Step 3: Commit the changes
+    # Step 7: Commit the changes
     return vaccine_record
