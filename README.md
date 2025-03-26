@@ -23,7 +23,7 @@
 - [Node.js 18+](https://nodejs.org/en/download/)
 - [Git](https://git-scm.com/downloads)
 - [DVC](https://dvc.org/doc/install)
-- pre-commit - For macOS users, refer to the installation instructions [here](https://formulae.brew.sh/formula/pre-commit). For Windows users, refer [here](https://pre-commit.com/).
+- pre-commit — For macOS users, refer to the installation instructions [here](https://formulae.brew.sh/formula/pre-commit). For Windows users, refer [here](https://pre-commit.com/).
 - [PowerShell 7+ (pwsh)](https://github.com/powershell/powershell) — For Windows users only.
   - Ensure you can run `pwsh.exe` from a PowerShell terminal. If this fails, you likely need to upgrade PowerShell.
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) — or other [alternatives](./docs/ALTERNATIVE_PYTHON_PACKAGE_MANAGERS.md).
