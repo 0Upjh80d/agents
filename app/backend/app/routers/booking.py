@@ -12,6 +12,7 @@ from schemas.booking import (
     ScheduleSlotRequest,
 )
 from schemas.record import VaccineRecordResponse
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -41,7 +42,7 @@ async def get_available_booking_slots(
         .join(BookingSlot.polyclinic)
         .options(selectinload(BookingSlot.polyclinic).selectinload(Clinic.address))
         .where(
-            Vaccine.name == vaccine_name,
+            func.lower(Vaccine.name).like(f"%{vaccine_name.lower()}%"),
             BookingSlot.datetime
             >= datetime(2025, 3, 10),  # TODO: Hardcoded for development
             BookingSlot.id.notin_(booked_slots_subquery),
@@ -50,7 +51,7 @@ async def get_available_booking_slots(
 
     # Step 3: Optional filter by polyclinic_name if provided
     if polyclinic_name:
-        stmt = stmt.where(Clinic.name == polyclinic_name)
+        stmt = stmt.where(func.lower(Clinic.name).like(f"%{polyclinic_name.lower()}%"))
 
     # Step 4: Order and return results
     stmt = stmt.order_by(BookingSlot.datetime.asc())
