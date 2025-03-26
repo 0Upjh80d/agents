@@ -21,6 +21,7 @@
     "@primeng/themes": "^19.0.10",
     "@tailwindcss/postcss": "^4.0.15",
     "autoprefixer": "^10.4.21",
+    "lucide-angular": "^0.475.0",
     "ngx-markdown": "^18.1.0",
     "postcss": "^8.5.3",
     "primeicons": "^7.0.0",

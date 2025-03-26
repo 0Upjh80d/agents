@@ -2,11 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, EventEmitter, Output, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
+import { LucideAngularModule } from 'lucide-angular';
+import { InputTextModule } from 'primeng/inputtext';
+
+
 
 @Component({
   selector: 'app-text-input',
   standalone: true,
-  imports: [FormsModule, Button, CommonModule, ReactiveFormsModule],
+  imports: [LucideAngularModule, FormsModule, Button, CommonModule, ReactiveFormsModule, FormsModule, InputTextModule],
   templateUrl: './text-input.component.html',
   styleUrl: './text-input.component.css'
 })
@@ -21,7 +25,7 @@ export class TextInputComponent {
   ngAfterViewInit(): void {
     this.emitHeightChange(); // Initial height emission
   }
-  
+
   adjustTextareaRows(): void {
     const textarea = this.inputTextarea.nativeElement;
     if (textarea.value === '') {
@@ -38,6 +42,8 @@ export class TextInputComponent {
   private emitHeightChange(): void {
     setTimeout(() => {
       const height = this.inputTextContainer.nativeElement.getBoundingClientRect().height;
+      console.log('height', height);
+
       this.heightChange.emit(height);
     }, 0);
   }
