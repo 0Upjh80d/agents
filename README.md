@@ -136,7 +136,7 @@ For more information on development, you may find the following documentations u
 
 4. To access the API endpoints, add `/docs` to the URL, e.g. `http://127.0.0.1:8000/docs`
 
-   ![FastAPI Endpoints](./media/fastapi-endpoints.png)
+   ![FastAPI Endpoints](./media/swagger.png)
 
    For more information on FastAPI endpoints, please refer to the [API Endpoints](./docs/API_ENDPOINTS.md) guide.
 
