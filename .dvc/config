@@ -1,2 +1,4 @@
 ['remote "vaccination_db"']
     url = azure://default/vaccination_db
+['remote "get_instituitions_response"']
+    url = azure://default/get_instituitions_response

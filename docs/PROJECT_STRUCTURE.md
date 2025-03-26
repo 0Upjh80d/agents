@@ -26,7 +26,7 @@ To get a better sense of our project, here is the project structure:
 
       - [`routers/`](../app/backend/app/routers/): contains the routers for the application.
 
-      - [`schema/`](../app/backend/app/schema/): contains Pydantic schemas that will be used to validate request and response data.
+      - [`schemas/`](../app/backend/app/schemas/): contains Pydantic schemas that will be used to validate request and response data.
 
       - [`tests/`](../app/backend/app/tests/): contains the tests for the application.
 

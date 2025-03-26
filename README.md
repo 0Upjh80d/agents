@@ -26,6 +26,10 @@
 - [PowerShell 7+ (pwsh)](https://github.com/powershell/powershell) — For Windows users only.
   - Ensure you can run `pwsh.exe` from a PowerShell terminal. If this fails, you likely need to upgrade PowerShell.
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) — or other [alternatives](./docs/ALTERNATIVE_PYTHON_PACKAGE_MANAGERS.md).
+  - [Bump My Version](https://callowayproject.github.io/bump-my-version/tutorials/getting-started/) - Recommended to install if you are already using uv. Otherwise, this is optional.
+
+> [!NOTE]
+> If you're using another Python package manager and would still like to use Bump My Version to manage the project's versioning, you may refer [here](https://pypi.org/project/bump-my-version/), [here](https://anaconda.org/conda-forge/bump-my-version) or [here](https://formulae.brew.sh/formula/bump-my-version).
 
 ### Create a Virtual Environment <a id="create-a-virtual-environment"></a>
 

@@ -12,6 +12,14 @@ dependencies = [
     "openai>=1.66.3",
     "python-dotenv>=1.0.1",
     "uvicorn>=0.34.0",
+    "sqlalchemy>=2.0.39",
+    "aiosqlite>=0.21.0",
+    "greenlet>=3.1.1",
+    "pydantic[email]>=2.10.6",
+    "passlib[bcrypt]>=1.7.4",
+    "pyjwt>=2.10.1",
+    "pydantic-settings>=2.8.1",
+    "python-multipart>=0.0.20",
 ]
 
 [dependency-groups]
@@ -19,6 +27,29 @@ dev = [
     "db-sqlite3>=0.0.1",
     "faker>=37.0.0",
     "ipykernel>=6.29.5",
+    "nest-asyncio>=1.6.0",
     "pandas>=2.2.3",
     "pytest>=8.3.5",
 ]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+search = "{current_version}"
+replace = "{new_version}"
+regex = false
+ignore_missing_version = false
+ignore_missing_files = false
+tag = false
+sign_tags = false
+tag_name = "v{new_version}"
+tag_message = "Bump version: {current_version} → {new_version}"
+allow_dirty = false
+commit = false
+message = "Bump version: {current_version} → {new_version}"
+moveable_tags = []
+commit_args = ""
+setup_hooks = []
+pre_commit_hooks = []
+post_commit_hooks = []
