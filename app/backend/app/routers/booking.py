@@ -26,9 +26,9 @@ router = APIRouter(prefix="/bookings", tags=["Booking"])
 )
 async def get_available_booking_slots(
     vaccine_name: str,
+    polyclinic_name: str | None = None,
     polyclinic_limit: int = 3,
     timeslot_limit: int = 1,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     # Step 1: Create a query to exclude already-booked slots
@@ -46,8 +46,14 @@ async def get_available_booking_slots(
             >= datetime(2025, 3, 10),  # TODO: Hardcoded for development
             BookingSlot.id.notin_(booked_slots_subquery),
         )
-        .order_by(BookingSlot.datetime.asc())
     )
+
+    # Step 3: Optional filter by polyclinic_name if provided
+    if polyclinic_name:
+        stmt = stmt.where(Clinic.name == polyclinic_name)
+
+    # Step 4: Order and return results
+    stmt = stmt.order_by(BookingSlot.datetime.asc())
 
     result = await db.execute(stmt)
     slots = result.scalars().all()
@@ -89,7 +95,6 @@ async def get_available_booking_slots(
 )
 async def get_booking_slot(
     id: str,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     stmt = (
