@@ -1,5 +1,6 @@
+import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { DropdownModule } from 'primeng/dropdown';
@@ -7,11 +8,24 @@ import { TextInputComponent } from '../text/text-input/text-input.component';
 import { Message, MessageRole } from '../../types/message.type';
 import { TextSystemComponent } from '../text/text-system/text-system.component';
 import { TextUserComponent } from '../text/text-user/text-user.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-vaccine-index',
   standalone: true,
-  imports: [ButtonModule, CardModule, FormsModule, DropdownModule, TextInputComponent, TextSystemComponent, TextUserComponent],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    CardModule,
+    FormsModule,
+    DropdownModule,
+    TextInputComponent,
+    TextSystemComponent,
+    TextUserComponent,
+    InputTextModule,
+    ReactiveFormsModule
+  ],
   templateUrl: './vaccine-index.component.html',
   styleUrl: './vaccine-index.component.css'
 })
@@ -21,11 +35,14 @@ export class VaccineIndexComponent {
   user: string = MessageRole.User;
   system: string = MessageRole.Assistant;
 
-  greeting: Message[] = [{
+  greeting: Message[] = [
+    {
       role: MessageRole.Assistant,
-      message:  '<b>Welcome to the Beta version of HealthHub AI!</b><br><br>I am your friendly AI assistant, here to help you explore health information on HealthHub. You may ask questions in English, Chinese, Malay, or Tamil.<br><br>My responses may not always be perfect, as I am built on experimental technology and still learning progressively, but I will do my best to assist.<br><br>To ask a question, you can:<br>1. <b>Hold the voice button</b> (🎙️) to speak;<br>2. <b>Type</b> in your question (💬);<br>3. <b>Select from the suggested questions</b>.<br><br>How can I assist you today?<br><br>'
-    } ];
-  
+      message:
+        '<b>Welcome to the Beta version of HealthHub AI!</b><br><br>I am your friendly AI assistant, here to help you explore health information on HealthHub. You may ask questions in English, Chinese, Malay, or Tamil.<br><br>My responses may not always be perfect, as I am built on experimental technology and still learning progressively, but I will do my best to assist.<br><br>To ask a question, you can:<br>1. <b>Hold the voice button</b> (🎙️) to speak;<br>2. <b>Type</b> in your question (💬);<br>3. <b>Select from the suggested questions</b>.<br><br>How can I assist you today?<br><br>'
+    }
+  ];
+
   messages: Message[] = [
     {
       role: MessageRole.User,
@@ -88,4 +105,31 @@ export class VaccineIndexComponent {
       message: "You're welcome! If you have any more questions, feel free to ask."
     }
   ];
+
+  constructor(private toastService: MessageService) {}
+
+  loginForm: FormGroup = new FormGroup({
+    id: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
+  });
+
+  login() {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+        this.toastService.add({
+          severity: 'error',
+          summary: "Error!",
+          detail: "Wrong ID or password",
+        });
+      return;
+    } else {
+        this.toastService.add({
+          severity: 'success',
+          summary: 'Welcome!',
+          detail: 'You have logged in',
+        });
+      console.log('this.loginForm.value.id', this.loginForm.value.id);
+      console.log('this.loginForm.value.password', this.loginForm.value.password);
+    }
+  }
 }

@@ -42,8 +42,6 @@ export class TextInputComponent {
   private emitHeightChange(): void {
     setTimeout(() => {
       const height = this.inputTextContainer.nativeElement.getBoundingClientRect().height;
-      console.log('height', height);
-
       this.heightChange.emit(height);
     }, 0);
   }

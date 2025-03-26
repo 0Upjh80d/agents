@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'primeng/dropdown';
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 
 interface City {
     name: string;
@@ -12,23 +10,24 @@ interface City {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet,ButtonModule,CardModule,FormsModule,DropdownModule],
+  imports: [RouterOutlet, ToastModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.css',
+  providers: [MessageService]
 })
 export class AppComponent implements OnInit {
   title = 'frontend';
   cities: City[] | undefined;
 
-    selectedCity: City | undefined;
+  selectedCity: City | undefined;
 
-    ngOnInit() {
-        this.cities = [
-            { name: 'New York', code: 'NY' },
-            { name: 'Rome', code: 'RM' },
-            { name: 'London', code: 'LDN' },
-            { name: 'Istanbul', code: 'IST' },
-            { name: 'Paris', code: 'PRS' }
-        ];
-    }
+  ngOnInit() {
+    this.cities = [
+      { name: 'New York', code: 'NY' },
+      { name: 'Rome', code: 'RM' },
+      { name: 'London', code: 'LDN' },
+      { name: 'Istanbul', code: 'IST' },
+      { name: 'Paris', code: 'PRS' }
+    ];
+  }
 }

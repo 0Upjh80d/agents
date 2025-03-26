@@ -65,24 +65,28 @@
     <div class="tw-w-full tw-max-w-md">
       <h3 class="tw-text-lg tw-font-medium tw-mb-4">Log in</h3>
       
-      <form class="tw-space-y-4">
+      <form [formGroup]="loginForm" class="tw-space-y-4">
         <div>
           <input 
+            pInputText
             type="text" 
             placeholder="Singpass ID" 
-            class="tw-w-full tw-p-3 tw-border tw-border-gray-300 tw-rounded-md focus:tw-outline-none focus:tw-ring-1 focus:tw-ring-red-500"
+            formControlName="id"
+            class="tw-w-full tw-p-3"
           >
         </div>
         
         <div>
           <input 
+            pInputText
             type="password" 
             placeholder="Password" 
-            class="tw-w-full tw-p-3 tw-border tw-border-gray-300 tw-rounded-md focus:tw-outline-none focus:tw-ring-1 focus:tw-ring-red-500"
+            formControlName="password"
+            class="tw-w-full tw-p-3"
           >
         </div>
         
-        <button type="submit" class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition">
+        <button type="submit" (click)="login()" class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition">
           Log in
         </button>
       </form>
