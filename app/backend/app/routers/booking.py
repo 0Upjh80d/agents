@@ -8,6 +8,7 @@ from models.models import BookingSlot, Clinic, User, Vaccine, VaccineRecord
 from schemas.booking import (
     AvailableSlotResponse,
     BookingSlotResponse,
+    RescheduleSlotRequest,
     ScheduleSlotRequest,
 )
 from schemas.record import VaccineRecordResponse
@@ -207,3 +208,79 @@ async def cancel_vaccination_slot(
     await db.commit()
 
     return JSONResponse(content={"detail": "Vaccination slot successfully cancelled."})
+
+
+@router.post(
+    "/reschedule",
+    status_code=status.HTTP_200_OK,
+    response_model=VaccineRecordResponse,
+)
+async def reschedule_vaccination_slot(
+    request: RescheduleSlotRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+
+    # Step 1: Check if the VaccineRecord exists
+    vaccine_record_query = await db.execute(
+        select(VaccineRecord).where(VaccineRecord.id == str(request.vaccine_record_id))
+    )
+    vaccine_record = vaccine_record_query.scalar_one_or_none()
+
+    if not vaccine_record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Vaccine record with id {str(request.vaccine_record_id)} not found.",
+        )
+
+    # Step 2: Validate that the current user owns this VaccineRecord
+    if vaccine_record.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized to cancel this vaccination slot.",
+        )
+
+    # Step 3: Only allow rescheduling if status is 'booked'
+    if vaccine_record.status != "booked":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot reschedule slot with status '{vaccine_record.status}'.",
+        )
+
+    # Step 4: Check if the desired booking slot is available
+    new_slot_query = await db.execute(
+        select(BookingSlot).where(BookingSlot.id == str(request.new_slot_id))
+    )
+    new_slot = new_slot_query.scalar_one_or_none()
+
+    if not new_slot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Booking slot with ID {str(request.new_slot_id)} not found.",
+        )
+
+    # Step 5: Ensure this slot hasn't already been booked
+    booked_result = await db.execute(
+        select(VaccineRecord).where(
+            VaccineRecord.booking_slot_id == str(request.new_slot_id)
+        )
+    )
+
+    existing_record = booked_result.scalar_one_or_none()
+
+    if existing_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Slot already booked."
+        )
+
+    # Step 6: Update the VaccineRecord with the new booking slot
+    vaccine_record.booking_slot_id = str(request.new_slot_id)
+
+    print(vaccine_record)
+    await db.flush()
+    await db.refresh(vaccine_record)
+    await db.commit()
+    print(vaccine_record)
+
+    # Step 3: Commit the changes
+    return vaccine_record

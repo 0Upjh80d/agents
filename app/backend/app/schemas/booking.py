@@ -20,6 +20,11 @@ class BookingSlotResponse(BookingSlotBase):
         from_attributes = True
 
 
+class RescheduleSlotRequest(BaseModel):
+    vaccine_record_id: UUID
+    new_slot_id: UUID
+
+
 class AvailableSlotResponse(BookingSlotBase):
     vaccine_id: UUID
 
