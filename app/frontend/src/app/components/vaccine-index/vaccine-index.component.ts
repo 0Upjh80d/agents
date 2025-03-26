@@ -35,6 +35,8 @@ export class VaccineIndexComponent {
   user: string = MessageRole.User;
   system: string = MessageRole.Assistant;
 
+  isSignUp = false;
+
   greeting: Message[] = [
     {
       role: MessageRole.Assistant,
@@ -113,23 +115,35 @@ export class VaccineIndexComponent {
     password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
   });
 
+  signupForm: FormGroup = new FormGroup({
+    id: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    cfm_password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
+  });
+
+  toggleForm() {
+    this.isSignUp = !this.isSignUp;
+  }
+
   login() {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
-        this.toastService.add({
-          severity: 'error',
-          summary: "Error!",
-          detail: "Wrong ID or password",
-        });
+      this.toastService.add({
+        severity: 'error',
+        summary: 'Error!',
+        detail: 'Wrong ID or password'
+      });
       return;
     } else {
-        this.toastService.add({
-          severity: 'success',
-          summary: 'Welcome!',
-          detail: 'You have logged in',
-        });
+      this.toastService.add({
+        severity: 'success',
+        summary: 'Welcome!',
+        detail: 'You have logged in'
+      });
       console.log('this.loginForm.value.id', this.loginForm.value.id);
       console.log('this.loginForm.value.password', this.loginForm.value.password);
     }
   }
+
+  signup(){}
 }

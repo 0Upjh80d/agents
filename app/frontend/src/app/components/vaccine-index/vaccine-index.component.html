@@ -53,19 +53,26 @@
     
     <!-- Tabs -->
     <div class="tw-flex tw-w-full tw-max-w-md tw-mb-6">
-      <button class="tw-flex-1 tw-py-2 tw-text-gray-400 tw-border-b-2 tw-border-gray-200">
-        Singpass app
+      <button (click)="toggleForm()"  
+    [class.tw-text-red-500]="isSignUp" 
+    [class.tw-border-red-500]="isSignUp"
+    [class.tw-text-gray-400]="!isSignUp"
+    [class.tw-border-gray-200]="!isSignUp" class="tw-flex-1 tw-py-2 tw-border-b-2">
+        Sign up
       </button>
-      <button class="tw-flex-1 tw-py-2 tw-text-red-500 tw-border-b-2 tw-border-red-500 tw-font-medium">
+      <button (click)="toggleForm()" [class.tw-text-red-500]="!isSignUp" 
+    [class.tw-border-red-500]="!isSignUp"
+    [class.tw-text-gray-400]="isSignUp"
+    [class.tw-border-gray-200]="isSignUp" class="tw-flex-1 tw-py-2 tw-border-b-2">
         Password login
       </button>
     </div>
     
     <!-- Login form -->
     <div class="tw-w-full tw-max-w-md">
-      <h3 class="tw-text-lg tw-font-medium tw-mb-4">Log in</h3>
+      <h3 class="tw-text-lg tw-font-medium tw-mb-4">{{isSignUp?'Sign up':"Log in"}}</h3>
       
-      <form [formGroup]="loginForm" class="tw-space-y-4">
+      <form *ngIf="!isSignUp" [formGroup]="loginForm" class="tw-space-y-4">
         <div>
           <input 
             pInputText
@@ -88,6 +95,42 @@
         
         <button type="submit" (click)="login()" class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition">
           Log in
+        </button>
+      </form>
+
+      <form *ngIf="isSignUp" [formGroup]="signupForm" class="tw-space-y-4">
+        <div>
+          <input 
+            pInputText
+            type="text" 
+            placeholder="Singpass ID" 
+            formControlName="id"
+            class="tw-w-full tw-p-3"
+          >
+        </div>
+        
+        <div>
+          <input 
+            pInputText
+            type="password" 
+            placeholder="Password" 
+            formControlName="password"
+            class="tw-w-full tw-p-3"
+          >
+        </div>
+
+         <div>
+          <input 
+            pInputText
+            type="password" 
+            placeholder="Enter password again" 
+            formControlName="password"
+            class="tw-w-full tw-p-3"
+          >
+        </div>
+        
+        <button type="submit" (click)="signup()" class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition">
+          Sign up
         </button>
       </form>
       
