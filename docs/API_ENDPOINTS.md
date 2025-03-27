@@ -8,6 +8,7 @@
 - [Vaccine](#vaccine)
 - [BookingSlot](#booking-slot)
 - [VaccineRecord](#vaccine-record)
+- [Clinic](#clinic)
 
 ## Overview <a id="overview"></a>
 
@@ -54,6 +55,12 @@ Many of the endpoints below require a valid access token. Typically, the token i
 | ------ | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | `GET`  | `/records`      | Retrieves an authenticated user's vaccination record given the vaccination record ID.                                                          | Yes (token)   |
 | `GET`  | `/records/{id}` | Retrieves a list of vaccination records for an authenticated user sorted by date and time (with the record furthest away in time shown first). | Yes (token)   |
+
+## Clinic <a id="clinic"></a>
+
+| Method | Path            | Description                                                                                                                                    | Auth Required |
+| ------ | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `GET`  | `/clinic/nearest`      | Retrieves a list of the nearest polyclinic or GP based on the user's location.                                                          | Yes (token)   |
 
 ## Swagger UI Reference
 
