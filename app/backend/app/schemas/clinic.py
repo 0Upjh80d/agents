@@ -19,7 +19,7 @@ class PolyclinicResponse(BaseModel):
         from_attributes = True
 
 
-class EnrolledClinicResponse(BaseModel):
+class ClinicResponse(BaseModel):
     name: str
     type: ClinicType
     address: AddressResponse
