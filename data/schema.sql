@@ -1,18 +1,46 @@
--- Users table with unique email and audit timestamps
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+-- Users table with general information, credentials and audit timestamps
+CREATE TABLE Users (
+    id TEXT PRIMARY KEY,
+    address_id TEXT,
+    enrolled_clinic_id TEXT,
+    nric VARCHAR(9) UNIQUE NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     date_of_birth DATE,
     gender VARCHAR(10),
+    password VARCHAR(255) NOT NULL, -- hashed password
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (address_id) REFERENCES Addresses(id) ON DELETE CASCADE,
+    FOREIGN KEY (enrolled_clinic_id) REFERENCES Clinics(id) ON DELETE CASCADE
+);
+
+-- Clinics table with basic information and audit timestamps
+CREATE TABLE Clinics (
+    id TEXT PRIMARY KEY,
+    address_id TEXT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(50) NOT NULL, -- 'polyclinic', 'gp'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (address_id) REFERENCES Addresses(id) ON DELETE CASCADE
+);
+
+-- Addresses table with location information (i.e., long and lat) and audit timestamps
+CREATE TABLE Addresses (
+    id TEXT PRIMARY KEY,
+    postal_code VARCHAR(6) NOT NULL,
+    address VARCHAR(100) NOT NULL,
+    latitude DECIMAL(9,6) NOT NULL,
+    longitude DECIMAL(9,6) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Vaccines table including eligibility criteria and audit timestamps
-CREATE TABLE vaccines (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+-- Vaccines table including vaccine information, eligibility criterias and audit timestamps
+CREATE TABLE Vaccines (
+    id TEXT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     doses_required INTEGER NOT NULL,
@@ -22,51 +50,27 @@ CREATE TABLE vaccines (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Polyclinics table with basic location info and audit timestamps
-CREATE TABLE polyclinics (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(100) NOT NULL,
-    address VARCHAR(255),
-    -- longitude DECIMAL(9,6),
-    -- latitude DECIMAL(9,6),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- BookingSlots table representing available slots for appointments
-CREATE TABLE booking_slots (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    polyclinic_id INTEGER NOT NULL,
-    vaccine_id INTEGER NOT NULL,
+-- BookingSlots table representing available slots for appointments and audit timestamps
+CREATE TABLE BookingSlots (
+    id TEXT PRIMARY KEY,
+    polyclinic_id TEXT NOT NULL,
+    vaccine_id TEXT NOT NULL,
     datetime DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (polyclinic_id) REFERENCES Polyclinics(id) ON DELETE CASCADE,
+    FOREIGN KEY (polyclinic_id) REFERENCES Clinics(id) ON DELETE CASCADE,
     FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id) ON DELETE CASCADE,
     UNIQUE (polyclinic_id, vaccine_id, datetime)
 );
 
--- VaccineRecords table representing booked appointments (or vaccinations)
-CREATE TABLE vaccine_records (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    booking_slot_id INTEGER NOT NULL UNIQUE,
+-- VaccineRecords table representing booked or completed appointments (or vaccinations) and audit timestamps
+CREATE TABLE VaccineRecords (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    booking_slot_id TEXT UNIQUE NOT NULL,
     status VARCHAR(20) NOT NULL, -- 'booked', 'completed'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
     FOREIGN KEY (booking_slot_id) REFERENCES BookingSlots(id) ON DELETE CASCADE
-);
-
--- PolyclinicVaccineInventory table representing stock per polyclinic and vaccine
-CREATE TABLE vaccine_stock_inventory (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    polyclinic_id INTEGER NOT NULL,
-    vaccine_id INTEGER NOT NULL,
-    stock_quantity INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (polyclinic_id) REFERENCES Polyclinics(id) ON DELETE CASCADE,
-    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id) ON DELETE CASCADE,
-    UNIQUE (polyclinic_id, vaccine_id)
 );

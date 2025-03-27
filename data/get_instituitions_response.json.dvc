@@ -1,0 +1,5 @@
+outs:
+- md5: 0a8b26d497a2c9b7a7350fba871f7890
+  size: 95968
+  hash: md5
+  path: get_instituitions_response.json
