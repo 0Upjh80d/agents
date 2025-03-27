@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, time
 
 from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -28,10 +28,18 @@ router = APIRouter(prefix="/bookings", tags=["Booking"])
 async def get_available_booking_slots(
     vaccine_name: str,
     polyclinic_name: str | None = None,
+    start_datetime: date | datetime | None = None,
+    end_datetime: date | datetime | None = None,
     polyclinic_limit: int = 3,
     timeslot_limit: int = 1,
     db: AsyncSession = Depends(get_db),
 ):
+    # Convert date objects to datetime if needed
+    if isinstance(start_datetime, date) and not isinstance(start_datetime, datetime):
+        start_datetime = datetime.combine(start_datetime, time.min)
+    if isinstance(end_datetime, date) and not isinstance(end_datetime, datetime):
+        end_datetime = datetime.combine(end_datetime, time.max)
+
     # Step 1: Create a query to exclude already-booked slots
     booked_slots_subquery = select(VaccineRecord.booking_slot_id)
 
@@ -43,13 +51,19 @@ async def get_available_booking_slots(
         .options(selectinload(BookingSlot.polyclinic).selectinload(Clinic.address))
         .where(
             func.lower(Vaccine.name).like(f"%{vaccine_name.lower()}%"),
-            BookingSlot.datetime
-            >= datetime(2025, 3, 10),  # TODO: Hardcoded for development
             BookingSlot.id.notin_(booked_slots_subquery),
         )
     )
 
-    # Step 3: Optional filter by polyclinic_name if provided
+    # Step 3: Optional filtering by datetime range if provided
+    if start_datetime and end_datetime:
+        stmt = stmt.where(BookingSlot.datetime.between(start_datetime, end_datetime))
+    elif start_datetime:
+        stmt = stmt.where(BookingSlot.datetime >= start_datetime)
+    elif end_datetime:
+        stmt = stmt.where(BookingSlot.datetime <= end_datetime)
+
+    # Step 4: Optional filter by polyclinic_name if provided
     if polyclinic_name:
         stmt = stmt.where(func.lower(Clinic.name).like(f"%{polyclinic_name.lower()}%"))
 
