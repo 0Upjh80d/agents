@@ -47,6 +47,7 @@ Many of the endpoints below require a valid access token. Typically, the token i
 | `GET`    | `/bookings/{id}`               | Retrieves a booking slot given the booking slot ID.                                                                                         | No (public endpoint) |
 | `POST`   | `/bookings/schedule`           | Schedules a vaccination booking given the booking slot ID. Creates an entry in the `VaccineRecords` table with a status marked as "booked". | Yes (token)          |
 | `DELETE` | `/bookings/cancel/{record_id}` | Cancels a vaccination booking give the vaccine record ID. Removes the entry in the `VaccineRecords` table.                                  | Yes (token)          |
+| `POST`   | `/bookings/reschedule`         | Reschedules a vaccination booking give the vaccine record ID and new booking slot ID. Updates the entry in the `VaccineRecords` table.      | Yes (token)          |
 
 ## VaccineRecord <a id="vaccine-record"></a>
 
