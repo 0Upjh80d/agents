@@ -62,7 +62,7 @@ async def get_user_vaccination_record(
                 BookingSlot.polyclinic
             ),
         )
-        .filter(VaccineRecord.id == id)
+        .filter(VaccineRecord.id == id, VaccineRecord.user_id == current_user.id)
     )
 
     result = await db.execute(stmt)
