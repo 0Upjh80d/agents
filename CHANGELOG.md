@@ -1,14 +1,78 @@
 # Changelog
 
-## March 21, 2025
+## March 27, 2025
+
+- Added documentation for backend, guides to current API endpoints, database models and Postman testing guide
+- Minor fixes to `Users` table — ensured `nric` and `email` columns are unique
+- Removed user dependency injection for `get_available_booking_slots` and `get_booking_slot` endpoints
+- Modified `get_user_vaccination_record` endpoint to ensure user can only get their own vaccination record
+- Added optional arguments `polyclinic_name`, `start_datetime` and `end_datetime` to `get_available_booking_slots`
+- Implemented new endpoints:
+  - **Booking**: `reschedule_vaccination_slot`
+  - **Clinic**: `get_nearest_clinic`
+
+## March 25, 2025
+
+- Combined the `Polyclincics` and `⁠GeneralPractioners` tables into one `⁠Clinics` table, with additional field `type` indicating if it’s a⁠ `polyclinic` or⁠ `gp`
+- An additional field type `enrolled_clinic_id` in the `Users` table which references the `Clinics` table
+- Version-controlled updated SQLite data
+- Version-controlled institution data required to generate data for SQLite
+
+---
+
+- Updated response schemas to `UUID` data type for all `id` fields
+- Updated SQLAlchemy models to account for data schema changes
+- Replaced Polyclinic response schema with Clinic response schema
+- Moved `get_user_vaccination_records` from `user` router to `record` router
+- Moved `get_vaccine_recommendations_for_user` from `user` router to `vaccine` router
+- Removed `get_vaccine_stock` endpoint as no longer required
+- Implemented new endpoints:
+  - **User**: `update_user` (meant only for development purposes — **not** to be integrated as tools for agents)
+  - **Booking**: `get_booking_slot`
+
+## March 24, 2025
+
+- Updated all PK columns to `id`, with `UUID` date type
+- Normalized `BookingSlots` table:
+  - Removed `user_id` and `isbooked` columns
+  - Renamed `slot_datetime` column to `datetime`
+- Normalized `VaccineRecords` table:
+  - Removed `polyclinic_id`, `vaccination_date` and `vaccine_id` columns
+  - Added `status` (`completed` or `booked`) and `booking_slot_id` — which references the `BookingSlots` table — columns
+- For `Vaccines` table:
+  - Used [MOH NAIS](https://www.moh.gov.sg/seeking-healthcare/overview-of-diseases/communicable-diseases/nationally-recommended-vaccines) data to populate the `Vaccines` table
+  - Changed `price` column to `float` data type
+  - Changed `gender_criteria` column values to `M`, `F` or `None`
+- For `Users` table:
+  - Created `address_id`, `nric` and `password` columns
+  - Splitted name into `first_name` and `last_name`
+    - Generated gender based first and last names
+  - Ensured `email` makes sense to `first_name` and `last_name`
+  - Changed `gender` column values to `M` or `F`
+- For `Polyclinics` table:
+  - Added `address_id` column
+  - Used institution data provided by Data Owner to populate the `Polyclinics` table
+- Created `GeneralPractitioners` table with open source [Clinics onboard the Health Appointment System](https://data.gov.sg/datasets?query=clinic&page=1&resultId=d_3cd840069e95b6a521aa5301a084b25a) data by [data.gov.sg](https://data.gov.sg/) with `id`, `address_id` and `name` columns
+- Removed `VaccineStock` table
+
+---
+
+- Implemented OAuth2 authentication flow
+- Renamed `get_vaccine_record` to `get_user_vaccination_record`
+- Implemented new endpoints:
+  - **Authentication**: `signup`, `login`
+  - **User**: `delete_user` (meant only for development purposes — **not** to be integrated as tools for agents)
+  - **Vaccine**: `get_vaccine_recommendations_for_user`
+
+## March 21, 2025 (Release v0.1.0)
 
 - Integrated SQLAlchemy as the ORM framework for the project
 - Implemented FastAPI endpoints:
-  - **User**: `get_user`, `get_user_vaccination_records`, `get_vaccination_recommendation_for_user`
-  - **Booking**: `get_booking_slot`, `get_available_booking_slots`, `schedule_vaccination_slot`, `cancel_vaccination_slot`
-  - **Stock**: `get_vaccine_stock`
+  - **Booking**: `get_available_booking_slots`, `get_booking_slot`, `schedule_vaccination_slot`, `cancel_vaccination_slot`
   - **Record**: `get_vaccine_record`
-- Version-controlled updated SQLite DVC file for development data
+  - **Stock**: `get_vaccine_stock`
+  - **User**: `get_user`, `get_user_vaccination_records`, `get_vaccine_recommendations_for_user`
+- Version-controlled updated SQLite data
 
 ## March 19, 2025
 
