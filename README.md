@@ -9,6 +9,7 @@
   - [Install Git Hooks](#install-git-hooks)
 - [Project Structure](#project-structure)
 - [Development](#development)
+  - [Running Locally](#running-locally)
 - [Deployment](#deployment)
 - [Contributing](#contributing)
 
@@ -22,7 +23,7 @@
 - [Node.js 18+](https://nodejs.org/en/download/)
 - [Git](https://git-scm.com/downloads)
 - [DVC](https://dvc.org/doc/install)
-- pre-commit - For macOS users, refer to the installation instructions [here](https://formulae.brew.sh/formula/pre-commit). For Windows users, refer [here](https://pre-commit.com/).
+- pre-commit — For macOS users, refer to the installation instructions [here](https://formulae.brew.sh/formula/pre-commit). For Windows users, refer [here](https://pre-commit.com/).
 - [PowerShell 7+ (pwsh)](https://github.com/powershell/powershell) — For Windows users only.
   - Ensure you can run `pwsh.exe` from a PowerShell terminal. If this fails, you likely need to upgrade PowerShell.
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) — or other [alternatives](./docs/ALTERNATIVE_PYTHON_PACKAGE_MANAGERS.md).
@@ -108,7 +109,36 @@ For more information on our project structure, please refer to the [Project Stru
 
 ## Development <a id="development"></a>
 
-Please refer to the [Development](./docs/DEVELOPMENT.md) guide for more information on retrieving the synthetic data version-controlled in Azure Blob Storage for development.
+For more information on development, you may find the following documentations useful:
+
+- [Data Management](./docs/DATA_MANAGEMENT.md) - Instructions and guidelines on retrieving and managing version-controlled datasets using DVC integrated with Azure Blob Storage.
+
+- [API Endpoints](./docs/API_ENDPOINTS.md) - Overview and details of FastAPI endpoints, their functionality, and interactions with the database using SQLAlchemy.
+
+### Running Locally <a id="running-locally"></a>
+
+1. Ensure you're at the root of the project if not run `cd ..` to return to the root
+
+> [!TIP]
+> You may run `pwd` in your terminal to check your current working directory. Run `Get-Location` if you're using PowerShell.
+
+2. Run the following command in your terminal:
+
+   ```bash
+   make run-server
+   ```
+
+   This will install the `uv` Python package and project manager, sync the dependencies and start the FastAPI server.
+
+   ![Starting the Server](./media/start-server.png)
+
+3. Navigate to URL shown in terminal, e.g. `http://127.0.0.1:8000`
+
+4. To access the API endpoints, add `/docs` to the URL, e.g. `http://127.0.0.1:8000/docs`
+
+   ![FastAPI Endpoints](./media/swagger.png)
+
+   For more information on FastAPI endpoints, please refer to the [API Endpoints](./docs/API_ENDPOINTS.md) guide.
 
 ## Deployment <a id="deployment"></a>
 
