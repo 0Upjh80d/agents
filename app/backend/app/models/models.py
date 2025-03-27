@@ -31,10 +31,10 @@ class User(AsyncAttrs, Base):
     enrolled_clinic_id = Column(
         "enrolled_clinic_id", String, ForeignKey("Clinics.id"), nullable=True
     )
-    nric = Column("nric", String, nullable=False, unique=True)
+    nric = Column("nric", String, unique=True, nullable=False)
     first_name = Column("first_name", String, nullable=False)
     last_name = Column("last_name", String, nullable=False)
-    email = Column("email", String, nullable=False)
+    email = Column("email", String, unique=True, nullable=False)
     date_of_birth = Column("date_of_birth", Date, nullable=False)
     gender = Column("gender", String, nullable=False)
     password = Column(String, nullable=False)
