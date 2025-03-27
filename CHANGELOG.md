@@ -40,7 +40,7 @@
 - Set up SAS token for DVC
 - Store SAS token as secret in Azure Key Vault
 - Added scripts to [set up DVC](./scripts/setup_dvc.sh), [fetch SAS token](./scripts/fetch_sas_token.py), and [get data](./scripts/get_data.sh)
-- Added [documentation](./docs/DEVELOPMENT.md) on retrieving the synthetic data version-controlled in Azure Blob Storage for development
+- Added [documentation](./docs/DATA_MANAGEMENT.md) on retrieving the synthetic data version-controlled in Azure Blob Storage for development
 - Updated [documentation](./docs/PROJECT_STRUCTURE.md) on project structure
 
 ## March 14, 2025
