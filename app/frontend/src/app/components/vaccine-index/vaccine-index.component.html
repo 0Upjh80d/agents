@@ -3,19 +3,12 @@
     <div class="tw-bg-white tw-shadow-md tw-rounded-lg tw-w-full tw-h-full tw-p-6 tw-flex tw-flex-col">
       <div #scrollableTextContent id="scrollableTextContent" class="tw-flex-1 tw-flex tw-overflow-y-auto tw-flex-col tw-items-stretch tw-gap-2 tw-pt-4 tw-px-4">
         <app-text-system [message]="greeting[0]"></app-text-system>
-        
-        @for (message of messages; track message) {
-          @if (message.message.trim()) {
-            @switch (message.role) {
-              @case (user) {
-                <app-text-user [message]="message"></app-text-user>
-              }
-              @case (system) {
-                <app-text-system [message]="message"></app-text-system>
-              }
-            }
-          }
-        }
+
+        @for (message of messages; track message) { @if (message.message.trim()) { @switch (message.role) { @case (user) {
+        <app-text-user [message]="message"></app-text-user>
+        } @case (system) {
+        <app-text-system [message]="message"></app-text-system>
+        } } } }
       </div>
       <div class="tw-mt-auto tw-w-full tw-max-w-[860px]">
         <app-text-input></app-text-input>
@@ -23,123 +16,125 @@
     </div>
   </div>
   <div class="tw-w-1/2 tw-h-full tw-p-4 tw-flex tw-justify-center tw-items-center">
-   <div class="tw-bg-white tw-shadow-md tw-rounded-lg tw-w-full tw-h-full tw-p-6 tw-flex tw-flex-col">
-  <!-- Header with logo -->
-  <div class="tw-mb-6">
-    <div class="tw-flex tw-items-center">
-      <div class="tw-text-red-500 tw-text-2xl tw-font-bold">
-        <span>s</span><span class="tw-text-red-600">i</span><span>ngpass</span>
-      </div>
-    </div>
-    
-    <!-- Warning banner -->
-    <div class="tw-mt-6 tw-bg-gray-100 tw-rounded-md tw-p-4">
-      <div class="tw-flex tw-justify-between tw-items-center tw-text-gray-800 tw-font-medium tw-mb-2">
-        <span>Beware of impersonation scams</span>
-        <svg xmlns="http://www.w3.org/2000/svg" class="tw-h-5 tw-w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
-        </svg>
-      </div>
-      <p class="tw-text-sm tw-text-gray-700">
-        Government officials will NEVER ask you to transfer money or disclose banking details over a phone call. Call the 24/7 ScamShield Helpline at 1799 if you are unsure if something is a scam.
-      </p>
-    </div>
-  </div>
-  
-  <!-- Login section -->
-  <div class="tw-flex-1 tw-flex tw-flex-col tw-items-center tw-justify-center">
-    <h2 class="tw-text-2xl tw-font-bold tw-text-gray-800 tw-mb-1">Log in with Singpass</h2>
-    <p class="tw-text-gray-600 tw-mb-8">Your trusted digital identity</p>
-    
-    <!-- Tabs -->
-    <div class="tw-flex tw-w-full tw-max-w-md tw-mb-6">
-      <button (click)="toggleForm()"  
-    [class.tw-text-red-500]="isSignUp" 
-    [class.tw-border-red-500]="isSignUp"
-    [class.tw-text-gray-400]="!isSignUp"
-    [class.tw-border-gray-200]="!isSignUp" class="tw-flex-1 tw-py-2 tw-border-b-2">
-        Sign up
-      </button>
-      <button (click)="toggleForm()" [class.tw-text-red-500]="!isSignUp" 
-    [class.tw-border-red-500]="!isSignUp"
-    [class.tw-text-gray-400]="isSignUp"
-    [class.tw-border-gray-200]="isSignUp" class="tw-flex-1 tw-py-2 tw-border-b-2">
-        Password login
-      </button>
-    </div>
-    
-    <!-- Login form -->
-    <div class="tw-w-full tw-max-w-md">
-      <h3 class="tw-text-lg tw-font-medium tw-mb-4">{{isSignUp?'Sign up':"Log in"}}</h3>
-      
-      <form *ngIf="!isSignUp" [formGroup]="loginForm" class="tw-space-y-4">
-        <div>
-          <input 
-            pInputText
-            type="text" 
-            placeholder="Singpass ID" 
-            formControlName="id"
-            class="tw-w-full tw-p-3"
-          >
-        </div>
-        
-        <div>
-          <input 
-            pInputText
-            type="password" 
-            placeholder="Password" 
-            formControlName="password"
-            class="tw-w-full tw-p-3"
-          >
-        </div>
-        
-        <button type="submit" (click)="login()" class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition">
-          Log in
-        </button>
-      </form>
-
-      <form *ngIf="isSignUp" [formGroup]="signupForm" class="tw-space-y-4">
-        <div>
-          <input 
-            pInputText
-            type="text" 
-            placeholder="Singpass ID" 
-            formControlName="id"
-            class="tw-w-full tw-p-3"
-          >
-        </div>
-        
-        <div>
-          <input 
-            pInputText
-            type="password" 
-            placeholder="Password" 
-            formControlName="password"
-            class="tw-w-full tw-p-3"
-          >
+    <div class="tw-bg-white tw-shadow-md tw-rounded-lg tw-w-full tw-h-full tw-p-6 tw-flex tw-flex-col">
+      <!-- Header with logo -->
+      <div class="tw-mb-6">
+        <div class="tw-flex tw-items-center">
+          <div class="tw-text-red-500 tw-text-2xl tw-font-bold"><span>s</span><span class="tw-text-red-600">i</span><span>ngpass</span></div>
         </div>
 
-         <div>
-          <input 
-            pInputText
-            type="password" 
-            placeholder="Enter password again" 
-            formControlName="password"
-            class="tw-w-full tw-p-3"
-          >
+        <!-- Warning banner -->
+        <div class="tw-mt-6 tw-bg-gray-100 tw-rounded-md tw-p-4">
+          <div class="tw-flex tw-justify-between tw-items-center tw-text-gray-800 tw-font-medium tw-mb-2">
+            <span>Beware of impersonation scams</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="tw-h-5 tw-w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <p class="tw-text-sm tw-text-gray-700">
+            Government officials will NEVER ask you to transfer money or disclose banking details over a phone call. Call the 24/7 ScamShield Helpline at 1799
+            if you are unsure if something is a scam.
+          </p>
         </div>
-        
-        <button type="submit" (click)="signup()" class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition">
-          Sign up
-        </button>
-      </form>
-      
-      <!-- Help links -->
-      <div class="tw-flex tw-justify-between tw-mt-6 tw-text-blue-500">
-        <a href="#" class="hover:tw-underline">Retrieve Singpass ID</a>
-        <a href="#" class="hover:tw-underline">Reset password</a>
+      </div>
+
+      <!-- Sinpass section -->
+      <div class="tw-flex-1 tw-flex tw-flex-col tw-items-center tw-justify-center tw-overflow-y-auto">
+        <h2 class="tw-text-2xl tw-font-bold tw-text-gray-800 tw-mb-1">Log in with Singpass</h2>
+        <p class="tw-text-gray-600 tw-mb-8">Your trusted digital identity</p>
+
+        <!-- Tabs -->
+        <div class="tw-flex tw-w-full tw-max-w-md tw-mb-6">
+          <button
+            (click)="toggleForm()"
+            [class.tw-text-red-500]="isSignUp"
+            [class.tw-border-red-500]="isSignUp"
+            [class.tw-text-gray-400]="!isSignUp"
+            [class.tw-border-gray-200]="!isSignUp"
+            class="tw-flex-1 tw-py-2 tw-border-b-2"
+          >
+            Sign up
+          </button>
+          <button
+            (click)="toggleForm()"
+            [class.tw-text-red-500]="!isSignUp"
+            [class.tw-border-red-500]="!isSignUp"
+            [class.tw-text-gray-400]="isSignUp"
+            [class.tw-border-gray-200]="isSignUp"
+            class="tw-flex-1 tw-py-2 tw-border-b-2"
+          >
+            Password login
+          </button>
+        </div>
+
+        <!-- Form section -->
+        <div class="tw-w-full tw-max-w-md tw-overflow-y-auto">
+          <form *ngIf="!isSignUp" [formGroup]="loginForm" class="tw-space-y-4">
+            <div>
+              <input pInputText type="text" placeholder="Email" formControlName="username" class="tw-w-full tw-p-3" />
+            </div>
+
+            <div>
+              <input pInputText type="password" placeholder="Password" formControlName="password" class="tw-w-full tw-p-3" />
+            </div>
+
+            <button
+              type="submit"
+              (click)="login()"
+              class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition"
+            >
+              Log in
+            </button>
+          </form>
+
+          <form *ngIf="isSignUp" [formGroup]="signupForm" class="tw-space-y-4">
+            <div>
+              <input pInputText type="text" placeholder="NRIC" formControlName="nric" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="text" placeholder="First Name" formControlName="first_name" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="text" placeholder="Last Name" formControlName="last_name" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="text" placeholder="Email" formControlName="email" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="text" placeholder="Date of Birth (YYY-MM-DD)" formControlName="date_of_birth" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="text" placeholder="Gender" formControlName="gender" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="text" placeholder="Postal Code" formControlName="postal_code" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="password" placeholder="Password" formControlName="password" class="tw-w-full tw-p-3" />
+            </div>
+            <div>
+              <input pInputText type="password" placeholder="Enter password again" formControlName="cfm_password" class="tw-w-full tw-p-3" />
+            </div>
+            <button
+              type="submit"
+              (click)="signup()"
+              class="tw-w-full tw-bg-red-500 tw-text-white tw-py-3 tw-rounded-md tw-font-medium hover:tw-bg-red-600 tw-transition"
+            >
+              Sign up
+            </button>
+          </form>
+
+          <!-- Help links -->
+          <div class="tw-flex tw-justify-between tw-mt-6 tw-text-blue-500">
+            <a href="#" class="hover:tw-underline">Retrieve Singpass ID</a>
+            <a href="#" class="hover:tw-underline">Reset password</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </div>

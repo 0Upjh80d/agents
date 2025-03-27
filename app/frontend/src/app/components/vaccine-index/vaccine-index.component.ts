@@ -10,6 +10,9 @@ import { TextSystemComponent } from '../text/text-system/text-system.component';
 import { TextUserComponent } from '../text/text-user/text-user.component';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
+import { EndpointService } from '../../services/endpoint.service';
+import { Signup } from '../../types/signup.type';
+import { Login } from '../../types/login.type';
 
 @Component({
   selector: 'app-vaccine-index',
@@ -108,15 +111,21 @@ export class VaccineIndexComponent {
     }
   ];
 
-  constructor(private toastService: MessageService) {}
+  constructor(private toastService: MessageService, private endpointService: EndpointService) {}
 
   loginForm: FormGroup = new FormGroup({
-    id: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    username: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
     password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
   });
 
   signupForm: FormGroup = new FormGroup({
-    id: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    nric: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    first_name: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    last_name: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    email: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    date_of_birth: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    gender: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    postal_code: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
     password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
     cfm_password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
   });
@@ -135,15 +144,93 @@ export class VaccineIndexComponent {
       });
       return;
     } else {
-      this.toastService.add({
-        severity: 'success',
-        summary: 'Welcome!',
-        detail: 'You have logged in'
+      const loginData: Login = {
+        username: this.loginForm.value.username,
+        password: this.loginForm.value.password
+      };
+
+      this.endpointService.login(loginData).subscribe({
+        next: () => {
+          this.toastService.add({
+            severity: 'success',
+            summary: 'Welcome!',
+            detail: 'You have logged in'
+          });
+        },
+        error: error => {
+          this.toastService.add({
+            severity: 'error',
+            summary: 'Login Failed',
+            detail: 'Wrong ID or password'
+          });
+        }
       });
-      console.log('this.loginForm.value.id', this.loginForm.value.id);
-      console.log('this.loginForm.value.password', this.loginForm.value.password);
     }
   }
 
-  signup(){}
+  signup() {
+    if (this.signupForm.invalid) {
+      this.signupForm.markAllAsTouched();
+      this.toastService.add({
+        severity: 'error',
+        summary: 'Error!',
+        detail: 'An error occurred while creating your account'
+      });
+      return;
+    } else {
+      const signupData: Signup = {
+        nric: this.signupForm.value.nric,
+        first_name: this.signupForm.value.first_name,
+        last_name: this.signupForm.value.last_name,
+        email: this.signupForm.value.email,
+        date_of_birth: this.signupForm.value.date_of_birth,
+        gender: this.signupForm.value.gender,
+        postal_code: this.signupForm.value.postal_code,
+        password: this.signupForm.value.password,
+        password_confirm: this.signupForm.value.cfm_password
+      };
+
+      const dummySignupData: Signup = {
+        nric: this.generateRandomNRIC(),
+        first_name: 'first_name',
+        last_name: 'last_name',
+        email: this.generateRandomEmail(),
+        date_of_birth: '2025-03-27',
+        gender: 'F',
+        postal_code: '111111',
+        password: '1',
+        password_confirm: '1'
+      };
+
+      this.endpointService.signup(dummySignupData).subscribe({
+        next: () => {
+          this.toastService.add({
+            severity: 'success',
+            summary: 'Welcome!',
+            detail: 'Account created successfully'
+          });
+          this.isSignUp = false;
+        },
+        error: error => {
+          this.toastService.add({
+            severity: 'error',
+            summary: 'Signup Failed',
+            detail: 'An error occurred while creating your account'
+          });
+        }
+      });
+    }
+  }
+
+  generateRandomNRIC = (): string => {
+    const prefix = ['S', 'T', 'F', 'G'][Math.floor(Math.random() * 4)]; // Random prefix
+    const digits = Math.floor(1000000 + Math.random() * 9000000).toString(); // Random 7-digit number
+    const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random letter (A-Z)
+    return `${prefix}${digits}${suffix}`;
+  };
+
+  generateRandomEmail = (): string => {
+    const timestamp = Date.now(); // Use timestamp for uniqueness
+    return `user${timestamp}@example.com`;
+  };
 }

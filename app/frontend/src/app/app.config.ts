@@ -4,6 +4,7 @@ import { routes } from './app.routes';
 import { provideMarkdown } from 'ngx-markdown';
 import { ToastModule } from 'primeng/toast';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 
 
 export const appConfig: ApplicationConfig = {
@@ -12,6 +13,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideMarkdown(),
     importProvidersFrom(ToastModule),
-    importProvidersFrom(BrowserAnimationsModule)
+    importProvidersFrom(BrowserAnimationsModule),
+    provideHttpClient(withFetch())
   ]
 };
