@@ -30,7 +30,10 @@ dev = [
     "ipykernel>=6.29.5",
     "nest-asyncio>=1.6.0",
     "pandas>=2.2.3",
+]
+test = [
     "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
 ]
 
 [tool.bumpversion]
@@ -54,3 +57,6 @@ commit_args = ""
 setup_hooks = []
 pre_commit_hooks = []
 post_commit_hooks = []
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
