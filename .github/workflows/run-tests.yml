@@ -11,6 +11,7 @@ on:
 
 jobs:
   tests:
+    name: Run API Tests
     runs-on: ubuntu-latest
     env:
       secret_key: ${{ secrets.SECRET_KEY }}
