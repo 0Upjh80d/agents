@@ -1,15 +1,11 @@
 import jwt
 import pytest
-from core.config import settings
 from httpx import AsyncClient
 from requests import Response
 from schemas.oauth2 import Token
 from schemas.user import UserCreateResponse
 
-SECRET_KEY = settings.secret_key
-ALGORITHM = settings.algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
-REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
+from tests.conftest import ALGORITHM, SECRET_KEY
 
 
 @pytest.mark.asyncio
@@ -71,9 +67,7 @@ async def test_successful_login(
     data = res.json()
 
     token = Token(**data)
-    payload = jwt.decode(
-        token.access_token, settings.secret_key, algorithms=[settings.algorithm]
-    )
+    payload = jwt.decode(token.access_token, SECRET_KEY, algorithms=[ALGORITHM])
     id = payload.get("user_id")
 
     assert res.status_code == 200
