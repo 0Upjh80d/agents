@@ -9,6 +9,12 @@
 - [BookingSlot](#booking-slot)
 - [VaccineRecord](#vaccine-record)
 - [Clinic](#clinic)
+- [Swagger UI Reference](#swagger-ui-reference)
+- [Backend API Test Cases](#backend-api-test-cases)
+  - [Test Suite Overview](#test-suite-overview)
+  - [Running Tests Locally](#running-tests-locally)
+  - [CI Integration with GitHub Actions](#ci-integration-with-github-actions)
+- [(Optional) Debugging GitHub Actions Workflows Locally (with `act`)](#optional-debugging-github-actions-workflows-locally-with-act)
 
 ## Overview <a id="overview"></a>
 
@@ -63,7 +69,7 @@ Many of the endpoints below require a valid access token. Typically, the token i
 | ------ | ----------------- | ------------------------------------------------------------------------------ | ------------- |
 | `GET`  | `/clinic/nearest` | Retrieves a list of the nearest polyclinic or GP based on the user's location. | Yes (token)   |
 
-## Swagger UI Reference
+## Swagger UI Reference <a id="swagger-ui-reference"></a>
 
 For further details on request and response formats (what fields to send, what the JSON response looks like, etc.), use the Swagger UI as described next. Each endpoint in the Swagger UI includes example models and lets you try out calls live.
 
@@ -95,5 +101,79 @@ Using the Swagger UI is a great way for both developers and product managers to 
 
 > [!TIP]
 > If modifications are made to the API, such as adding new endpoints or changing models, the Swagger UI will automatically reflect those changes when you reload the page. This ensures our documentation never falls out of sync with the implementation.
+
+## Backend API Test Cases <a id="backend-api-test-cases"></a>
+
+Our backend API endpoints are thoroughly tested with automated **unit and integration tests** written using the **pytest** framework along with **pytest-asyncio** for asynchronous FastAPI routes. These test cases ensure that the API behaves correctly, validate data handling, and quickly detect regressions or breaking changes.
+
+### Test Suite Overview <a id="test-suite-overview"></a>
+
+Tests are located in the following directory structure:
+
+```txt
+app/
+├── backend/
+│   └── app/
+│      └── tests/
+│          ├── conftest.py
+│          ├── test_auth.py
+│          ├── test_booking.py
+│          ├── test_chat.py
+│          ├── test_clinic.py
+│          ├── test_record.py
+│          ├── test_root.py
+│          ├── test_user.py
+│          └── test_vaccine.py
+```
+
+Each test file corresponds to a specific API module or endpoint group, ensuring coverage and organization.
+
+### Running Tests Locally <a id="running-tests-locally"></a>
+
+To run the tests locally, ensure your environment is activated and run the following command:
+
+```bash
+./scripts/test_api.sh
+```
+
+For Windows users, run:
+
+```powershell
+./scripts/test_api.ps1
+```
+
+The script will install the test dependencies and run the tests. Once the tests are complete, you should see the following in your terminal:
+
+![Successful Test Cases](../media/successful-test-cases.png)
+
+_Successful Test Cases_
+
+> [!IMPORTANT]
+> If there are any test failures, you should address them immediately before making a pull request.
+
+## CI Integration with GitHub Actions <a id="ci-integration-with-github-actions"></a>
+
+Automated testing is integrated into our CI pipeline using GitHub Actions, configured in [`run-tests.yml`](../.github/workflows/run-tests.yml). The action will run when either of the following conditions are met:
+
+- A Pull Request is opened or updated targeting `main` or `staging`
+- Any file changes are detected within `app/backend/app/` or to `scripts/test_api.sh`.
+
+The following images is what you should see when the action runs successfully without issue for a pull request:
+
+![Successful Required Check](../media/successful-required-check.png)
+
+_Successful Required Check_
+
+You may click into the check to see more details about the action run. This is where you would navigate to for debugging if your check fails. Below shows the summary of a successful GitHub Action run.
+
+![Summary of Successful GitHub Action Run](../media/successful-gha-run.png)
+
+_Summary of Successful GitHub Action Run_
+
+This ensures code integrity and quality before merging code changes. Although we have this action as a fallback, we should always run our tests locally, fixing any issues that are found before merging code to `main` or `staging`.
+
+## (Optional) Debugging GitHub Actions Workflows Locally (with `act`) <a id="optional-debugging-github-actions-workflows-locally-with-act"></a>
+
+For more detailed information, see the [Debugging GitHub Actions Workflows Locally (with `act`)](DEBUGGING_GITHUB_ACTIONS_LOCALLY.md) guide.
 
 [^1]: [OpenAPI docs](https://fastapi.tiangolo.com/reference/openapi/docs/#:~:text=OpenAPI%20)

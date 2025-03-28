@@ -6,8 +6,8 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     secret_key: str
     algorithm: str
-    access_token_expire_minutes: int
-    refresh_token_expire_days: int
+    access_token_expire_minutes: int = 60
+    refresh_token_expire_days: int = 2
 
     class Config:
         env_file = ".env"
