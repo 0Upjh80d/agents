@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from routers import authentication, booking, chat, clinic, record, user, vaccine
 from starlette.middleware.cors import CORSMiddleware
 
+
 def create_app():
     app = FastAPI()
 
