@@ -9,7 +9,7 @@ uv venv
 . .venv/Scripts/Activate
 
 Write-Output "Syncing dependencies..."
-uv sync
+uv sync --no-dev
 
 Set-Location app/backend/app
 uvicorn main:app --reload
