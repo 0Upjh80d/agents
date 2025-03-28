@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 if ! command -v uv >/dev/null 2>&1; then
     echo "uv not installed. Installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -8,7 +10,7 @@ uv venv
 source .venv/bin/activate
 
 echo "Syncing dependencies..."
-uv sync
+uv sync --no-dev
 
 cd app/backend/app
 uvicorn main:app --reload
