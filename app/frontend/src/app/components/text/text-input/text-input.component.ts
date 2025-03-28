@@ -5,8 +5,6 @@ import { Button } from 'primeng/button';
 import { LucideAngularModule } from 'lucide-angular';
 import { InputTextModule } from 'primeng/inputtext';
 
-
-
 @Component({
   selector: 'app-text-input',
   standalone: true,

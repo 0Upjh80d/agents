@@ -12,7 +12,10 @@ import { MarkdownModule } from 'ngx-markdown';
 export class MarkdownComponent implements OnChanges {
   @Input() markdownContent?: string = `# Default Markdown Content`;
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {}
+  constructor(
+    private el: ElementRef,
+    private renderer: Renderer2
+  ) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['markdownContent']) {

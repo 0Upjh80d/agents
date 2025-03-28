@@ -9,8 +9,7 @@ describe('VaccineIndexComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [VaccineIndexComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(VaccineIndexComponent);
     component = fixture.componentInstance;

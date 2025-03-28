@@ -4,12 +4,12 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr
 from schemas.address import AddressResponse
 from schemas.base import UserBase
-from schemas.clinic import EnrolledClinicResponse
+from schemas.clinic import ClinicResponse
 
 
 class UserResponse(UserBase):
     address: AddressResponse | None
-    enrolled_clinic: EnrolledClinicResponse | None
+    enrolled_clinic: ClinicResponse | None
     created_at: datetime
     updated_at: datetime
 

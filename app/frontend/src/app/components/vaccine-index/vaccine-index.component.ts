@@ -111,7 +111,10 @@ export class VaccineIndexComponent {
     }
   ];
 
-  constructor(private toastService: MessageService, private endpointService: EndpointService) {}
+  constructor(
+    private toastService: MessageService,
+    private endpointService: EndpointService
+  ) {}
 
   loginForm: FormGroup = new FormGroup({
     username: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),

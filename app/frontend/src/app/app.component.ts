@@ -4,8 +4,8 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 interface City {
-    name: string;
-    code: string;
+  name: string;
+  code: string;
 }
 @Component({
   selector: 'app-root',

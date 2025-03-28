@@ -1,76 +1,87 @@
-# Development
+# Data Management
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
 - [Overview](#overview)
+- [Prerequisites](#prerequisites)
 - [Retrieving Data](#retrieving-data)
 - [Azure Integration](#azure-integration)
   - [Managing SAS Token](#managing-sas-token)
 - [Data Versioning](#data-versioning)
   - [Data Updates](#data-updates)
   - [Revert Data Version](#revert-data-version)
-- [Running locally](#running-locally)
+
+## Overview <a id="overview"></a>
+
+To manage datasets effectively, maintain reproducibility, and track changes over time, we utilize **Data Version Control ([DVC](https://dvc.org/))**. DVC extends traditional version control (like Git) by efficiently handling large data files and machine learning models. It allows tracking dataset versions, facilitating collaboration, and enabling reproducibility of experiments through pipeline management.
+
+Key advantages of using DVC include:
+
+- **Data versioning**: Keep track of multiple dataset versions.
+- **Reproducible pipelines**: Define and share data-processing steps clearly.
+- **Efficient storage**: Handles large data without bloating Git repositories.
+- **Collaboration**: Streamlines data sharing among team members.
+
+Refer to the sections below for detailed guidelines on setting up, configuring, and working with DVC.
 
 ## Prerequisites <a id="prerequisites"></a>
 
 Ensure you have met the [prerequisites](../README.md#prerequisites) in the [Getting Started](../README.md#getting-started) section. Run `dvc --version` to confirm you have DVC installed.
 
-## Overview <a id="overview"></a>
-
-The development data is version-controlled in Azure Blob Storage. Before development, ensure the data is available and up-to-date.
-
-If you are interested, refer to the sections below for more details:
-
-- [Retrieving Data](#retrieving-data) - How to access the development data.
-- [Azure Integration](#azure-integration) - Data integration with Azure and roles involved.
-- [Data Versioning](#data-versioning) - How to effectively use DVC for managing data versions.
-
 ## Retrieving Data <a id="retrieving-data"></a>
 
-In the root of this project, you will find a [`.env.sample`](../.env.sample). It should look like this:
+> [!IMPORTANT]
+> Before development work, ensure the data is available in your environment and is up-to-date. Please refer to the following steps to retrieve the latest data.
 
-```yaml
-AZURE_STORAGE_ACCOUNT=
-AZURE_KEY_VAULT=
-AZURE_URL=
-SECRET_NAME=
-```
+1. **Set Environment Variables**
 
-Create an `.env` file and copy and paste the contents from above into it.
+   In the root of this project, you will find a [`.env.sample`](../.env.sample). It should look like this:
+
+   ```yaml
+   AZURE_STORAGE_ACCOUNT=
+   AZURE_KEY_VAULT=
+   AZURE_URL=
+   SECRET_NAME=
+   ```
+
+   Create an `.env` file and copy and paste the contents from above into it.
 
 > [!NOTE]
 > Consult a [Data Controller](#data-controller) for the required credentials. Once they are set, the SAS token can be retrieved via the [`fetch_sas_token.py`](../scripts/fetch_sas_token.py) file which is called in the`setup_dvc.*` scripts.
 
-Once the environment variables have been set up, you can run the following command to retrieve the SAS token and set up the DVC configurations:
+2. **Set up DVC**
 
-For Linux or macOS users, run:
+   Once the environment variables have been set up, you can run the following command to retrieve the SAS token and set up the DVC configurations:
 
-```bash
-./scripts/setup_dvc.sh
-```
+   For Linux or macOS users, run:
 
-For Windows users, run:
+   ```bash
+   ./scripts/setup_dvc.sh
+   ```
 
-```powershell
-./scripts/setup_dvc.ps1
-```
+   For Windows users, run:
 
-After execution, the script updates all remote data repositories in the [config](../.dvc/config) file and sets credentials in a local configuration file — not version-controlled with Git.
+   ```powershell
+   ./scripts/setup_dvc.ps1
+   ```
 
-Lastly, run the following command to get the latest version of data respectively:
+   After execution, the script updates all remote data repositories in the [config](../.dvc/config) file and sets credentials in a local configuration file — not version-controlled with Git.
 
-```bash
-./scripts/get_data.sh
-```
+3. **Retrieve Data**
 
-For Windows, run:
+   Lastly, run the following command to get the latest version of data respectively:
 
-```powershell
-./scripts/get_data.ps1
-```
+   ```bash
+   ./scripts/get_data.sh
+   ```
 
-After execution, you should see all the data in the [`data`](../data/) folder. It may take a while for all the data to be downloaded if this is your first time pulling them in. For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/azure-blob-storage) on how to integrate DVC with Microsoft Azure Blob Storage.
+   For Windows, run:
+
+   ```powershell
+   ./scripts/get_data.ps1
+   ```
+
+   After execution, you should see all the data in the [`data`](../data/) folder. It may take a while for all the data to be downloaded if this is your first time pulling them in. For more information, refer to this [user guide](https://dvc.org/doc/user-guide/data-management/remote-storage/azure-blob-storage) on how to integrate DVC with Microsoft Azure Blob Storage.
 
 > [!NOTE]
 > If you encounter any issues, please consult a [Data Controller](#data-controller). Usually, an error occurs when the SAS token has expired. If so, please consult the [Managing SAS Token](#managing-sas-token) section to generate a new SAS token.
@@ -175,15 +186,3 @@ git add .
 git commit -m "chore: revert data version; version control previous .dvc file"
 git push
 ```
-
-## Running locally <a id="running-locally"></a>
-
-1. `cd` to root folder
-2. Run the following command in your terminal
-
-   ```bash
-   make run-server
-   ```
-
-3. This will install the `uv` package, syunc the dependencies and run the FastAPI server
-4. Navigate to url shown in terminal

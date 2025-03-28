@@ -7,6 +7,4 @@ import { Component } from '@angular/core';
   templateUrl: './disclaimer.component.html',
   styleUrl: './disclaimer.component.css'
 })
-export class DisclaimerComponent {
-
-}
+export class DisclaimerComponent {}

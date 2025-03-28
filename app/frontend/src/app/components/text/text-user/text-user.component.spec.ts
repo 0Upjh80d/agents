@@ -9,8 +9,7 @@ describe('TextUserComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TextUserComponent]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(TextUserComponent);
     component = fixture.componentInstance;
