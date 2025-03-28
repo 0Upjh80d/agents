@@ -1,0 +1,34 @@
+name: Backend API Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+    paths:
+      - "app/backend/app/**"
+      - "scripts/test_api.sh"
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      secret_key: ${{ secrets.SECRET_KEY }}
+      algorithm: ${{ secrets.ALGORITHM }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          pip install uv
+          uv sync --group test --no-dev
+
+      - name: Run API Tests
+        run: |
+          uv run bash scripts/test_api.sh
