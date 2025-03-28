@@ -5,7 +5,7 @@ set -e
 
 echo "🚀 Running backend API unit tests..."
 
-uv sync --group test
+uv sync --group test --no-dev
 
 cd app/backend/app
 

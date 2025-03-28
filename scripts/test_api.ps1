@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 
 Write-Host "🚀 Running backend API unit tests..."
 
-uv sync --group test
+uv sync --group test --no-dev
 
 Set-Location app/backend/app
 
