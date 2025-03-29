@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -39,6 +39,8 @@ export class VaccineIndexComponent {
   system: string = MessageRole.Assistant;
 
   isSignUp = false;
+  isSinpassLogin = false;
+  isLoggedIn = false;
 
   greeting: Message[] = [
     {
@@ -48,73 +50,9 @@ export class VaccineIndexComponent {
     }
   ];
 
-  messages: Message[] = [
-    {
-      role: MessageRole.User,
-      message: 'Hi, I want to know about the COVID-19 vaccine.'
-    },
-    {
-      role: MessageRole.Assistant,
-      message:
-        'Sure! The COVID-19 vaccine helps protect you from the virus that causes COVID-19. Would you like to know about the different types of vaccines available?'
-    },
-    {
-      role: MessageRole.User,
-      message: 'Yes, please tell me more about them.'
-    },
-    {
-      role: MessageRole.Assistant,
-      message:
-        "There are several types of COVID-19 vaccines, including mRNA vaccines like Pfizer-BioNTech and Moderna, and vector vaccines like Johnson & Johnson's Janssen vaccine. Each has its own efficacy rates and dosing schedules.There are several types of COVID-19 vaccines, including mRNA vaccines like Pfizer-BioNTech and Moderna, and vector vaccines like Johnson & Johnson's Janssen vaccine. Each has its own efficacy rates and dosing schedules.There are several types of COVID-19 vaccines, including mRNA vaccines like Pfizer-BioNTech and Moderna, and vector vaccines like Johnson & Johnson's Janssen vaccine. Each has its own efficacy rates and dosing schedules.There are several types of COVID-19 vaccines, including mRNA vaccines like Pfizer-BioNTech and Moderna, and vector vaccines like Johnson & Johnson's Janssen vaccine. Each has its own efficacy rates and dosing schedules."
-    },
-    {
-      role: MessageRole.User,
-      message: 'How many doses do I need?'
-    },
-    {
-      role: MessageRole.Assistant,
-      message: 'Most mRNA vaccines require two doses, typically administered 3 to 4 weeks apart. The Johnson & Johnson vaccine requires only one dose.'
-    },
-    {
-      role: MessageRole.User,
-      message: 'What are the side effects?'
-    },
-    {
-      role: MessageRole.Assistant,
-      message:
-        'Common side effects include soreness at the injection site, fatigue, headache, muscle pain, chills, fever, and nausea. These usually go away within a few days.'
-    },
-    {
-      role: MessageRole.User,
-      message: 'Is it safe for children?'
-    },
-    {
-      role: MessageRole.Assistant,
-      message: "Yes, the vaccines are safe for children aged 5 and older. It's important to consult with a healthcare provider for specific recommendations."
-    },
-    {
-      role: MessageRole.User,
-      message: 'Where can I get vaccinated?'
-    },
-    {
-      role: MessageRole.Assistant,
-      message:
-        'You can get vaccinated at local health departments, pharmacies, and clinics. You can also visit the official health department website to find vaccination sites near you.'
-    },
-    {
-      role: MessageRole.User,
-      message: 'Thank you for the information!'
-    },
-    {
-      role: MessageRole.Assistant,
-      message: "You're welcome! If you have any more questions, feel free to ask."
-    }
-  ];
-
-  constructor(
-    private toastService: MessageService,
-    private endpointService: EndpointService
-  ) {}
+  suggestedQns: String[] = ['Can you help me book my Vaccination?', 'Please show me my Vaccination history'];
+  messages: Message[] = [];
+  constructor(private toastService: MessageService, private endpointService: EndpointService) {}
 
   loginForm: FormGroup = new FormGroup({
     username: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
@@ -159,6 +97,8 @@ export class VaccineIndexComponent {
             summary: 'Welcome!',
             detail: 'You have logged in'
           });
+          this.isSinpassLogin = false;
+          this.isLoggedIn = true;
         },
         error: error => {
           this.toastService.add({
@@ -236,4 +176,28 @@ export class VaccineIndexComponent {
     const timestamp = Date.now(); // Use timestamp for uniqueness
     return `user${timestamp}@example.com`;
   };
+
+  suggestedQn(question: string) {
+    // Add the selected question as a user message
+    this.messages.push({
+      role: MessageRole.User,
+      message: question
+    });
+
+    // Generate a dummy system response
+    const dummyResponse = 'Sure, please sign in to your Singpass';
+    this.messages.push({
+      role: MessageRole.Assistant,
+      message: dummyResponse
+    });
+
+    // Scroll to the bottom of the message container
+    setTimeout(() => {
+      this.scrollableTextContent.nativeElement.scrollTop = this.scrollableTextContent.nativeElement.scrollHeight;
+    }, 0);
+  }
+
+  SingpassLogin() {
+    this.isSinpassLogin = true;
+  }
 }
