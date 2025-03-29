@@ -171,31 +171,31 @@
           </div>
         </div>
       </div>
-      <div *ngIf="isLoggedIn">
-        <div class="tw-p-6">
-          <h2 class="tw-text-3xl tw-font-bold tw-mb-2">NG TIE BOON</h2>
+      <div *ngIf="isLoggedIn" class="tw-flex-1 tw-flex tw-flex-col tw-overflow-hidden">
+        <div class="tw-p-6 tw-flex-shrink-0">
+          <h2 class="tw-text-3xl tw-font-bold tw-mb-2">Johnny</h2>
           <div class="tw-mb-6">
             <p class="tw-text-gray-700"><span class="tw-font-medium">Enrolled: </span> <b>Sengkang Polyclinic</b></p>
             <p class="tw-text-gray-700"><span class="tw-font-medium">Address: </span> <b>544756</b></p>
           </div>
+        </div>
+        <div class="tw-overflow-y-auto tw-flex-1 tw-px-6">
           <div class="tw-bg-gray-100 tw-rounded-lg tw-p-6 tw-mb-6">
             <h3 class="tw-text-xl tw-font-bold tw-mb-6">Current Vaccination</h3>
-            <div class="tw-border-b tw-border-gray-300 tw-pb-4 tw-mb-4">
-              <div class="tw-flex tw-justify-between tw-items-center">
-                <span class="tw-font-medium">PPSV23</span>
-                <span class="tw-text-green-500 tw-font-medium">Vaccinated</span>
+            <div class="tw-overflow-y-auto">
+              @for(v of vaccinations; track vaccinations){
+              <div class="tw-border-b tw-border-gray-500 tw-pb-4 tw-mb-4 tw-max-w-md">
+                <div class="tw-flex tw-items-center tw-justify-between">
+                  <span class="tw-font-medium">{{ v }}</span>
+                  <span class="tw-text-green-500 tw-font-medium tw-mr-[150px]">Vaccinated</span>
+                </div>
               </div>
-            </div>
-            <div class="tw-border-b tw-border-gray-300 tw-pb-4 tw-mb-4">
-              <div class="tw-flex tw-justify-between tw-items-center">
-                <span class="tw-font-medium">Tdap</span>
-                <span class="tw-text-green-500 tw-font-medium">Vaccinated</span>
-              </div>
+              }
             </div>
           </div>
         </div>
       </div>
-      <div class="tw-flex tw-justify-end tw-font-bold tw-mt-auto">
+      <div class="tw-flex tw-justify-end tw-font-bold tw-mt-auto tw-p-6 tw-flex-shrink-0">
         <div class="tw-flex tw-justify-center tw-items-center">
           <div class="tw-bg-gradient-to-r tw-from-red-400 tw-via-pink-500 tw-to-purple-500 tw-rounded-full tw-px-8 tw-py-3 tw-w-full tw-max-w-md">
             <p class="tw-text-white tw-text-center tw-font-bold tw-text-2xl">Powered by AI</p>

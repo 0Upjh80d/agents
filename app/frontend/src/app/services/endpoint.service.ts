@@ -30,20 +30,25 @@ export class EndpointService {
   }
 
   signup(signup: Signup): Observable<any> {
-    const data: Signup = {
-      nric: signup.nric,
-      first_name: signup.first_name,
-      last_name: signup.last_name,
-      email: signup.email,
-      date_of_birth: signup.date_of_birth,
-      gender: signup.gender,
-      postal_code: signup.postal_code,
-      password: signup.password,
-      password_confirm: signup.password
-    };
-
     return this.httpClient
-      .post(`${this.baseUrl}/signup`, data, {
+      .post(`${this.baseUrl}/signup`, signup, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .pipe(
+        catchError(error => {
+          return throwError(() => new Error(error.error.detail));
+        })
+      );
+  }
+
+  dummyRecord() {
+    const data = {
+      text: 'dummyRecord'
+    };
+    return this.httpClient
+      .post(`${this.baseUrl}/dummy_record`, data, {
         headers: {
           'Content-Type': 'application/json'
         }

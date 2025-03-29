@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from routers import authentication, booking, chat, clinic, record, user, vaccine
+from routers import authentication, booking, chat, clinic, record, user, vaccine, dummy_record
 from starlette.middleware.cors import CORSMiddleware
 
 
@@ -29,6 +29,7 @@ def create_app():
     app.include_router(record.router)
     app.include_router(user.router)
     app.include_router(vaccine.router)
+    app.include_router(dummy_record.router)
     return app
 
 

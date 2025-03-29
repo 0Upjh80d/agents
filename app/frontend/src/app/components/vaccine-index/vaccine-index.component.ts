@@ -52,6 +52,7 @@ export class VaccineIndexComponent {
 
   suggestedQns: String[] = ['Can you help me book my Vaccination?', 'Please show me my Vaccination history'];
   messages: Message[] = [];
+  vaccinations: String[] = [];
   constructor(private toastService: MessageService, private endpointService: EndpointService) {}
 
   loginForm: FormGroup = new FormGroup({
@@ -99,6 +100,23 @@ export class VaccineIndexComponent {
           });
           this.isSinpassLogin = false;
           this.isLoggedIn = true;
+
+          this.endpointService.dummyRecord().subscribe({
+            next: response => {
+              let vaccineString = (response as any).text;
+
+              const regex: RegExp = /\s*([^,(]+)\s*(?:\([^)]+\))?/g;
+              let match: RegExpExecArray | null;
+
+              // Iterate through all matches and push them to the vaccinations array
+              while ((match = regex.exec(vaccineString)) !== null) {
+                const vaccineName = match[1].trim();
+                if (vaccineName) {
+                  this.vaccinations.push(vaccineName);
+                }
+              }
+            }
+          });
         },
         error: error => {
           this.toastService.add({
