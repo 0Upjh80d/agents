@@ -1,0 +1,9 @@
+.hyperlink ::ng-deep a {
+  color: blue; /* Set the desired link color */
+  text-decoration: underline; /* Optionally underline the links */
+}
+
+a:hover {
+  color: darkblue; /* Optional: Change color on hover */
+  text-decoration: none; /* Optional: Remove underline on hover */
+}
