@@ -1,0 +1,14 @@
+{
+  "pull_request": {
+    "head": {
+      "ref": "feature/xxx",
+      "sha": ""
+    },
+    "base": {
+      "ref": "staging"
+    }
+  },
+  "repository": {
+    "default_branch": "main"
+  }
+}
