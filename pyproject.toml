@@ -27,7 +27,6 @@ dev = [
     "db-sqlite3>=0.0.1",
     "faker>=37.0.0",
     "ipykernel>=6.29.5",
-    "nest-asyncio>=1.6.0",
     "pandas>=2.2.3",
 ]
 test = [
