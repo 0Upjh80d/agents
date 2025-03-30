@@ -29,6 +29,8 @@ _Example Git branching workflow with feature, staging, and main branches. New fe
 
 - `staging` — **Pre-Production/Test Branch**: The `staging` branch is our integration branch used for pre-production testing. New features and bug fixes are first merged here and deployed to a `staging` environment (if available) for QA and verification. This branch should always have the next intended release. Once code on `staging` is confirmed stable, it will be merged into `main`. Like `main`, we typically protect `staging` (changes come in via pull requests from `feature`/`bugfix` branches). This ensures everything in `staging` has been reviewed and tested.
 
+- `release/yyyy-mm-dd` — **Release Branches**: Release branches follow the naming convention `release/yyyy-mm-dd`, indicating the scheduled release date. These branches are created from `main` when preparing a stable set of changes for a planned release. Features and bug fixes intended for the current release are selectively cherry-picked from `staging` onto the release branch. Once a release branch is created, it is used to finalize testing, documentation, and minor fixes specific to that release. No major features or significant new developments should be introduced at this stage. After successful testing and approval, the release branch is merged back into `main`, tagged with a version number, and deployed to production. This approach clearly tracks releases, simplifies deployment processes, and allows parallel stabilization activities separate from ongoing development on `staging`.
+
 - `feature/xxx` — **Feature Branches**: Each new feature or enhancement should be developed in its own branch off of `staging` (or off a `dev` branch, if we use one; see below). Name the branch descriptively, e.g., `feature/login-page` or `feature/ai-scheduling-agent`. These branches are short-lived; once the feature is complete and tested locally, you will merge it into `staging` through a pull request. Feature branches help isolate development work until it's ready to be integrated.
 
 - `bugfix/xxx` — **Bug Fix Branches**: Non-critical bug fixes (issues found in the `staging` environment or during development) are addressed in `bugfix` branches. Branch off from `staging` for a bug that exists in the `staging` code (or `dev` if applicable). For example, `bugfix/appointment-date-validation`. After fixing the bug and testing, merge the `bugfix` branch back into `staging` via a pull request. This ensures the fix is included in the next release. (For critical bugs in production, see hotfix below.)
@@ -39,14 +41,15 @@ _Example Git branching workflow with feature, staging, and main branches. New fe
 
 **Summary of branch purposes**:
 
-| **Branch**    | **Purpose**                                                           |
-| ------------- | --------------------------------------------------------------------- |
-| `main`        | Stable production code; release-ready.                                |
-| `staging`     | Aggregate of completed features for the next release; testing ground. |
-| `dev`         | (If used) Active development integration; latest untested code.       |
-| `feature/xxx` | Individual new feature development.                                   |
-| `bugfix/xxx`  | Fixes for issues on staging (pre-release).                            |
-| `hotfix/xxx`  | Critical fixes on production code.                                    |
+| **Branch**           | **Purpose**                                                           |
+| -------------------- | --------------------------------------------------------------------- |
+| `main`               | Stable production code; release-ready.                                |
+| `staging`            | Aggregate of completed features for the next release; testing ground. |
+| `dev`                | (If used) Active development integration; latest untested code.       |
+| `release/yyyy-mm-dd` | Cherry-picked features for the next release (pre-release).            |
+| `feature/xxx`        | Individual new feature development.                                   |
+| `bugfix/xxx`         | Fixes for issues on staging (pre-release).                            |
+| `hotfix/xxx`         | Critical fixes on production code.                                    |
 
 ### Release Strategy <a id="release-strategy"></a>
 
