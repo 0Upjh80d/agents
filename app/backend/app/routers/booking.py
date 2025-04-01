@@ -1,10 +1,12 @@
+from collections import defaultdict
 from datetime import date, datetime, time
 
 from auth.oauth2 import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
+from geopy.distance import geodesic
 from models.database import get_db
-from models.models import BookingSlot, Clinic, User, Vaccine, VaccineRecord
+from models.models import Address, BookingSlot, Clinic, User, Vaccine, VaccineRecord
 from schemas.booking import (
     AvailableSlotResponse,
     BookingSlotResponse,
@@ -32,18 +34,35 @@ async def get_available_booking_slots(
     end_datetime: date | datetime | None = None,
     polyclinic_limit: int = 3,
     timeslot_limit: int = 1,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Step 1: Retrieve user address
+    user_address_stmt = (
+        select(Address.longitude, Address.latitude)
+        .join(User.address)
+        .where(User.id == current_user.id)
+    )
+
+    result = await db.execute(user_address_stmt)
+    user_longitude, user_latitude = result.first()
+
+    if not (user_latitude and user_longitude):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User address not found.",
+        )
+
     # Convert date objects to datetime if needed
     if isinstance(start_datetime, date) and not isinstance(start_datetime, datetime):
         start_datetime = datetime.combine(start_datetime, time.min)
     if isinstance(end_datetime, date) and not isinstance(end_datetime, datetime):
         end_datetime = datetime.combine(end_datetime, time.max)
 
-    # Step 1: Create a query to exclude already-booked slots
+    # Step 2: Create a query to exclude already-booked slots
     booked_slots_subquery = select(VaccineRecord.booking_slot_id)
 
-    # Step 2: Select booking slots NOT in VaccineRecord table
+    # Step 3: Select booking slots NOT in VaccineRecord table
     stmt = (
         select(BookingSlot)
         .join(BookingSlot.vaccine)
@@ -55,7 +74,7 @@ async def get_available_booking_slots(
         )
     )
 
-    # Step 3: Optional filtering by datetime range if provided
+    # Step 4: Optional filtering by datetime range if provided
     if start_datetime and end_datetime:
         stmt = stmt.where(BookingSlot.datetime.between(start_datetime, end_datetime))
     elif start_datetime:
@@ -63,11 +82,11 @@ async def get_available_booking_slots(
     elif end_datetime:
         stmt = stmt.where(BookingSlot.datetime <= end_datetime)
 
-    # Step 4: Optional filter by polyclinic_name if provided
+    # Step 5: Optional filter by polyclinic_name if provided
     if polyclinic_name:
         stmt = stmt.where(func.lower(Clinic.name).like(f"%{polyclinic_name.lower()}%"))
 
-    # Step 4: Order and return results
+    # Step 6: Order and return results
     stmt = stmt.order_by(BookingSlot.datetime.asc())
 
     result = await db.execute(stmt)
@@ -79,26 +98,41 @@ async def get_available_booking_slots(
             detail=f"No available slots for {vaccine_name}.",
         )
 
-    # Step 3: Group results by polyclinic (up to polyclinic_limit), each with up to timeslot_limit slots
-    from collections import defaultdict
+    clinic_distances = {}
+    polyclinic_slots = defaultdict(list)
+    unique_clinics = {}
 
-    polyclinic_slot_count = defaultdict(int)
-    final_slots = []
-
+    # Step 7: Group slots by polyclinic_id
     for slot in slots:
-        # If number of recommended polyclinics exceeds the limit and polyclinic already exists inside,
-        # we should still proceed with the logic to check if the recommended number of timeslots
-        # for the polyclinic have exceeded the limit or not
-        if (
-            len(polyclinic_slot_count) >= polyclinic_limit
-            and slot.polyclinic_id not in polyclinic_slot_count
-        ):
-            continue  # skip if we have reached the polyclinic limit and this polyclinic isn't counted yet
+        polyclinic_slots[slot.polyclinic_id].append(slot)
+        if slot.polyclinic_id not in unique_clinics:
+            unique_clinics[slot.polyclinic_id] = slot.polyclinic
 
-        # Check if recommended timeslots exceeded the limit for the recommended polyclinic
-        if polyclinic_slot_count[slot.polyclinic_id] < timeslot_limit:
-            final_slots.append(slot)
-            polyclinic_slot_count[slot.polyclinic_id] += 1
+    # Step 8: Compute distance once per unique clinic
+    for clinic_id, clinic in unique_clinics.items():
+        clinic_location = (clinic.address.latitude, clinic.address.longitude)
+        clinic_distances[clinic_id] = geodesic(
+            (user_latitude, user_longitude), clinic_location
+        ).km
+
+    # Step 9: Sort clinics by distance
+    sorted_clinics = sorted(
+        unique_clinics.keys(), key=lambda cid: clinic_distances[cid]
+    )
+
+    final_slots = []
+    selected_clinics = 0
+
+    for clinic_id in sorted_clinics:
+        if selected_clinics >= polyclinic_limit:
+            break  # Stop once we've reached the polyclinic limit
+
+        clinic_timeslots = polyclinic_slots[clinic_id][
+            :timeslot_limit
+        ]  # Takes the latest n timeslot for the clinic
+        final_slots.extend(clinic_timeslots)
+
+        selected_clinics += 1
 
     return final_slots
 
