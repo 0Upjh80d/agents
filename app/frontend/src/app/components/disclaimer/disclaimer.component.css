@@ -1,0 +1,81 @@
+.disclaimer-list {
+  @apply tw-list-decimal tw-pl-4 tw-space-y-2 tw-text-gray-700 tw-text-sm;
+}
+
+.disclaimer-button-container {
+  @apply tw-mt-4 tw-flex tw-justify-center;
+}
+
+.disclaimer-button {
+  @apply tw-bg-emerald-600 tw-text-white tw-px-4 tw-py-2 tw-rounded;
+  @apply hover:tw-bg-emerald-700 hover:tw-shadow-lg;
+  @apply focus:tw-outline-none;
+}
+
+::ng-deep .custom-disclaimer-dialog .p-dialog-header {
+  text-align: center;
+  color: #147752;
+  @apply tw-mb-3 tw-font-bold;
+}
+
+.red-disclaimer-text {
+  text-align: center;
+  color: #dc2626; /* tw-text-red-600 */
+  font-weight: 500; /* tw-font-medium */
+  font-style: italic;
+  font-size: 10px;
+  padding: 4px 2px;
+  background-color: #fef6ea;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.beta-text {
+  color: #dc2626; /* tw-text-red-600 */
+  font-weight: 500; /* tw-font-medium */
+  font-style: italic;
+  font-size: 12px;
+  padding: 4px 2px;
+  display: flex;
+  justify-content: center;
+  gap: 50px 10px;
+}
+
+.icon-container {
+  display: flex;
+  align-items: center;
+}
+
+.disclaimer-link {
+  color: #dc2626; /* tw-text-red-500 */
+  text-decoration: underline;
+}
+
+.disclaimer-link:hover {
+  color: #b91c1c; /* tw-text-red-700 */
+  cursor: pointer;
+}
+
+li {
+  word-wrap: break-word;
+}
+
+/* Force scrollbar visibility on iOS */
+::ng-deep .p-dialog .p-dialog-content::-webkit-scrollbar {
+  -webkit-appearance: none;
+  display: block !important; /* Ensure scrollbar always appears */
+  width: 5px;
+}
+
+::ng-deep .p-dialog .p-dialog-content::-webkit-scrollbar-thumb {
+  background: rgba(64, 64, 64, 0.567); /* Scrollbar color */
+  border-radius: 4px;
+}
+
+/* Extra fix for iOS to prevent disappearing scrollbar */
+@supports (-webkit-touch-callout: none) {
+  ::ng-deep .p-dialog .p-dialog-content {
+    scrollbar-gutter: stable both-edges;
+  }
+}

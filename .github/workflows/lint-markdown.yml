@@ -45,8 +45,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Run Markdownlint
-        uses: articulate/actions-markdownlint@v1
+        uses: DavidAnson/markdownlint-cli2-action@v19
         with:
           config: .markdownlint.jsonc
-          files: "**/*.md"
-          ignore: data/
+          globs: |
+            **/*.md
+            !data/
