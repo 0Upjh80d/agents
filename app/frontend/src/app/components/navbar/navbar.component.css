@@ -1,0 +1,60 @@
+.firstLoad {
+  @apply tw-ml-[-320px] tw-max-h-0 tw-z-10 tw-fixed tw-top-0 tw-left-0 tw-max-w-[320px];
+}
+
+.open {
+  @apply tw-transition-[margin-left] tw-duration-[1s] tw-ease-in-out tw-z-10 tw-fixed tw-top-0 tw-left-0 tw-ml-0;
+}
+
+.close {
+  @apply tw-ml-[-320px] tw-max-h-0 tw-transition-[margin-left] tw-duration-1000 tw-z-10 tw-fixed tw-top-0 tw-left-0 tw-max-w-[320px];
+}
+
+.custom-overlay {
+  @apply tw-fixed tw-top-0 tw-left-0 tw-w-full tw-h-full tw-bg-stone-950/50 tw-z-[1000];
+}
+
+.logo {
+  max-width: 70px; /* Adjust the max-width as needed */
+  height: auto;
+}
+
+.sidebar-button {
+  background-color: #e6f7f1;
+  border: none;
+  padding: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b7987;
+}
+
+.navbar {
+  border-bottom: 0.5px solid rgba(48, 81, 91, 0.16);
+}
+
+.beta-tag {
+  background-color: #c0c0c0;
+  font-family: "Inter", sans-serif;
+  color: #ffffff;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center; /* Aligns everything vertically */
+  gap: 1px; /* Adds spacing between elements */
+}
+
+.custom-text-ai {
+  font-family: "Inter", sans-serif;
+  color: #147752;
+  font-weight: 600;
+  margin-left: 2px; /* Moves AI closer to logo */
+  margin-right: 5px; /* Adds space before Beta */
+}
