@@ -37,21 +37,6 @@ async def get_available_booking_slots(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    # Step 1: Retrieve user address
-    user_address_stmt = (
-        select(Address.longitude, Address.latitude)
-        .join(User.address)
-        .where(User.id == current_user.id)
-    )
-
-    result = await db.execute(user_address_stmt)
-    user_longitude, user_latitude = result.first()
-
-    if not (user_latitude and user_longitude):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User address not found.",
-        )
 
     # Convert date objects to datetime if needed
     if isinstance(start_datetime, date) and not isinstance(start_datetime, datetime):
@@ -59,10 +44,10 @@ async def get_available_booking_slots(
     if isinstance(end_datetime, date) and not isinstance(end_datetime, datetime):
         end_datetime = datetime.combine(end_datetime, time.max)
 
-    # Step 2: Create a query to exclude already-booked slots
+    # Step 1: Create a query to exclude already-booked slots
     booked_slots_subquery = select(VaccineRecord.booking_slot_id)
 
-    # Step 3: Select booking slots NOT in VaccineRecord table
+    # Step 2: Select booking slots NOT in VaccineRecord table
     stmt = (
         select(BookingSlot)
         .join(BookingSlot.vaccine)
@@ -74,7 +59,7 @@ async def get_available_booking_slots(
         )
     )
 
-    # Step 4: Optional filtering by datetime range if provided
+    # Step 3: Optional filtering by datetime range if provided
     if start_datetime and end_datetime:
         stmt = stmt.where(BookingSlot.datetime.between(start_datetime, end_datetime))
     elif start_datetime:
@@ -82,11 +67,11 @@ async def get_available_booking_slots(
     elif end_datetime:
         stmt = stmt.where(BookingSlot.datetime <= end_datetime)
 
-    # Step 5: Optional filter by polyclinic_name if provided
+    # Step 4: Optional filter by polyclinic_name if provided
     if polyclinic_name:
         stmt = stmt.where(func.lower(Clinic.name).like(f"%{polyclinic_name.lower()}%"))
 
-    # Step 6: Order and return results
+    # Step 5: Order and return results
     stmt = stmt.order_by(BookingSlot.datetime.asc())
 
     result = await db.execute(stmt)
@@ -98,43 +83,61 @@ async def get_available_booking_slots(
             detail=f"No available slots for {vaccine_name}.",
         )
 
-    clinic_distances = {}
-    polyclinic_slots = defaultdict(list)
-    unique_clinics = {}
-
-    # Step 7: Group slots by polyclinic_id
-    for slot in slots:
-        polyclinic_slots[slot.polyclinic_id].append(slot)
-        if slot.polyclinic_id not in unique_clinics:
-            unique_clinics[slot.polyclinic_id] = slot.polyclinic
-
-    # Step 8: Compute distance once per unique clinic
-    for clinic_id, clinic in unique_clinics.items():
-        clinic_location = (clinic.address.latitude, clinic.address.longitude)
-        clinic_distances[clinic_id] = geodesic(
-            (user_latitude, user_longitude), clinic_location
-        ).km
-
-    # Step 9: Sort clinics by distance
-    sorted_clinics = sorted(
-        unique_clinics.keys(), key=lambda cid: clinic_distances[cid]
+    # Step 6: Retrieve user address
+    user_address_stmt = (
+        select(Address.longitude, Address.latitude)
+        .join(User.address)
+        .where(User.id == current_user.id)
     )
 
-    final_slots = []
-    selected_clinics = 0
+    result = await db.execute(user_address_stmt)
+    user_address = result.first()
 
-    for clinic_id in sorted_clinics:
-        if selected_clinics >= polyclinic_limit:
-            break  # Stop once we've reached the polyclinic limit
+    if user_address:
+        user_longitude, user_latitude = user_address
 
-        clinic_timeslots = polyclinic_slots[clinic_id][
-            :timeslot_limit
-        ]  # Takes the latest n timeslot for the clinic
-        final_slots.extend(clinic_timeslots)
+        # Step 7: Compute distance once per unique polyclinic
+        unique_polyclinics = {slot.polyclinic_id: slot.polyclinic for slot in slots}
+        clinic_distances = {
+            polyclinic_id: geodesic(
+                (user_latitude, user_longitude),
+                (polyclinic.address.latitude, polyclinic.address.longitude),
+            ).km
+            for polyclinic_id, polyclinic in unique_polyclinics.items()
+        }
 
-        selected_clinics += 1
+        # Step 8: Sort polyclinics by distance
+        sorted_polyclinics = sorted(unique_polyclinics, key=clinic_distances.get)
+        polyclinic_slots = defaultdict(list)
+        for slot in slots:
+            polyclinic_slots[slot.polyclinic_id].append(slot)
 
-    return final_slots
+        final_slots = []
+        for polyclinic_id in sorted_polyclinics[:polyclinic_limit]:
+            final_slots.extend(polyclinic_slots[polyclinic_id][:timeslot_limit])
+
+        return final_slots
+
+    else:
+        polyclinic_slot_count = defaultdict(int)
+        final_slots = []
+
+        for slot in slots:
+            # If number of recommended polyclinics exceeds the limit and polyclinic already exists inside,
+            # we should still proceed with the logic to check if the recommended number of timeslots
+            # for the polyclinic have exceeded the limit or not
+            if (
+                len(polyclinic_slot_count) >= polyclinic_limit
+                and slot.polyclinic_id not in polyclinic_slot_count
+            ):
+                continue  # skip if we have reached the polyclinic limit and this polyclinic isn't counted yet
+
+            # Check if recommended timeslots exceeded the limit for the recommended polyclinic
+            if polyclinic_slot_count[slot.polyclinic_id] < timeslot_limit:
+                final_slots.append(slot)
+                polyclinic_slot_count[slot.polyclinic_id] += 1
+
+        return final_slots
 
 
 @router.get(
