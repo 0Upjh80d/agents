@@ -9,7 +9,8 @@ from dotenv import load_dotenv, set_key
 #     schedule_vaccination_slot,
 #     cancel_booking,
 #     get_vaccination_history,
-#     get_user_details
+#     get_user_details,
+# get_vaccine_recommendations
 # )
 
 """
@@ -21,7 +22,7 @@ Development functions
 
 # for development, create a new user and login, save access token to environment as 'AUTH_TOKEN'
 def register_and_login_user(user_data: dict):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
 
     reg_url = f"{BACKEND_DB_URL}/signup"
@@ -102,7 +103,7 @@ Authentication functions
 def login_with_email_password_and_set_access_token(
     email: str, password: str, verbose: bool = False
 ):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
     CLIENT_ID = os.getenv("CLIENT_ID", None)
     CLIENT_SECRET = os.getenv("CLIENT_SECRET", None)
@@ -147,7 +148,7 @@ def get_available_booking_slots(
     timeslot_limit: int = None,
     verbose: bool = False,
 ):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
     auth_token = os.getenv("AUTH_TOKEN")
 
@@ -171,7 +172,20 @@ def get_available_booking_slots(
     if response.status_code == 200:
         if verbose:
             print("Available slots retrieved successfully.")
-        return response.json()
+        slots = response.json()
+
+        # filter unused key value pairs
+        filtered_slots = []
+        for slot in slots:
+            filtered_slot = {
+                "booking_slot_id": slot["id"],
+                "datetime": slot["datetime"],
+                "polyclinic_name": slot["polyclinic"]["name"],
+                "poluclinic_id": slot["polyclinic"]["id"],
+                "vaccine_id": slot["vaccine_id"],
+            }
+            filtered_slots.append(filtered_slot)
+        return filtered_slots
     else:
         if verbose:
             print("Failed to fetch available slots:", response.status_code)
@@ -181,7 +195,7 @@ def get_available_booking_slots(
 ### GET /bookings/{id}
 # description: get booking details by booking_id
 def get_booking_by_id(booking_id: str, verbose: bool = False):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
     auth_token = os.getenv("AUTH_TOKEN")
 
@@ -207,7 +221,7 @@ def get_booking_by_id(booking_id: str, verbose: bool = False):
 ### POST /bookings/schedule
 # remark: booking_slot_id can be obtained from get_available_booking_slots["slot_index"]["id"]
 def schedule_vaccination_slot(booking_slot_id: str, verbose: bool = False):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
     auth_token = os.getenv("AUTH_TOKEN")
 
@@ -241,7 +255,7 @@ def schedule_vaccination_slot(booking_slot_id: str, verbose: bool = False):
 # remark: assumed logged in
 # description: cancel a booking by record_id, i.e. primary key in vaccine_records table
 def cancel_booking(record_id: str, verbose: bool = False):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
     auth_token = os.getenv("AUTH_TOKEN")
 
@@ -284,7 +298,7 @@ Record functions (vaccination)
 # login needed, i.e. must have auth_token in environment
 # description: get vaccination history for currently login user
 def get_vaccination_history(verbose: bool = False):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
     auth_token = os.getenv("AUTH_TOKEN")
 
@@ -307,7 +321,21 @@ def get_vaccination_history(verbose: bool = False):
     if response.status_code == 200:
         if verbose:
             print("Vaccination history retrieved successfully!")
-        return response.json()
+        slots = response.json()
+        # filter unused key value pairs
+        filtered_slots = []
+        for slot in slots:
+            booking_slot_id = slot["booking_slot_id"]
+            vaccine_name = get_vaccination_name_by_booking_id(booking_slot_id)
+
+            filtered_slot = {
+                "vaccination_booking_id": slot["id"],
+                "status": slot["status"],
+                "booking_slot_id": booking_slot_id,
+                "vaccine_name": vaccine_name,
+            }
+            filtered_slots.append(filtered_slot)
+        return filtered_slots
     elif (
         response.status_code == 404
         and response.json().get("detail") == "No records found."
@@ -321,6 +349,7 @@ def get_vaccination_history(verbose: bool = False):
                 f"Failed to retrieve vaccination history. Status code: {response.status_code}"
             )
             print(response.json())
+        return response.json()
 
 
 """
@@ -334,7 +363,7 @@ User functions
 # remark: login needed, i.e. must have auth_token in environment
 # description: get user details of the currently logged in user
 def get_user_details(verbose: bool = False):
-    load_dotenv(override=True)
+    load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
     auth_token = os.getenv("AUTH_TOKEN")
 
@@ -378,13 +407,86 @@ Vaccine functions
 ===================================================
 """
 
+
 ### GET /vaccines/recommendations
+# Remark: the user is assumed to be logged in already
+def get_vaccine_recommendations(verbose: bool = False):
+    load_dotenv(dotenv_path="../../.env", override=True)
+    BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
+    auth_token = os.getenv("AUTH_TOKEN")
+
+    if not auth_token and verbose:
+        print("Access token not found. Please register and log in first.")
+        return
+
+    recommendations_url = f"{BACKEND_DB_URL}/vaccines/recommendations"
+
+    headers = {"Authorization": f"Bearer {auth_token}", "Accept": "application/json"}
+
+    response = requests.get(recommendations_url, headers=headers)
+
+    if response.status_code == 200:
+        if verbose:
+            print("Vaccine recommendations retrieved successfully!")
+        return response.json()
+    else:
+        if verbose:
+            print(
+                f"Failed to retrieve vaccine recommendations. Status code: {response.status_code}"
+            )
+        return response.json()
+
 
 """
 ===================================================
 default functions
 ===================================================
 """
+
+"""
+=====
+transfer functions
+=====
+"""
+
+vaccine_records_topic_type = "VaccineRecordsAgent"
+vaccine_recommendation_topic_type = "VaccineRecommenderAgent"
+appointment_topic_type = "AppointmentAgent"
+triage_agent_topic_type = "TriageAgent"
+
+
+def transfer_to_vaccine_records_agent() -> str:
+    return vaccine_records_topic_type
+
+
+def transfer_to_recommender_agent() -> str:
+    return vaccine_recommendation_topic_type
+
+
+def transfer_to_appointment_agent() -> str:
+    return appointment_topic_type
+
+
+def transfer_back_to_triage() -> str:
+    return triage_agent_topic_type
+
+
+"""
+=====
+Helper functions
+=====
+"""
+
+
+def get_vaccination_name_by_booking_id(
+    booking_slot_id: str, verbose: bool = False
+) -> str | None:
+    res_booking = get_booking_by_id(booking_slot_id, verbose)
+    if not res_booking.get("details", None):
+        vaccination_type = res_booking["vaccine"]["name"]
+        return vaccination_type
+    else:
+        return None
 
 
 # Test the functions

@@ -9,8 +9,13 @@ from agent_tools import (
     get_booking_by_id,
     get_user_details,
     get_vaccination_history,
+    get_vaccine_recommendations,
     login_with_email_password_and_set_access_token,
     schedule_vaccination_slot,
+    transfer_back_to_triage,
+    transfer_to_appointment_agent,
+    transfer_to_recommender_agent,
+    transfer_to_vaccine_records_agent,
 )
 from autogen_core.tools import FunctionTool
 
@@ -20,7 +25,12 @@ from autogen_core.tools import FunctionTool
 #     schedule_vaccination_slot_tool,
 #     cancel_booking_tool,
 #     get_vaccination_history_tool,
-#     get_user_details_tool
+#     get_user_details_tool,
+#     get_vaccine_recommendations_tool,
+#     transfer_back_to_triage_tool,
+#     transfer_to_appointment_agent_tool,
+#     transfer_to_recommender_agent_tool,
+#     transfer_to_vaccine_records_agent_tool
 # )
 """
 ===================================================
@@ -134,15 +144,43 @@ get_user_details_tool = FunctionTool(
 Vaccine functions
 ===================================================
 """
-
+get_vaccine_recommendations
 ### GET /vaccines/recommendations
-
+get_vaccine_recommendations_tool = FunctionTool(
+    get_vaccine_recommendations,
+    description=(
+        "Retrieves the recommendation vaccine for the current logged in user. "
+        "The recommendation is based on the user's details."
+    ),
+)
 """
 ===================================================
 default functions
 ===================================================
 """
 
+"""
+=======
+transfer tool
+=======
+"""
+
+transfer_to_vaccine_records_agent_tool = FunctionTool(
+    transfer_to_vaccine_records_agent,
+    description="Use for retrieval of vaccination records history.",
+)
+transfer_to_recommender_agent_tool = FunctionTool(
+    transfer_to_recommender_agent,
+    description="Use for recommendation of vaccinations for user based on user's vaccination history, age and gender.",
+)
+transfer_to_appointment_agent_tool = FunctionTool(
+    transfer_to_appointment_agent,
+    description="Use for vaccination-related appointments enquiry, booking, cancellation and rescheduling.",
+)
+transfer_back_to_triage_tool = FunctionTool(
+    transfer_back_to_triage,
+    description="Call this if the user brings up a topic outside of your purview.",
+)
 
 if __name__ == "__main__":
     # test the functions

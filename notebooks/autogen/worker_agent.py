@@ -2,6 +2,19 @@ import json
 import pprint
 from typing import List, Tuple
 
+from agent_tools import (
+    get_user_details,
+)
+from agent_tools_wrapper import (
+    get_vaccination_history_tool,
+    get_vaccine_recommendations_tool,
+    schedule_vaccination_slot_tool,
+    transfer_back_to_triage_tool,
+    transfer_to_appointment_agent_tool,
+    transfer_to_recommender_agent_tool,
+    transfer_to_vaccine_records_agent_tool,
+)
+
 # testing openai connection
 from autogen_core import (
     FunctionCall,
@@ -18,98 +31,28 @@ from autogen_core.models import (
     FunctionExecutionResultMessage,
     SystemMessage,
 )
-from autogen_core.tools import FunctionTool, Tool
+from autogen_core.tools import Tool
 
 # Message types
 from message_type import AgentResponse, UserTask
+from pydantic import BaseModel
+
+
+class UserDetails(BaseModel):
+    address: str
+    created_at: str
+    date_of_birth: str
+    email: str
+    enrolled_clinic: str
+    first_name: str
+    gender: str
+    last_name: str
+    nric: str
+    updated_at: str
+
 
 pp = pprint.PrettyPrinter(indent=4)
 
-
-def fetch_vaccination_history():
-    return "Temp: You have received the following vaccinations: Influenza, Hepatitis A, Hepatitis B, Tetanus, and HPV, but not Covid-19"
-
-
-def fetch_user_profile():
-    return "Temp: Your age is 20, gender male"
-
-
-def recommend_vaccines():
-    return "Temp: I recommend that you get the COVID-19 booster shot."
-
-
-def check_available_slots():
-    return "Temp: There is no available slots at the moment at Clementi Polyclinic. \n\
-        But there is available slots for Covid-19 vaccination at Bukit Batok Polyclinic on 10 March 2025, 3:00pm and 4:00pm."
-
-
-def book_appointment():
-    return "Temp: Your appointment has been booked."
-
-
-fetch_vaccination_history_tool = FunctionTool(
-    fetch_vaccination_history,
-    description="Use to retrieve user's vaccination history records based on user id.",
-)
-fetch_user_profile_tool = FunctionTool(
-    fetch_user_profile,
-    description="Use to retrieve user profile information such as gender and date of birth based on user id.",
-)
-recommend_vaccines_tool = FunctionTool(
-    recommend_vaccines,
-    description="Provide personalised vaccine recommendations based on user's vaccination history, age and gender.",
-)
-check_slots_tool = FunctionTool(
-    check_available_slots,
-    description="Check for available vaccination appointment slots based on vaccine name, polyclinic name and date.",
-)
-book_appointment_tool = FunctionTool(
-    book_appointment,
-    description="User to book, cancel or reschedule a vaccination appointment.",
-)
-
-
-def transfer_to_vaccine_records_agent() -> str:
-    return vaccine_records_topic_type
-
-
-def transfer_to_recommender_agent() -> str:
-    return vaccine_recommendation_topic_type
-
-
-def transfer_to_appointment_agent() -> str:
-    return appointment_topic_type
-
-
-def transfer_back_to_triage() -> str:
-    return triage_agent_topic_type
-
-
-def transfer_to_general_query_agent() -> str:
-    return
-
-
-transfer_to_general_query_agent_tool = FunctionTool(
-    transfer_to_general_query_agent,
-    description="Use for general queries.",
-)
-
-transfer_to_vaccine_records_agent_tool = FunctionTool(
-    transfer_to_vaccine_records_agent,
-    description="Use for retrieval of vaccination records history.",
-)
-transfer_to_recommender_agent_tool = FunctionTool(
-    transfer_to_recommender_agent,
-    description="Use for recommendation of vaccinations for user based on user's vaccination history, age and gender.",
-)
-transfer_to_appointment_agent_tool = FunctionTool(
-    transfer_to_appointment_agent,
-    description="Use for vaccination-related appointments enquiry, booking, cancellation and rescheduling.",
-)
-transfer_back_to_triage_tool = FunctionTool(
-    transfer_back_to_triage,
-    description="Call this if the user brings up a topic outside of your purview.",
-)
 
 # These tools can be passed to an agent system to be executed or used by other agents.
 # description parameter provides context for how the tool should be used.
@@ -133,6 +76,7 @@ class AIAgent(RoutedAgent):
         agent_topic_type: str,
         user_topic_type: str,
         access_token: str = None,
+        user_details: UserDetails = None,
     ) -> None:
         super().__init__(description)
         self._system_message = system_message
@@ -143,12 +87,26 @@ class AIAgent(RoutedAgent):
         self._delegate_tool_schema = [tool.schema for tool in delegate_tools]
         self._agent_topic_type = agent_topic_type
         self._user_topic_type = user_topic_type
+        self._user_details = user_details
+        self._user_detail_message = None
 
     @message_handler
     async def handle_task(self, message: UserTask, ctx: MessageContext) -> None:
+        # retrieve user details
+        if not self._user_detail_message:
+            self._user_details = get_user_details()
+            message_context = "Current logged in user's detail: " + str(
+                get_user_details()
+            )
+            self._user_detail_message = AssistantMessage(
+                content=message_context, source=self.id.type
+            )
+
         # Send the task to the LLM.
         llm_result = await self._model_client.create(
-            messages=[self._system_message] + message.context,
+            messages=[self._system_message]
+            + [self._user_detail_message]
+            + message.context,
             tools=self._tool_schema + self._delegate_tool_schema,
             cancellation_token=ctx.cancellation_token,
         )
@@ -170,10 +128,8 @@ class AIAgent(RoutedAgent):
         ):
             tool_call_results: List[FunctionExecutionResult] = []
             delegate_targets: List[Tuple[str, UserTask]] = []
-            print("x" * 40, "START A NEW ITERATION IN WHILE ", "x" * 40, flush=True)
             # Process each function call.
             for call in llm_result.content:
-                print("o" * 40, "each call in llm_result", "o" * 40, flush=True)
                 arguments = json.loads(call.arguments)
 
                 if call.name in self._tools:
@@ -233,6 +189,9 @@ class AIAgent(RoutedAgent):
                         task, topic_id=TopicId(topic_type, source=self.id.key)
                     )
 
+                    # experiment: can only delegate to one agent, and no tool can be used after delegation
+                    return
+
             if len(tool_call_results) > 0:
                 print(
                     f"{'-'*80}\n{self.id.type}:\ntool call result: {tool_call_results}",
@@ -259,6 +218,7 @@ class AIAgent(RoutedAgent):
             else:
                 # The task has been delegated, so we are done.
                 return
+
         # The task has been completed, publish the final result.)
         assert isinstance(llm_result.content, str)
         message.context.append(
@@ -276,9 +236,10 @@ async def register_triage_agent(runtime, autogen_openai_client):
     triage_agent_prompt = """
     You are an intelligent triage assistant for a vaccination enquiry and booking system. Your goal is to efficiently guide users by gathering key details and directing them to the appropriate service.
     Start by introducing yourself briefly. Ask clear, natural, and relevant questions to collect necessary information without overwhelming the user. Be polite, concise, and proactive.
-    Gather information to direct the customer to the right agent.
+    Direct the customer to the right agent when the user asks about vaccination recommendation and vaccination appointment booking.
+    Remember, you should delegate only one agent to take up the next task, the agent will pass to subsequent agent based on its decision, and possibly come back to you.
+
     If the user say hi, tell them what you can provide, and ask them how you can help them today.
-    If the user requests a vaccination appointment but does not specify a preferred date or location or vaccine name, ask them to provide the missing details before proceeding.
     If the request is unclear, politely ask for more details before routing them.
     """
 
@@ -329,7 +290,7 @@ async def register_vaccine_records_agent(runtime, autogen_openai_client):
             ),
             model_client=autogen_openai_client,
             tools=[
-                fetch_vaccination_history_tool
+                get_vaccination_history_tool
             ],  # agent can execute orders when the user agrees to buy.
             delegate_tools=[
                 transfer_back_to_triage_tool,
@@ -357,14 +318,16 @@ async def register_vaccine_recommender_agent(runtime, autogen_openai_client):
             description="An agent responsible for recommending vaccines based on user vaccination history, age, and gender.",
             system_message=SystemMessage(
                 content="You are responsible for providing personalized vaccine recommendations."
-                "Given a user's vaccination history, age, and gender, suggest appropriate vaccines."
+                "Use get_vaccine_recommendations_tool to get vaccinations suitable for the user based on its profile."
+                "Use get_vaccination_history_tool to check the vaccination history of the user. The return from get_vaccination_history_tool are "
                 "Exclude vaccines the user has already received. Provide a brief purpose for each recommended vaccine."
+                "The backend will handle the profile retrieval, you can just safely call the function without asking any information from the user."
             ),
             model_client=autogen_openai_client,
             tools=[
-                fetch_vaccination_history_tool,
-                fetch_user_profile_tool,
-                recommend_vaccines_tool,
+                get_vaccination_history_tool,
+                get_vaccine_recommendations_tool,
+                # recommend_vaccines_tool,
             ],  # agent can execute orders when the user agrees to buy.
             delegate_tools=[
                 transfer_back_to_triage_tool,
@@ -395,10 +358,87 @@ async def register_appointment_agent(runtime, autogen_openai_client):
                 "You help users check available slots, book new appointments, reschedule existing ones, or cancel appointments."
                 "Ensure all necessary information is provided, such as vaccine name, polyclinic location, and preferred date."
                 "If any information is missing, request clarification before proceeding."
+                """
+                Follow the flow strictly and interactively guide the user to book a slot.
+                You already have access to the user’s profile including their enrolled_clinic, so you don’t need to retrieve user details again.
+                Here's how you operate:
+
+                ---
+
+                #### 🏥 Clinic Enrollment Confirmation
+                - Begin by asking:
+                > *Hi! You're enrolled at **{enrolled_clinic.name}**. Would you like me to check for available vaccination slots there?*
+
+                - If **Yes**: proceed to vaccine selection.
+                - If **No**:
+                - Ask:
+                    > *Would you like me to look at other Polyclinics for available slots instead?*
+                - If **No**:
+                    > *Alright, I'm sorry I couldn’t help this time. Let me know if there’s anything else I can assist with.*
+                - If **Yes**: proceed with `polyclinic_name` omitted in slot lookup.
+
+                ---
+
+                #### 💉 Vaccine Selection
+                - If `vaccine_name` is not yet provided, ask:
+                > *Which vaccine are you interested in?*
+                    (available vaccination type list: ['Influenza (INF)', 'Pneumococcal Conjugate (PCV13)', 'Human Papillomavirus (HPV)', 'Tetanus, Diphtheria, Pertussis Tdap)', 'Hepatitis B (HepB)', 'Measles, Mumps, Rubella (MMR)', 'Varicella (VAR)'] )
+
+                - Once selected, proceed to fetch available slots.
+
+                ---
+
+                #### 📅 Fetch Available Slots
+                - Use tool:
+                ```
+                get_available_booking_slots_tool()
+                ```
+                - Parameters:
+                    - `vaccine_name` (required, You have to convert the name in user's reply to the verbatim name from the available vaccination type list.)
+                    - `polyclinic_name = enrolled_clinic.name`
+
+                ---
+
+                #### 🗓️ Display Slot Options
+                - From the JSON response, display:
+                > *Here are the available slots for **{vaccine_name}** at **{enrolled_clinic.name}**.*
+                > *Please select a slot you'd like to book:*
+                    - Slot 1 (Date, Time)
+                    - Slot 2 (Date, Time)
+                    - Slot 3 (Date, Time)
+
+                ---
+
+                #### ✅ Confirm Booking
+                - Once a slot is selected, confirm details:
+                > *Great! Here's your booking summary:*
+                    • Polyclinic: **{enrolled_clinic.name}**
+                    • Vaccine: **{vaccine_name}**
+                    • Date: **{datetime.date}**
+                    • Time: **{datetime.time}**
+                    > *Would you like to proceed with this booking?*
+
+                ---
+
+                #### 📥 Finalize Appointment
+                - If **Yes**:
+                - Use tool:
+                    ```
+                    schedule_vaccination_slot_tool()
+                    ```
+                    - with `booking_slot_id`
+                - Respond:
+                    ✅ *Your appointment has been successfully scheduled!*
+
+                - If **No**: handle fallback logic as needed.
+
+                ---
+
+                """
             ),
             model_client=autogen_openai_client,
             tools=[
-                book_appointment_tool,
+                schedule_vaccination_slot_tool,
             ],  # agent can execute orders when the user agrees to buy.
             delegate_tools=[
                 transfer_back_to_triage_tool,
