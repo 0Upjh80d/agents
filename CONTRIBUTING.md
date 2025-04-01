@@ -29,6 +29,8 @@ _Example Git branching workflow with feature, staging, and main branches. New fe
 
 - `staging` — **Pre-Production/Test Branch**: The `staging` branch is our integration branch used for pre-production testing. New features and bug fixes are first merged here and deployed to a `staging` environment (if available) for QA and verification. This branch should always have the next intended release. Once code on `staging` is confirmed stable, it will be merged into `main`. Like `main`, we typically protect `staging` (changes come in via pull requests from `feature`/`bugfix` branches). This ensures everything in `staging` has been reviewed and tested.
 
+- `release/yyyy-mm-dd` — **Release Branches**: Release branches follow the naming convention `release/yyyy-mm-dd`, indicating the scheduled release date. These branches are created from `main` when preparing a stable set of changes for a planned release. Features and bug fixes intended for the current release are selectively cherry-picked from `staging` onto the release branch. Once a release branch is created, it is used to finalize testing, documentation, and minor fixes specific to that release. No major features or significant new developments should be introduced at this stage. After successful testing and approval, the release branch is merged back into `main`, tagged with a version number, and deployed to production. This approach clearly tracks releases, simplifies deployment processes, and allows parallel stabilization activities separate from ongoing development on `staging`.
+
 - `feature/xxx` — **Feature Branches**: Each new feature or enhancement should be developed in its own branch off of `staging` (or off a `dev` branch, if we use one; see below). Name the branch descriptively, e.g., `feature/login-page` or `feature/ai-scheduling-agent`. These branches are short-lived; once the feature is complete and tested locally, you will merge it into `staging` through a pull request. Feature branches help isolate development work until it's ready to be integrated.
 
 - `bugfix/xxx` — **Bug Fix Branches**: Non-critical bug fixes (issues found in the `staging` environment or during development) are addressed in `bugfix` branches. Branch off from `staging` for a bug that exists in the `staging` code (or `dev` if applicable). For example, `bugfix/appointment-date-validation`. After fixing the bug and testing, merge the `bugfix` branch back into `staging` via a pull request. This ensures the fix is included in the next release. (For critical bugs in production, see hotfix below.)
@@ -39,14 +41,15 @@ _Example Git branching workflow with feature, staging, and main branches. New fe
 
 **Summary of branch purposes**:
 
-| **Branch**    | **Purpose**                                                           |
-| ------------- | --------------------------------------------------------------------- |
-| `main`        | Stable production code; release-ready.                                |
-| `staging`     | Aggregate of completed features for the next release; testing ground. |
-| `dev`         | (If used) Active development integration; latest untested code.       |
-| `feature/xxx` | Individual new feature development.                                   |
-| `bugfix/xxx`  | Fixes for issues on staging (pre-release).                            |
-| `hotfix/xxx`  | Critical fixes on production code.                                    |
+| **Branch**           | **Purpose**                                                           |
+| -------------------- | --------------------------------------------------------------------- |
+| `main`               | Stable production code; release-ready.                                |
+| `staging`            | Aggregate of completed features for the next release; testing ground. |
+| `dev`                | (If used) Active development integration; latest untested code.       |
+| `release/yyyy-mm-dd` | Cherry-picked features for the next release (pre-release).            |
+| `feature/xxx`        | Individual new feature development.                                   |
+| `bugfix/xxx`         | Fixes for issues on staging (pre-release).                            |
+| `hotfix/xxx`         | Critical fixes on production code.                                    |
 
 ### Release Strategy <a id="release-strategy"></a>
 
@@ -106,132 +109,11 @@ _Figure: The contribution process, highlighting the key actions for both contrib
 
 ### Contributor's Step-by-Step Guide <a id="contributors-step-by-step-guide"></a>
 
-1. **Start with the Latest Code**: Before you begin any work, **pull the latest changes** from the remote repository. If you're starting a new feature or fix, ensure your local `main` and `staging` branches are up-to-date with the team's repository. This reduces the chance of merge conflicts later. For example, run:
-
-   ```bash
-   git checkout staging
-   git pull origin staging
-   ```
-
-> [!NOTE]
-> Use `dev` instead of `staging` if our workflow includes a `dev` branch.
-
-2. **Create a New Branch**: Create a dedicated branch for your work:
-
-   - For a new feature, branch off `staging` (or `dev` if using that) and name it `feature/<your-feature-name>`. Choose a short, descriptive name for the feature. For example:
-
-     ```bash
-     git checkout -b feature/improved-booking-ui staging
-     ```
-
-     This creates and switches to `feature/improved-booking-ui` based on the latest `staging`.
-
-   - For a bug fix (non-critical), branch off `staging` and name it `bugfix/<description-of-fix>` or include the issue number, e.g.:
-
-     ```bash
-     git checkout -b bugfix/fix-date-validation staging
-     ```
-
-   - For a critical production hotfix, branch off `main` (since you're fixing something currently in production) and name it `hotfix/<description-of-fix>`, e.g.:
-
-     ```bash
-     git checkout -b hotfix/fix-null-pointer main
-     ```
-
-> [!IMPORTANT]
-> Use **descriptive branch names** so others can quickly understand the purpose. Our naming convention is all lowercase with words separated by hyphens or slashes as shown. Include a prefix (`feature/`, `bugfix/`, `hotfix/`) to indicate the branch type. Avoid long or vague names. Good examples: `feature/login-auth`, `bugfix/email-validation`, `hotfix/payment-crash`. Poor example: `feature/stuff` (not descriptive).
-
-3. **Work Commit-by-Commit**: Make changes in your branch and commit your work in logical chunks. Each commit should have a clear purpose. Follow our commit message conventions (see below) when writing commit messages. For example:
-
-   ```bash
-   git add .
-   git commit -m "feat: implement OAuth2 login flow"
-   ```
-
-   Commit often to save progress, but **ensure each commit compiles and passes tests** (don't commit broken code). This makes it easier to review and to roll back if needed. If you are working on a large feature, consider breaking it into smaller commits or even multiple smaller feature branches, to make reviews easier.
-
-4. **Keep Your Branch Updated**: If other changes get merged into `staging` while you are working, you should update your branch to avoid drifting too far behind. You can do this by merging `staging` into your branch:
-
-   ```bash
-   git pull origin staging
-   git merge staging
-   ```
-
-   or by rebasing your branch onto the latest staging:
-
-   ```bash
-   git fetch origin
-   git rebase origin/staging
-   ```
-
-   Use the method you're comfortable with. Merging will create a merge commit on your branch, whereas rebasing will rewrite your commits on top of the new `staging` `HEAD` (making the history linear).
-
-> [!CAUTION]
-> If rebasing, **be cautious** if your branch is public/shared (i.e. available in the remote repository), as rebasing alters commit history. The key point is to handle conflicts on your branch **before** opening a pull request, so the PR can be merged cleanly. Keeping your branch in sync with `staging` frequently (especially before pushing) reduces big conflict headaches later.
-
-5. **Push Your Branch to GitHub**: When you are ready to share your work (or back it up), push the branch to the remote repository:
-
-   ```bash
-   git push -u origin feature/improved-booking-ui
-   ```
-
-   The `-u` flag sets the upstream, so future `git push` calls know where to push. Pushing your branch makes it visible to the team on GitHub. You can push even before the feature is complete (mark the pull request as a draft, see next step) if you want others to see progress or help you.
-
-6. **Open a Pull Request (PR)**: On GitHub, open a PR from **your branch into the `staging` branch**. This is how we propose to merge your changes. In the PR description:
-
-   - Provide a **clear title** (e.g., "Add OAuth2 Login Flow" or "Fix date validation error on booking form").
-   - Give a **description** of what your change does and why. Include any relevant context or screenshots if UI changes are involved.
-   - **Link any issues** the PR addresses by referencing the issue number (e.g., "Fixes #123" to auto-close issue #123 when merged).
-   - If your PR is still a work in progress (not ready for full review), mark it as a **Draft PR**. This signals it's not final yet.
-   - Ensure the PR is targeting the `staging` branch (the base should be `staging` in GitHub's PR settings, not `main`).
-   - Add any relevant labels or assign reviewers if you know who should review.
-
-7. **Code Review and Discussion**: Team members will review your pull request (see the Code Review section below for details). Be responsive to feedback:
-
-   - If changes are requested, push additional commits to your branch to address them. Those commits will automatically show up in the same PR.
-   - Keep the discussion civil and focused on the code. The goal is to improve the quality of the codebase, so try not to take feedback personally.
-   - Ensure all automated checks pass (our repository may have Continuous Integration (CI) setup to run tests and linters on PRs).
-
-8. **Merge the Pull Request**: Once your PR is approved by at least the required number of reviewers (usually 1-2) and all checks pass, it's time to merge:
-
-   - We prefer using **"Squash and Merge"** for most pull requests. Squash merging will take all your commits and combine them into a single commit on the `staging` branch. This keeps the commit history clean and easy to follow (one commit per PR/feature). GitHub allows you to edit the commit message when squashing; make sure to write a concise summary (you can use the PR title and include the issue number).
-
-   - After merging, **delete the feature/bugfix branch** from the remote (GitHub usually gives a button for this). This keeps our repository tidy by removing branches that are no longer needed. You will still have the branch locally, but you can delete it locally too (`git branch -d feature/improved-booking-ui`) since it's merged.
-
-9. **Testing on Staging**: After merge, the `staging` branch now includes your changes. Our CI/CD pipeline might automatically deploy `staging` to a test server (if configured). Verify that your feature/fix works as expected in the `staging` environment along with other merged changes. If any issues are found, address them by creating a new `bugfix` branch from `staging`.
-
-10. **Release to Main**: When we decide to release to production (this could be immediately if the change is urgent, or after accumulating a few changes):
-
-    - Ensure `staging` is stable and all intended changes for the release are merged.
-
-    - Open a release PR from `staging` into `main`. This PR should list all the changes (automatically, the commits or PRs included since the last merge to `main`).
-
-    - Review and approve this PR (team lead or devops might handle this), then merge it into `main`. We might use a merge commit here or squash — the choice is up to our convention. Using a merge commit for the release can preserve the individual feature commits (squashed commits) from `staging`, which is fine.
-
-    - Tag the commit on `main` with a version (e.g., `git tag -a v1.1.0 -m "Release v1.1.0"` and push the tag).
-
-    - The deployment to production will be triggered after merging to `main` (if CI/CD is set up for that).
-
-    - After release, merge `main` back into `staging` if any new commit (like a hotfix or a generated release commit) was added, to keep them in sync. Often, merging `staging` to `main` via PR won't create any divergence, but in case of a hotfix or if you did a merge commit, syncing `main` into `staging` ensures no disparity.
-
-11. **Branch Protection**: We enforce branch protections on `main` and `staging`. This means you cannot push directly to these branches; all changes must come through PRs with at least one approval. This practice safeguards our important branches from accidental changes. Do not override these protections by forcing pushes. If something absolutely needs to be done (extremely rare), coordinate with the repository admin.
-
-> [!TIP]
->
-> **Branch Naming Recap**: Use the prefixes and naming conventions as described (`feature/`, `bugfix/`, `hotfix/`). Keep names concise yet descriptive. It's often helpful to include an issue number or a keyword. Examples:
->
-> - `feature/booking-confirmation-email`
-> - `feature/langchain-agent-upgrade`
-> - `bugfix/typo-on-welcome-page`
-> - `hotfix/cert-renewal`
->
-> Avoid using ambiguous names like `update-branch` or reusing branch names. Each branch name should ideally be unique and relevant to its content.
-
-By following this workflow, we maintain an organized project history and reduce the chances of errors. Each step (branching, PR, review, merge) acts as a checkpoint to catch issues early and ensure high code quality.
+For more detailed instructions, refer to the [Contributor's Step-by-Step Guide](./docs/CONTRIBUTORS_STEP_BY_STEP.md).
 
 ### Reviewer's Step-by-Step Guide <a id="reviewers-step-by-step-guide"></a>
 
-TODO.
+For more detailed instructions, refer to the [Reviewer's Step-by-Step Guide](./docs/REVIEWERS_STEP_BY_STEP.md).
 
 ## Pull Request & Code Review Practices <a id="pull-request--code-review-practices"></a>
 
