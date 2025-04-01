@@ -23,31 +23,38 @@
             </button>
           </ng-template>
         </div>
-        @for (message of messages; track message) { @if (message.message.trim()) { @switch (message.role) { @case (user) {
-        <app-text-user [message]="message"></app-text-user>
-        } @case (system) {
-        <app-text-system [message]="message"></app-text-system>
-        <div
-          class="tw-pr-[0px] tw-w-full tw-flex tw-flex-row tw-justify-start tw-items-start"
-          [ngClass]="{
-            'tw-pr-[0px]': true,
-            'tw-w-full': true,
-            'tw-flex': true,
-            'tw-flex-row': true,
-            'tw-justify-start': true,
-            'tw-items-start': true
-          }"
-          tabindex="-1"
-        >
-          <button
-            class=""
-            [class]="'tw-overflow-auto tw-font-bold tw-px-3 tw-py-2 tw-rounded-2xl ' + (isLoggedIn ? 'content-card' : 'tw-bg-red-500 tw-text-white')"
-            (click)="SingpassLogin()"
-          >
-            {{ isLoggedIn ? "Login successfully." : "Log in with Singpass" }}
-          </button>
-        </div>
-        } } } }
+        @for (message of messages; track message) {
+          @if (message.message.trim()) {
+            @switch (message.role) {
+              @case (user) {
+                <app-text-user [message]="message"></app-text-user>
+              }
+              @case (system) {
+                <app-text-system [message]="message"></app-text-system>
+                <div
+                  class="tw-pr-[0px] tw-w-full tw-flex tw-flex-row tw-justify-start tw-items-start"
+                  [ngClass]="{
+                    'tw-pr-[0px]': true,
+                    'tw-w-full': true,
+                    'tw-flex': true,
+                    'tw-flex-row': true,
+                    'tw-justify-start': true,
+                    'tw-items-start': true
+                  }"
+                  tabindex="-1"
+                >
+                  <button
+                    class=""
+                    [class]="'tw-overflow-auto tw-font-bold tw-px-3 tw-py-2 tw-rounded-2xl ' + (isLoggedIn ? 'content-card' : 'tw-bg-red-500 tw-text-white')"
+                    (click)="SingpassLogin()"
+                  >
+                    {{ isLoggedIn ? "Login successfully." : "Log in with Singpass" }}
+                  </button>
+                </div>
+              }
+            }
+          }
+        }
       </div>
       <div class="tw-mt-auto tw-w-full tw-max-w-[860px]">
         <app-text-input></app-text-input>
@@ -183,13 +190,13 @@
           <div class="tw-bg-gray-100 tw-rounded-lg tw-p-6 tw-mb-6">
             <h3 class="tw-text-xl tw-font-bold tw-mb-6">Current Vaccination</h3>
             <div class="tw-overflow-y-auto">
-              @for(v of vaccinations; track vaccinations){
-              <div class="tw-border-b tw-border-gray-500 tw-pb-4 tw-mb-4 tw-max-w-md">
-                <div class="tw-flex tw-items-center tw-justify-between">
-                  <span class="tw-font-medium">{{ v }}</span>
-                  <span class="tw-text-green-500 tw-font-medium tw-mr-[150px]">Vaccinated</span>
+              @for (v of vaccinations; track vaccinations) {
+                <div class="tw-border-b tw-border-gray-500 tw-pb-4 tw-mb-4 tw-max-w-md">
+                  <div class="tw-flex tw-items-center tw-justify-between">
+                    <span class="tw-font-medium">{{ v }}</span>
+                    <span class="tw-text-green-500 tw-font-medium tw-mr-[150px]">Vaccinated</span>
+                  </div>
                 </div>
-              </div>
               }
             </div>
           </div>

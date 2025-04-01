@@ -1,7 +1,16 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from routers import authentication, booking, chat, clinic, record, user, vaccine, dummy_record
+from routers import (
+    authentication,
+    booking,
+    chat,
+    clinic,
+    dummy_record,
+    record,
+    user,
+    vaccine,
+)
 from starlette.middleware.cors import CORSMiddleware
 
 

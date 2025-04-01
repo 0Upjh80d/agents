@@ -53,7 +53,10 @@ export class VaccineIndexComponent {
   suggestedQns: String[] = ['Can you help me book my Vaccination?', 'Please show me my Vaccination history'];
   messages: Message[] = [];
   vaccinations: String[] = [];
-  constructor(private toastService: MessageService, private endpointService: EndpointService) {}
+  constructor(
+    private toastService: MessageService,
+    private endpointService: EndpointService
+  ) {}
 
   loginForm: FormGroup = new FormGroup({
     username: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
