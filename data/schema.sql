@@ -38,16 +38,27 @@ CREATE TABLE Addresses (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Vaccines table including vaccine information, eligibility criterias and audit timestamps
+-- Vaccines table including vaccine name and audit timestamps
 CREATE TABLE Vaccines (
     id TEXT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    doses_required INTEGER NOT NULL,
-    age_criteria VARCHAR(50),
-    gender_criteria VARCHAR(50),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- VaccineCriteria table including eligibility criterias and audit timestamps
+CREATE TABLE VaccineCriteria (
+    id TEXT PRIMARY KEY,
+    vaccine_id TEXT NOT NULL,
+    age_criteria VARCHAR(50),
+    gender_criteria VARCHAR(50),
+    health_condition_criteria VARCHAR(50),
+    doses_required INTEGER NOT NULL,
+    frequency VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id) ON DELETE CASCADE,
+    UNIQUE (vaccine_id, age_criteria)
 );
 
 -- BookingSlots table representing available slots for appointments and audit timestamps

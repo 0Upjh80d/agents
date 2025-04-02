@@ -7,6 +7,7 @@
 - [Clinic](#clinic)
 - [Address](#address)
 - [Vaccine](#vaccine)
+- [VaccineCriteria](#vaccinecriteria)
 - [BookingSlot](#booking-slot)
 - [VaccineRecord](#vaccine-record)
 
@@ -102,17 +103,35 @@ _Entity Relationship Diagram_
 
   - `name` (String): Name of the vaccine.
 
-  - `price` (Float): Price of the vaccine.
+- **Relationships**:
 
-  - `doses_required` (Integer): Number of doses required for the vaccine.
+  - A vaccine has a one-to-many relationship with the `BookingSlot` table via the `vaccine_id` foreign key.
+
+  - It also has a one-to-many relationship with the `VaccineCriteria` table via the `vaccine_id` foreign key.
+
+## VaccineCriteria <a id="vaccinecriteria"></a>
+
+- **Table Name**: `VaccineCriteria`
+
+- **Columns**:
+
+  - `id` (String, primary key): Unique identifier for each vaccine criteria.
+
+  - `vaccine_id` (String, foreign key): ID of the vaccine associated with the vaccine criteria.
 
   - `age_criteria` (String): Age criteria for the vaccine.
 
   - `gender_criteria` (String): Gender criteria for the vaccine.
 
+  - `health_condition_criteria` (String): Health condition criteria for the vaccine.
+
+  - `doses_required` (Integer): Number of doses required for the vaccine.
+
+  - `frequency` (String): Frequency of doses required for the vaccine.
+
 - **Relationships**:
 
-  - A vaccine has a one-to-many relationship with the `BookingSlot` table via the `vaccine_id` foreign key.
+  - A vaccine criteria has a many-to-one relationship with the `Vaccines` table via the `vaccine_id` foreign key.
 
 ## BookingSlot <a id="booking-slot"></a>
 
