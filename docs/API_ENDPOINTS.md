@@ -65,9 +65,9 @@ Many of the endpoints below require a valid access token. Typically, the token i
 
 ## Clinic <a id="clinic"></a>
 
-| Method | Path              | Description                                                                    | Auth Required |
-| ------ | ----------------- | ------------------------------------------------------------------------------ | ------------- |
-| `GET`  | `/clinic/nearest` | Retrieves a list of the nearest polyclinic or GP based on the user's location. | Yes (token)   |
+| Method | Path              | Description                                                                        | Auth Required |
+| ------ | ----------------- | ---------------------------------------------------------------------------------- | ------------- |
+| `GET`  | `/clinic/nearest` | Retrieves a list of the nearest polyclinic and/or GP based on the user's location. | Yes (token)   |
 
 ## Swagger UI Reference <a id="swagger-ui-reference"></a>
 
