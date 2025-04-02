@@ -157,13 +157,31 @@ async def authorized_client_for_no_vaccine_recommendations(async_client: AsyncCl
 @pytest_asyncio.fixture
 async def authorized_client_for_vaccine_records(async_client: AsyncClient):
     user_data = {"username": "test.user@example.com", "password": "testpassword123"}
-    res: Response = await async_client.post(
-        "/login",
-        data=user_data,
-    )
+    res: Response = await async_client.post("/login", data=user_data)
 
     assert res.status_code == 200
 
+    token = res.json().get("access_token")
+
+    payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    id = payload.get("user_id")
+
+    async_client.headers = {
+        **async_client.headers,
+        "user_id": str(id),
+        "Authorization": f"Bearer {token}",
+    }
+
+    return async_client
+
+
+@pytest_asyncio.fixture
+async def authorized_client_for_scheduling(async_client: AsyncClient):
+    user_data = {
+        "username": "test_2@example.com",
+        "password": "Password123",
+    }
+    res: Response = await async_client.post("/login", data=user_data)
     token = res.json().get("access_token")
 
     payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
