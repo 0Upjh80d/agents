@@ -1,1 +1,2 @@
 # Add links to exclude during checking of broken links (regex is supported)
+*.html
