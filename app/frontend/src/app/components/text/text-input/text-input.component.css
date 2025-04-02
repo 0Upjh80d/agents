@@ -1,0 +1,4 @@
+.custom-textarea {
+  resize: vertical; /* Allows manual resizing */
+  overflow-y: auto; /* Enables scrolling when needed */
+}
