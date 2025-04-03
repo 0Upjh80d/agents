@@ -19,7 +19,7 @@ async def test_authorized_user_get_nearest(
     if clinic_type:
         params["clinic_type"] = clinic_type
 
-    res: Response = await authorized_client.get("/clinic/nearest", params=params)
+    res: Response = await authorized_client.get("/clinics/nearest", params=params)
 
     assert res.status_code == 200
     assert len(res.json()) == clinic_limit
@@ -38,6 +38,6 @@ async def test_authorized_user_get_nearest(
 
 @pytest.mark.asyncio
 async def test_unauthorized_user_get_nearest_clinic(async_client: AsyncClient):
-    res: Response = await async_client.get("/clinic/nearest")
+    res: Response = await async_client.get("/clinics/nearest")
     assert res.status_code == 401
     assert res.json().get("detail") == "Not authenticated"
