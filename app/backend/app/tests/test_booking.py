@@ -1,9 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from requests import Response
-from schemas.booking import (
-    BookingSlotResponse,
-)
+from schemas.booking import BookingSlotResponse
 from schemas.record import VaccineRecordResponse
 
 
