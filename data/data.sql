@@ -1,9 +1,9 @@
 -- Insert sample data into Users
 INSERT INTO Users (id, address_id, enrolled_clinic_id, nric, first_name, last_name, email, date_of_birth, gender, password)
 VALUES
--- User for getting no vaccine recommendations
+-- User for getting no vaccine recommendations (Female, 17 years old)
 ('d2e8d855-1c1a-4fe6-a8b8-ac823250a414', '0968e1e9-f766-4268-bd05-52a2795e8e99', NULL, 'S1111111J', 'Jane', 'Doe', 'jane.doe@example.com', '2008-01-01', 'F', '$2b$12$//InOGG5Oo6zeAVdyAth3.b7dwZSVAp8ovAXrdkY/GAccLe8B/hDq'),
--- User for getting vaccination records
+-- User for getting vaccination records (Female, 20 years old)
 ('8045a3aa-e221-4d9c-89c5-822ab96d4885', '9d02493b-e55b-44fb-b4f5-2f530ffcef06', '225d024f-3d0e-427d-aef9-1fe9a2fc4e13', 'S1234567A', 'Test', 'User', 'test.user@example.com', '2005-01-01', 'F', '$2b$12$I4QqYcmEDKCFi0V3FodWWuFIi4IUKINf/DqvSmXlAdU/lEFjxZSRq');
 
 -- Insert sample data into Clinics
@@ -23,11 +23,24 @@ VALUES
 ('51650b4e-48fb-4665-80f4-c27b8c7de411', '545078', '1 SENGKANG SQUARE COMPASS ONE SINGAPORE 545078', 1.39205314156706, 103.89507054384);
 
 -- Insert sample data into Vaccines
-INSERT INTO Vaccines (id, name, price, doses_required, age_criteria, gender_criteria)
+INSERT INTO Vaccines (id, name)
 VALUES
-('9004aab3-8993-4d37-81c3-78844191e5ec', 'Influenza (INF)', 9.00, 1, '18+ years old', 'None'),
-('a67ed08a-95f0-47d4-a97b-8153f1d7874a', 'Human Papillomavirus (HPV)', 23.00, 3, '18-26 years old', 'F'),
-('599b1189-0687-4a38-8de5-95850cfa9ee7', 'Pneumococcal Conjugate (PCV13)', 16.00, 1, '65+ years old', 'None');
+('9004aab3-8993-4d37-81c3-78844191e5ec', 'Influenza (INF)'),
+('a67ed08a-95f0-47d4-a97b-8153f1d7874a', 'Human papillomavirus (HPV2 or HPV4)'),
+('599b1189-0687-4a38-8de5-95850cfa9ee7', 'Pneumococcal Conjugate (PCV13)');
+
+INSERT INTO VaccineCriteria (id, vaccine_id, age_criteria, gender_criteria, health_condition_criteria, doses_required, frequency)
+VALUES
+-- Influenza (INF)
+('d0dde26e-89bd-4366-878b-5e57117bab0e', '9004aab3-8993-4d37-81c3-78844191e5ec', '18-64 years', 'None', 'Specific medical conditions or indications', 1, 'Annually or per season'),
+-- Human papillomavirus (HPV2 or HPV4)
+('5696ee5b-761e-45bb-9df8-7bc440bf261e', 'a67ed08a-95f0-47d4-a97b-8153f1d7874a', '12-13 years', 'F', 'None', 1, 'Once'),
+('bdbe6d75-5e9e-4dab-ac57-296d9a57613a', 'a67ed08a-95f0-47d4-a97b-8153f1d7874a', '13-14 years', 'F', 'None', 1, 'Once'),
+('0e759716-b221-4ebd-abe2-4e4e7bd665c7', 'a67ed08a-95f0-47d4-a97b-8153f1d7874a', '18-26 years', 'F', 'Unvaccinated adults or uncertain history', 3, 'Once'),
+-- Pneumococcal Conjugate (PCV13)
+('255b7260-c7da-4f15-b772-64ec13dcf6a9', '599b1189-0687-4a38-8de5-95850cfa9ee7', '4 months', 'None', 'None', 1, 'Once'),
+('cda2e4b1-27ae-4bb2-9ee1-da75cd4683d4', '599b1189-0687-4a38-8de5-95850cfa9ee7', '6 months', 'None', 'None', 1, 'Once'),
+('d448048c-1d0e-4d3f-abd4-95919562d8bb', '599b1189-0687-4a38-8de5-95850cfa9ee7', '12 months', 'None', 'None', 1, 'Once');
 
 -- Insert sample data into BookingSlots
 INSERT INTO BookingSlots (id, polyclinic_id, vaccine_id, datetime)
