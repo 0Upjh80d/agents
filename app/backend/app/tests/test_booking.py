@@ -12,10 +12,10 @@ from schemas.record import VaccineRecordResponse
 # ============================================================================
 @pytest.mark.asyncio
 async def test_get_all_available_booking_slots(
-    async_client: AsyncClient,
+    authorized_client: AsyncClient,
 ):
     params = {"vaccine_name": "Influenza (INF)"}
-    res: Response = await async_client.get("/bookings/available", params=params)
+    res: Response = await authorized_client.get("/bookings/available", params=params)
 
     assert res.status_code == 200
 
@@ -29,7 +29,7 @@ async def test_get_all_available_booking_slots(
     [
         # See data.sql for the available records
         ("97ba51db-48d8-4873-b1ee-57a9b7f766f0", "Influenza (INF)"),
-        ("21b89cd2-f99c-4113-bb46-5cc21d566b97", "Human Papillomavirus (HPV)"),
+        ("21b89cd2-f99c-4113-bb46-5cc21d566b97", "Human papillomavirus (HPV2 or HPV4)"),
     ],
 )
 async def test_valid_booking_slot(
@@ -41,6 +41,22 @@ async def test_valid_booking_slot(
     slot = BookingSlotResponse(**res.json())
     assert str(slot.id) == slot_id
     assert slot.vaccine.name == expected_vaccine
+
+    for criteria in slot.vaccine.vaccine_criterias:
+
+        if slot.vaccine.name == "Influenza (INF)":
+            assert criteria.age_criteria in [
+                "18-64 years",
+            ]
+            assert criteria.gender_criteria == "None"
+
+        if slot.vaccine.name == "Human papillomavirus (HPV2 or HPV4)":
+            assert criteria.age_criteria in [
+                "12-13 years",
+                "13-14 years",
+                "18-26 years",
+            ]
+            assert criteria.gender_criteria == "F"
 
 
 # ============================================================================

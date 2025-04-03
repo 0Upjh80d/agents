@@ -5,8 +5,8 @@ VALUES
 ('d2e8d855-1c1a-4fe6-a8b8-ac823250a414', '0968e1e9-f766-4268-bd05-52a2795e8e99', NULL, 'S1111111J', 'Jane', 'Doe', 'jane.doe@example.com', '2008-01-01', 'F', '$2b$12$//InOGG5Oo6zeAVdyAth3.b7dwZSVAp8ovAXrdkY/GAccLe8B/hDq'),
 -- User for getting vaccination records (Female, 20 years old)
 ('8045a3aa-e221-4d9c-89c5-822ab96d4885', '9d02493b-e55b-44fb-b4f5-2f530ffcef06', '225d024f-3d0e-427d-aef9-1fe9a2fc4e13', 'S1234567A', 'Test', 'User', 'test.user@example.com', '2005-01-01', 'F', '$2b$12$I4QqYcmEDKCFi0V3FodWWuFIi4IUKINf/DqvSmXlAdU/lEFjxZSRq'),
--- User for scheduling vaccination
-('564b4728-9436-4e1a-8da1-c40dde49a0cc', NULL, NULL, 'T8815246X', 'Test_2', 'For_scheduling', 'test_2@example.com', '1990-04-02', 'M', '$2b$12$blZnIuQU1VYiVceIpxYRauEAZ20t3jE68tn45ezMSNzy0rxXrZIQe');
+-- User for scheduling vaccination (Male, 25 years old)
+('564b4728-9436-4e1a-8da1-c40dde49a0cc', NULL, NULL, 'T8815246X', 'Test_2', 'For_scheduling', 'test_2@example.com', '2000-04-02', 'M', '$2b$12$blZnIuQU1VYiVceIpxYRauEAZ20t3jE68tn45ezMSNzy0rxXrZIQe');
 
 
 -- Insert sample data into Clinics
