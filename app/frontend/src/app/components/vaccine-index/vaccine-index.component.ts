@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -38,9 +38,20 @@ export class VaccineIndexComponent {
   user: string = MessageRole.User;
   system: string = MessageRole.Assistant;
 
+  vaccineSelected: string = '';
+  bookingDate: string = '-';
+  bookingTime: string = '-';
+  agentUsed: string = '';
+
   isSignUp = false;
   isSinpassLogin = false;
   isLoggedIn = false;
+  isVaccineSelected = false;
+  isBookVaccine: boolean = false;
+  isBookingConfirmed: boolean = false;
+  isConfirming: boolean = false;
+  hideSlotTable: boolean = false;
+  showConfirmed: boolean = false;
 
   greeting: Message[] = [
     {
@@ -51,28 +62,29 @@ export class VaccineIndexComponent {
   ];
 
   suggestedQns: String[] = ['Can you help me book my Vaccination?', 'Please show me my Vaccination history'];
+  vaccines: String[] = ['Pneumococcal conjugate 13-valent (PCV-13)', 'Varicella (VAR)', 'Influenza (trivalent) (INF)', 'Hepatitis B (HepB)'];
   messages: Message[] = [];
-  vaccinations: String[] = [];
+  vaccinationRecords: String[] = [];
   constructor(
     private toastService: MessageService,
     private endpointService: EndpointService
   ) {}
 
   loginForm: FormGroup = new FormGroup({
-    username: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
+    username: new FormControl<string>(''),
+    password: new FormControl<string>('')
   });
 
   signupForm: FormGroup = new FormGroup({
-    nric: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    first_name: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    last_name: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    email: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    date_of_birth: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    gender: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    postal_code: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    cfm_password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
+    nric: new FormControl<string>(''),
+    first_name: new FormControl<string>(''),
+    last_name: new FormControl<string>(''),
+    email: new FormControl<string>(''),
+    date_of_birth: new FormControl<string>(''),
+    gender: new FormControl<string>(''),
+    postal_code: new FormControl<string>(''),
+    password: new FormControl<string>(''),
+    cfm_password: new FormControl<string>('')
   });
 
   toggleForm() {
@@ -115,11 +127,12 @@ export class VaccineIndexComponent {
               while ((match = regex.exec(vaccineString)) !== null) {
                 const vaccineName = match[1].trim();
                 if (vaccineName) {
-                  this.vaccinations.push(vaccineName);
+                  this.vaccinationRecords.push(vaccineName);
                 }
               }
             }
           });
+          this.scrollToBottom();
         },
         error: error => {
           this.toastService.add({
@@ -205,20 +218,178 @@ export class VaccineIndexComponent {
       message: question
     });
 
+    let dummyResponse = 'Sure, please sign in to your Singpass';
+
+    if (this.isLoggedIn) dummyResponse = 'Sure';
+
+    this.isBookVaccine = question.trim() === this.suggestedQns[0].trim();
+
     // Generate a dummy system response
-    const dummyResponse = 'Sure, please sign in to your Singpass';
     this.messages.push({
       role: MessageRole.Assistant,
       message: dummyResponse
     });
+    this.scrollToBottom();
+  }
 
-    // Scroll to the bottom of the message container
+  SingpassLogin() {
+    this.agentUsed = 'Login agent';
+    this.isSinpassLogin = true;
+  }
+
+  lastSystemMessage(): Message | null {
+    for (let i = this.messages.length - 1; i >= 0; i--) {
+      if (this.messages[i].role === MessageRole.Assistant) {
+        return this.messages[i];
+      }
+    }
+    return null;
+  }
+
+  // Scroll to the bottom of the message container
+  scrollToBottom() {
     setTimeout(() => {
       this.scrollableTextContent.nativeElement.scrollTop = this.scrollableTextContent.nativeElement.scrollHeight;
     }, 0);
   }
 
-  SingpassLogin() {
-    this.isSinpassLogin = true;
+  selectVaccine(v: string) {
+    this.isVaccineSelected = true;
+    this.hideSlotTable = false;
+
+    this.vaccineSelected = v;
+
+    this.agentUsed = 'Booking agent';
+
+    this.messages.push({
+      role: MessageRole.User,
+      message: v
+    });
+
+    this.messages.push({
+      role: MessageRole.Assistant,
+      message: 'Please tell me the date and time you wanted to book the vaccine?'
+    });
+    this.scrollToBottom();
+  }
+
+  handleUserInput(message: string): void {
+    // Add the user message to the messages array
+    this.messages.push({
+      role: MessageRole.User,
+      message: message
+    });
+
+    // Process the message to generate a response
+    this.processUserInput(message);
+    this.scrollToBottom();
+  }
+
+  processUserInput(message: string): void {
+    if (message === 'Confirm') {
+      this.isConfirming = false;
+      this.isBookingConfirmed = true;
+
+      this.messages.push({
+        role: MessageRole.User,
+        message: message
+      });
+
+      this.messages.push({
+        role: MessageRole.Assistant,
+        message: `Your appointment for ${this.vaccineSelected} has been booked for ${this.bookingTime} at ${this.bookingDate}. Please arrive 15 minutes before your appointment.`
+      });
+      this.scrollToBottom();
+      this.isBookVaccine = false;
+      setTimeout(() => {
+        this.showConfirmed = true;
+      }, 2000);
+      return;
+    }
+    // Check if the message contains date and time information (for vaccine booking)
+    if (this.isBookVaccine) {
+      const dateTimeInfo = this.extractDateAndTime(message);
+      // Generate a response based on the date and time
+      if (dateTimeInfo.dateString && dateTimeInfo.timeString) {
+        this.hideSlotTable = true;
+
+        this.bookingDate = dateTimeInfo.dateString;
+        this.bookingTime = dateTimeInfo.timeString;
+        this.isConfirming = true;
+        this.messages.push({
+          role: MessageRole.Assistant,
+          message: 'Do you want to confirm your booking?'
+        });
+        this.isBookVaccine = false;
+      } else {
+        this.messages.push({
+          role: MessageRole.Assistant,
+          message: `I couldn't recognize the date and time in your message. Please specify a date (e.g., "28 Mar") and time (e.g., "2pm") for your appointment.`
+        });
+      }
+    } else {
+      // Generic response for other queries
+      this.messages.push({
+        role: MessageRole.Assistant,
+        message: 'I understand you asked about: "' + message + '". How else can I assist you with your health information today?'
+      });
+    }
+  }
+
+  // Extract date and time from user input
+  extractDateAndTime(input: string): { dateString: string; timeString: string } {
+    // Initialize result
+    let dateString = '';
+    let timeString = '';
+
+    // Convert to lowercase and remove extra spaces
+    const text = input.toLowerCase().trim().replace(/\s+/g, ' ');
+
+    // Regular expressions for date patterns
+    const datePattern = /\b(\d{1,2})(?:\s*)(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/;
+
+    // Regular expressions for time patterns
+    const timePattern = /\b(\d{1,2})(?::(\d{2}))?(?:\s*)?(am|pm)?\b/;
+
+    // Extract date
+    const dateMatch = text.match(datePattern);
+    if (dateMatch) {
+      const day = parseInt(dateMatch[1]);
+      const month = dateMatch[2];
+
+      // Map month abbreviation to full month name
+      const monthMap: { [key: string]: string } = {
+        jan: 'January',
+        feb: 'February',
+        mar: 'March',
+        apr: 'April',
+        may: 'May',
+        jun: 'June',
+        jul: 'July',
+        aug: 'August',
+        sep: 'September',
+        oct: 'October',
+        nov: 'November',
+        dec: 'December'
+      };
+
+      const fullMonth = monthMap[month];
+      dateString = `${day} ${fullMonth} 2025`;
+    }
+
+    // Extract time
+    const timeMatch = text.match(timePattern);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+      const period = timeMatch[3] ? timeMatch[3].toLowerCase() : hours < 12 ? 'am' : 'pm'; // Default to am/pm based on hour
+
+      // Format time string
+      const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+      const ampm = period === 'pm' || (period !== 'am' && hours >= 12) ? 'PM' : 'AM';
+      timeString = `${formattedHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    }
+
+    return { dateString, timeString };
   }
 }
