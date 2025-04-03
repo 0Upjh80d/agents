@@ -1,4 +1,6 @@
+import math
 import os
+from enum import Enum
 
 import requests
 from dotenv import load_dotenv, set_key
@@ -144,9 +146,12 @@ Booking functions
 # return: list of {id (booking_id), datetime, polyclinic, vaccine_id}
 def get_available_booking_slots(
     vaccine_name: str,
-    polyclinic_limit: int = None,
-    timeslot_limit: int = None,
-    verbose: bool = False,
+    polyclinic_name: str = None,
+    start_datetime: str = None,
+    end_datetime: str = None,
+    polyclinic_limit: int = 2,
+    timeslot_limit: int = 3,
+    verbose: bool = True,
 ):
     load_dotenv(dotenv_path="../../.env", override=True)
     BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
@@ -157,12 +162,23 @@ def get_available_booking_slots(
             print("Access token not found.")
         return
 
+    if polyclinic_limit == 1:
+        timeslot_limit = math.max(timeslot_limit, 7)
+
     params = {"vaccine_name": vaccine_name}
-    if polyclinic_limit:
+    if polyclinic_name:
+        params["polyclinic_name"] = polyclinic_name
+    if polyclinic_limit and not polyclinic_name:
         params["polyclinic_limit"] = polyclinic_limit
     if timeslot_limit:
         params["timeslot_limit"] = timeslot_limit
+    if start_datetime:
+        params["start_datetime"] = start_datetime
+    if end_datetime:
+        params["end_datetime"] = end_datetime
 
+    if verbose:
+        print("[LOGGING] Request sent out:", params)
     headers = {"Authorization": f"Bearer {auth_token}"}
 
     response = requests.get(
@@ -170,9 +186,9 @@ def get_available_booking_slots(
     )
 
     if response.status_code == 200:
-        if verbose:
-            print("Available slots retrieved successfully.")
         slots = response.json()
+        if verbose:
+            print("[LOGGING] Available slots retrieved successfully:", slots)
 
         # filter unused key value pairs
         filtered_slots = []
@@ -287,6 +303,53 @@ Chat functions
 """
 ### POST /chat
 
+
+"""
+===================================================
+Clinic functions
+===================================================
+"""
+
+
+class ClinicType(str, Enum):
+    GP = "gp"
+    POLYCLINIC = "polyclinic"
+
+
+# GET /clinic/nearest
+def get_nearest_polyclinic(
+    clinic_type: ClinicType, clinic_limit: int = 5, verbose: bool = False
+):
+    load_dotenv(dotenv_path="../../.env", override=True)
+    BACKEND_DB_URL = os.getenv("BACKEND_DB_URL")
+    auth_token = os.getenv("AUTH_TOKEN")
+
+    if not auth_token and verbose:
+        print("Access token not found. Please register and log in first.")
+        return
+
+    nearest_clinic_url = f"{BACKEND_DB_URL}/clinic/nearest"
+
+    headers = {"Authorization": f"Bearer {auth_token}", "Accept": "application/json"}
+
+    params = {"clinic_type": clinic_type.value, "clinic_limit": clinic_limit}
+
+    response = requests.get(nearest_clinic_url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        if verbose:
+            print("Nearest clinics retrieved successfully!")
+        slots = response.json()
+        filtered_slots = []
+        for slot in slots:
+            filtered_slots.append(slot["name"])
+        return filtered_slots
+    else:
+        if verbose:
+            print(f"Failed to retrieve clinics. Status code: {response.status_code}")
+        return response.json()
+
+
 """
 ===================================================
 Record functions (vaccination)
@@ -329,7 +392,7 @@ def get_vaccination_history(verbose: bool = False):
             vaccine_name = get_vaccination_name_by_booking_id(booking_slot_id)
 
             filtered_slot = {
-                "vaccination_booking_id": slot["id"],
+                "vaccination_record_id": slot["id"],
                 "status": slot["status"],
                 "booking_slot_id": booking_slot_id,
                 "vaccine_name": vaccine_name,

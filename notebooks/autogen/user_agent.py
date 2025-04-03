@@ -48,11 +48,16 @@ class UserAgent(RoutedAgent):
         self, message: AgentResponse, ctx: MessageContext
     ) -> None:
         # Get the user's input after receiving a response from an agent.
+        print(
+            "\n[LOGGING] user replying to the topic type:", message.reply_to_topic_type
+        )
         user_input = input("User (type 'exit' to close the session): ")
         print(f"{'-'*80}\n{self.id.type}:\n{user_input}", flush=True)
+
         if user_input.strip().lower() == "exit":
             print(f"{'-'*80}\nUser session ended, session ID: {self.id.key}.")
             return
+
         message.context.append(UserMessage(content=user_input, source="User"))
         await self.publish_message(
             UserTask(context=message.context),

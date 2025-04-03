@@ -7,6 +7,7 @@ from agent_tools import (
     cancel_booking,
     get_available_booking_slots,
     get_booking_by_id,
+    get_nearest_polyclinic,
     get_user_details,
     get_vaccination_history,
     get_vaccine_recommendations,
@@ -27,6 +28,7 @@ from autogen_core.tools import FunctionTool
 #     get_vaccination_history_tool,
 #     get_user_details_tool,
 #     get_vaccine_recommendations_tool,
+#     get_nearest_polyclinic_tool,
 #     transfer_back_to_triage_tool,
 #     transfer_to_appointment_agent_tool,
 #     transfer_to_recommender_agent_tool,
@@ -101,6 +103,18 @@ Chat functions
 ===================================================
 """
 ### POST /chat
+
+"""
+===================================================
+Clinic functions
+===================================================
+"""
+
+# GET /clinic/nearest
+get_nearest_polyclinic_tool = FunctionTool(
+    get_nearest_polyclinic,
+    description="Cancels an existing vaccination appointment by specifying the record ID.",
+)
 
 """
 ===================================================
