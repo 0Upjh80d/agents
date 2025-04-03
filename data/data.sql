@@ -4,7 +4,10 @@ VALUES
 -- User for getting no vaccine recommendations (Female, 17 years old)
 ('d2e8d855-1c1a-4fe6-a8b8-ac823250a414', '0968e1e9-f766-4268-bd05-52a2795e8e99', NULL, 'S1111111J', 'Jane', 'Doe', 'jane.doe@example.com', '2008-01-01', 'F', '$2b$12$//InOGG5Oo6zeAVdyAth3.b7dwZSVAp8ovAXrdkY/GAccLe8B/hDq'),
 -- User for getting vaccination records (Female, 20 years old)
-('8045a3aa-e221-4d9c-89c5-822ab96d4885', '9d02493b-e55b-44fb-b4f5-2f530ffcef06', '225d024f-3d0e-427d-aef9-1fe9a2fc4e13', 'S1234567A', 'Test', 'User', 'test.user@example.com', '2005-01-01', 'F', '$2b$12$I4QqYcmEDKCFi0V3FodWWuFIi4IUKINf/DqvSmXlAdU/lEFjxZSRq');
+('8045a3aa-e221-4d9c-89c5-822ab96d4885', '9d02493b-e55b-44fb-b4f5-2f530ffcef06', '225d024f-3d0e-427d-aef9-1fe9a2fc4e13', 'S1234567A', 'Test', 'User', 'test.user@example.com', '2005-01-01', 'F', '$2b$12$I4QqYcmEDKCFi0V3FodWWuFIi4IUKINf/DqvSmXlAdU/lEFjxZSRq'),
+-- User for scheduling vaccination
+('564b4728-9436-4e1a-8da1-c40dde49a0cc', NULL, NULL, 'T8815246X', 'Test_2', 'For_scheduling', 'test_2@example.com', '1990-04-02', 'M', '$2b$12$blZnIuQU1VYiVceIpxYRauEAZ20t3jE68tn45ezMSNzy0rxXrZIQe');
+
 
 -- Insert sample data into Clinics
 INSERT INTO Clinics (id, address_id, name, type)
@@ -45,13 +48,20 @@ VALUES
 -- Insert sample data into BookingSlots
 INSERT INTO BookingSlots (id, polyclinic_id, vaccine_id, datetime)
 VALUES
+-- booked slot (see VaccineRecords):
 ('97ba51db-48d8-4873-b1ee-57a9b7f766f0', '225d024f-3d0e-427d-aef9-1fe9a2fc4e13', '9004aab3-8993-4d37-81c3-78844191e5ec', '2025-04-01 09:00:00'),
+('3f7f75c0-b28c-4bb7-8c9a-991e5d150bc3', '225d024f-3d0e-427d-aef9-1fe9a2fc4e13', '599b1189-0687-4a38-8de5-95850cfa9ee7', '2025-04-01 10:00:00'),
+-- completed slot (see VaccineRecords):
 ('21b89cd2-f99c-4113-bb46-5cc21d566b97', '225d024f-3d0e-427d-aef9-1fe9a2fc4e13', 'a67ed08a-95f0-47d4-a97b-8153f1d7874a', '2025-04-01 10:00:00'),
+-- available slots, to be booked by a user during test:
 ('213fa5e7-abbb-4e55-bccc-318db42ace81', 'bd760847-db7e-439f-add8-3610167478ca', '599b1189-0687-4a38-8de5-95850cfa9ee7', '2025-04-02 14:00:00'),
 ('e7bbc307-ae75-4854-bd91-d6851ae085fd', 'bd760847-db7e-439f-add8-3610167478ca', '9004aab3-8993-4d37-81c3-78844191e5ec', '2025-04-03 11:00:00');
 
 -- Insert sample data into VaccinationRecords
 INSERT INTO VaccineRecords (id, user_id, booking_slot_id, status)
 VALUES
+-- vaccine record to test for record
 ('b6732344-bc30-4401-9a69-b91e28273b8d', '8045a3aa-e221-4d9c-89c5-822ab96d4885', '97ba51db-48d8-4873-b1ee-57a9b7f766f0', 'booked'),
-('7eb3a1a2-dd8c-4cd7-84d5-cd5621ab4fc1', '8045a3aa-e221-4d9c-89c5-822ab96d4885', '21b89cd2-f99c-4113-bb46-5cc21d566b97', 'completed');
+('7eb3a1a2-dd8c-4cd7-84d5-cd5621ab4fc1', '8045a3aa-e221-4d9c-89c5-822ab96d4885', '21b89cd2-f99c-4113-bb46-5cc21d566b97', 'completed'),
+-- vaccine record to test for reschedule
+('a6578d08-4e81-40ca-bc30-c9f2d01024aa', '564b4728-9436-4e1a-8da1-c40dde49a0cc', '3f7f75c0-b28c-4bb7-8c9a-991e5d150bc3', 'booked');
