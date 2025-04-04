@@ -3,6 +3,7 @@ from httpx import AsyncClient
 from requests import Response
 from schemas.booking import BookingSlotResponse
 from schemas.record import VaccineRecordResponse
+from schemas.vaccine import VaccineCriteriaResponse
 
 
 # ============================================================================
@@ -43,7 +44,7 @@ async def test_valid_booking_slot(
     assert slot.vaccine.name == expected_vaccine
 
     for criteria in slot.vaccine.vaccine_criterias:
-
+        assert isinstance(criteria, VaccineCriteriaResponse)
         if slot.vaccine.name == "Influenza (INF)":
             assert criteria.age_criteria in [
                 "18-64 years",
