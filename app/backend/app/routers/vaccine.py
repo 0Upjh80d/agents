@@ -60,7 +60,7 @@ async def get_vaccine_recommendations_for_user(
     )
 
     result = await db.execute(stmt)
-    available_vaccines = result.scalars().unique()
+    available_vaccines = result.scalars().unique().all()
 
     if not available_vaccines:
         raise HTTPException(
