@@ -180,17 +180,14 @@ async def test_unauthorized_user_schedule(async_client: AsyncClient):
     "record_id",
     [
         # See data.sql for the available records
-        "b6732344-bc30-4401-9a69-b91e28273b8d",
-        # "7eb3a1a2-dd8c-4cd7-84d5-cd5621ab4fc1"
+        "a6578d08-4e81-40ca-bc30-c9f2d01024aa"
     ],
 )
 async def test_authorized_user_valid_cancel(
-    authorized_client_for_vaccine_records: AsyncClient, record_id: str
+    authorized_client_for_scheduling: AsyncClient, record_id: str
 ):
 
-    res = await authorized_client_for_vaccine_records.delete(
-        f"/bookings/cancel/{record_id}"
-    )
+    res = await authorized_client_for_scheduling.delete(f"/bookings/cancel/{record_id}")
 
     assert res.status_code == 200
     assert res.json().get("detail") == "Vaccination slot successfully cancelled."
@@ -257,16 +254,16 @@ async def test_unauthorized_user_cancel(async_client: AsyncClient):
     [
         # See data.sql for the available records
         (
-            "b6732344-bc30-4401-9a69-b91e28273b8d",
-            "213fa5e7-abbb-4e55-bccc-318db42ace81",
+            "a6578d08-4e81-40ca-bc30-c9f2d01024aa",
+            "e7bbc307-ae75-4854-bd91-d6851ae085fd",
         ),
     ],
 )
 async def test_authorized_user_valid_reschedule(
-    authorized_client_for_vaccine_records: AsyncClient, record_id: str, new_slot_id: str
+    authorized_client_for_scheduling: AsyncClient, record_id: str, new_slot_id: str
 ):
     json_body = {"vaccine_record_id": record_id, "new_slot_id": new_slot_id}
-    res: Response = await authorized_client_for_vaccine_records.post(
+    res: Response = await authorized_client_for_scheduling.post(
         "/bookings/reschedule", json=json_body
     )
 
@@ -279,7 +276,7 @@ async def test_authorized_user_valid_reschedule(
     assert rescheduled_slot.status.value == "booked"
     assert (
         str(rescheduled_slot.user_id)
-        == authorized_client_for_vaccine_records.headers["user_id"]
+        == authorized_client_for_scheduling.headers["user_id"]
     )
 
 
