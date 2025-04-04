@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from requests import Response
-from schemas.vaccine import VaccineResponse
+from schemas.vaccine import VaccineCriteriaResponse, VaccineResponse
 
 
 @pytest.mark.asyncio
@@ -13,18 +13,19 @@ async def test_authorized_user_get_vaccine_recommendations(
     data = res.json()
     available_vaccines = [VaccineResponse(**vaccine) for vaccine in data]
 
+    # authorized_client is Male, 35 years old (see conftest.py)
     for vaccine in available_vaccines:
-        assert vaccine.age_criteria in [
-            "18+ years old",
-            "65+ years old",
-            "18-26 years old",
-            "27-64 years old",
-            # Additional criteria
-        ]
-        assert vaccine.gender_criteria in ["None", "M", "F"]
-        assert (
-            vaccine.name == "Influenza (INF)"
-        )  # authorized_client is Male, 35 years old (see conftest.py)
+        assert vaccine.name == "Influenza (INF)"
+
+        # we should only criteria based on user's eligibility
+        # see conftest.py for Influenza vaccine criterias
+        assert len(vaccine.vaccine_criterias) == 1
+
+        for criteria in vaccine.vaccine_criterias:
+
+            assert isinstance(criteria, VaccineCriteriaResponse)
+            assert criteria.age_criteria in ["18-64 years"]
+            assert criteria.gender_criteria in ["None", "M", "F"]
 
     assert res.status_code == 200
     assert len(data) == len(available_vaccines)

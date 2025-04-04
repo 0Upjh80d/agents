@@ -36,6 +36,7 @@ INSERT INTO VaccineCriteria (id, vaccine_id, age_criteria, gender_criteria, heal
 VALUES
 -- Influenza (INF)
 ('d0dde26e-89bd-4366-878b-5e57117bab0e', '9004aab3-8993-4d37-81c3-78844191e5ec', '18-64 years', 'None', 'Specific medical conditions or indications', 1, 'Annually or per season'),
+('617c7996-546a-4b6c-b5bb-3e2cdd3bf0a1', 'b79e4769-a79f-4142-96fc-da07d538cf9e', '65+ years', 'None', 'None', 1, 'Annually or per season'),
 -- Human papillomavirus (HPV2 or HPV4)
 ('5696ee5b-761e-45bb-9df8-7bc440bf261e', 'a67ed08a-95f0-47d4-a97b-8153f1d7874a', '12-13 years', 'F', 'None', 1, 'Once'),
 ('bdbe6d75-5e9e-4dab-ac57-296d9a57613a', 'a67ed08a-95f0-47d4-a97b-8153f1d7874a', '13-14 years', 'F', 'None', 1, 'Once'),
