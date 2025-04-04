@@ -5,7 +5,6 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Float,
     ForeignKey,
     Integer,
     Numeric,
@@ -125,10 +124,6 @@ class Vaccine(AsyncAttrs, Base):
         default=lambda: str(uuid.uuid4()),
     )
     name = Column("name", String, unique=True, nullable=False)
-    price = Column("price", Float(precision=2), nullable=False)
-    doses_required = Column("doses_required", Integer, nullable=False)
-    age_criteria = Column("age_criteria", String)
-    gender_criteria = Column("gender_criteria", String)
     created_at = Column(
         "created_at", DateTime, server_default=func.now(), nullable=False
     )
@@ -141,6 +136,37 @@ class Vaccine(AsyncAttrs, Base):
     )
 
     booking_slots = relationship("BookingSlot", back_populates="vaccine")
+    vaccine_criterias = relationship("VaccineCriteria", back_populates="vaccine")
+
+
+class VaccineCriteria(AsyncAttrs, Base):
+    __tablename__ = "VaccineCriteria"
+
+    id = Column(
+        "id",
+        String,
+        primary_key=True,
+        nullable=False,
+        default=lambda: str(uuid.uuid4()),
+    )
+    vaccine_id = Column("vaccine_id", String, ForeignKey("Vaccines.id"), nullable=False)
+    age_criteria = Column("age_criteria", String)
+    gender_criteria = Column("gender_criteria", String)
+    health_condition_criteria = Column("health_condition_criteria", String)
+    doses_required = Column("doses_required", Integer, nullable=False)
+    frequency = Column("frequency", String)
+    created_at = Column(
+        "created_at", DateTime, server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        "updated_at",
+        DateTime,
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+    vaccine = relationship("Vaccine", back_populates="vaccine_criterias")
 
 
 class BookingSlot(AsyncAttrs, Base):
