@@ -13,6 +13,7 @@ import { MessageService } from 'primeng/api';
 import { EndpointService } from '../../services/endpoint.service';
 import { Signup } from '../../types/signup.type';
 import { Login } from '../../types/login.type';
+import { timeout } from 'rxjs';
 
 @Component({
   selector: 'app-vaccine-index',
@@ -42,6 +43,8 @@ export class VaccineIndexComponent {
   bookingDate: string = '-';
   bookingTime: string = '-';
   agentUsed: string = '';
+  dataType: string = '';
+  agentMessage: string = '';
 
   isSignUp = false;
   isSinpassLogin = false;
@@ -62,7 +65,7 @@ export class VaccineIndexComponent {
   ];
 
   suggestedQns: String[] = ['Can you help me book my Vaccination?', 'Please show me my Vaccination history'];
-  vaccines: String[] = ['Pneumococcal conjugate 13-valent (PCV-13)', 'Varicella (VAR)', 'Influenza (trivalent) (INF)', 'Hepatitis B (HepB)'];
+  vaccines: String[] = [];
   messages: Message[] = [];
   vaccinationRecords: String[] = [];
   constructor(
@@ -116,22 +119,26 @@ export class VaccineIndexComponent {
           this.isSinpassLogin = false;
           this.isLoggedIn = true;
 
-          this.endpointService.dummyRecord().subscribe({
-            next: response => {
-              let vaccineString = (response as any).text;
+          this.endpointService.dummyOrchestrator().subscribe(
+            response => {
+              // Extract fields from the response
+              this.agentUsed = response.agent_name;
+              this.dataType = response.data_type;
+              this.vaccinationRecords = response.data.vaccines;
+              this.vaccines = response.data.vaccines;
+              this.agentMessage = response.message;
 
-              const regex: RegExp = /\s*([^,(]+)\s*(?:\([^)]+\))?/g;
-              let match: RegExpExecArray | null;
+              setTimeout(() => {
+                this.agentUsed = 'Record agent';
+              }, 1000);
 
-              // Iterate through all matches and push them to the vaccinations array
-              while ((match = regex.exec(vaccineString)) !== null) {
-                const vaccineName = match[1].trim();
-                if (vaccineName) {
-                  this.vaccinationRecords.push(vaccineName);
-                }
-              }
+              console.log('response.data.vaccines', response.data.vaccines);
+            },
+            error => {
+              console.error('Error calling dummy orchestrator:', error);
             }
-          });
+          );
+
           this.scrollToBottom();
         },
         error: error => {
