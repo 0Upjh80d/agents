@@ -78,10 +78,10 @@ agent_app = create_agent_app()
 
 async def run_apps():
     config_main = uvicorn.Config(
-        "main:main_app", host="127.0.0.1", port=8000, reload=True
+        "main:main_app", host="127.0.0.1", port=8000, reload=True, reload_dirs=["."]
     )
     config_agent = uvicorn.Config(
-        "main:agent_app", host="127.0.0.1", port=8001, reload=True
+        "main:agent_app", host="127.0.0.1", port=8001, reload=True, reload_dirs=["."]
     )
 
     server_main = uvicorn.Server(config_main)
@@ -91,5 +91,6 @@ async def run_apps():
     await asyncio.gather(server_main.serve(), server_agent.serve())
 
 
+# main function to run the app
 if __name__ == "__main__":
     asyncio.run(run_apps())
