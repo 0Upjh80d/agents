@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-router = APIRouter(prefix="/clinic", tags=["Clinic"])
+router = APIRouter(prefix="/clinics", tags=["Clinic"])
 
 
 @router.get(
