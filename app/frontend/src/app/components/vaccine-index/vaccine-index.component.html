@@ -73,7 +73,7 @@
         <div *ngIf="agentUsed !== ''" class="tw-inline-flex tw-gap-2 tw-p-2 tw-rounded-lg">
           <p class="tw-bg-gray-300 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">{{ agentUsed }}</p>
         </div>
-        <h1 [class]="'tw-flex-1 tw-font-bold tw-text-2xl tw-text-center ' + (agentUsed !== '' ? 'tw-mr-[100px]' : null)">Data Preview</h1>
+        <h1 [class]="'tw-flex-1 tw-font-bold tw-text-2xl tw-text-center ' + (agentUsed !== '' ? 'tw-mr-[100px]' : null)">Preview</h1>
       </div>
       <div *ngIf="isSinpassLogin" class="tw-flex tw-flex-col tw-h-full tw-overflow-hidden">
         <!-- Header with logo -->
@@ -201,7 +201,7 @@
           <!-- Current Vaccination Section -->
           <div *ngIf="!isVaccineSelected || showConfirmed" class="tw-bg-gray-100 tw-rounded-lg tw-p-6 tw-mb-6">
             <h3 class="tw-text-xl tw-font-bold tw-mb-6">Current Vaccination</h3>
-            <div [class]="'tw-overflow-y-auto ' + (showConfirmed ? 'tw-max-h-[130px]' : 'tw-max-h-[370px]')">
+            <div [class]="'tw-overflow-y-auto ' + (showConfirmed ? 'tw-max-h-[130px]' : 'tw-max-h-[350px]')">
               @for (v of vaccinationRecords; track vaccinationRecords) {
                 <div class="tw-border-b tw-border-gray-500 tw-pb-4 tw-mb-4 tw-max-w-md">
                   <div class="tw-flex tw-items-center tw-justify-between">
@@ -216,7 +216,7 @@
           <!-- Booking Details Section -->
           <div *ngIf="isVaccineSelected || showConfirmed" class="tw-bg-gray-100 tw-rounded-lg tw-p-6 tw-mb-6">
             <h3 class="tw-text-xl tw-font-bold tw-mb-6">Booking Details</h3>
-            <div [class]="'tw-overflow-y-auto ' + (showConfirmed ? 'tw-max-h-[130px]' : 'tw-max-h-[370px]')">
+            <div [class]="'tw-overflow-y-auto ' + (showConfirmed ? 'tw-max-h-[130px]' : 'tw-max-h-[350px]')">
               <div *ngIf="!showConfirmed" class="tw-p-6">
                 <div class="tw-space-y-4">
                   <div class="tw-flex tw-items-start">
