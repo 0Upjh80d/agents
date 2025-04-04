@@ -1,24 +1,91 @@
 import pytest
 from httpx import AsyncClient
+from pydantic import TypeAdapter
 from requests import Response
-from schemas.booking import BookingSlotResponse
+from schemas.booking import AvailableSlotResponse, BookingSlotResponse
 from schemas.record import VaccineRecordResponse
 from schemas.vaccine import VaccineCriteriaResponse
 
 
 # ============================================================================
-# Get all slots
-# TODO: user without address (when staging merged)
-# TODO: distance increasing (when staging merged)
+# authorized user get all slots (valid)
 # ============================================================================
 @pytest.mark.asyncio
-async def test_get_all_available_booking_slots(
-    authorized_client: AsyncClient,
+@pytest.mark.parametrize(
+    "case, params, expected_status",
+    [
+        # Basic test with just vaccine name
+        (1, {"vaccine_name": "Influenza (INF)"}, 200),
+        # Test with specified polyclinic
+        (
+            2,
+            {"vaccine_name": "Influenza (INF)", "polyclinic_name": "yishun polyclinic"},
+            200,
+        ),
+    ],
+)
+async def test_authorized_user_get_all_available_booking_slots(
+    authorized_client_for_scheduling: AsyncClient,
+    case: int,
+    params: dict,
+    expected_status: int,
+):
+
+    res: Response = await authorized_client_for_scheduling.get(
+        "/bookings/available", params=params
+    )
+    assert res.status_code == expected_status
+
+    slots_data = res.json()
+    adapter = TypeAdapter(AvailableSlotResponse)
+
+    match case:
+        case 1:
+            assert len(slots_data) == 2
+            for slot in slots_data:
+                # Test for slot data structure compared to our schema
+                try:
+                    adapter.validate_python(slot)
+                except Exception as e:
+                    pytest.fail(
+                        f"Response data doesn't match AvailableSlotResponse structure: {e}"
+                    )
+        case 2:
+            assert len(slots_data) == 1
+            slot = AvailableSlotResponse(**slots_data[0])
+            assert slot.polyclinic.name == "Yishun Polyclinic"
+
+
+# ============================================================================
+# authorized user get all slots (invalid)
+# ============================================================================
+@pytest.mark.asyncio
+async def test_authorized_user_invalid_get_all_available_booking_slots(
+    authorized_client_for_scheduling: AsyncClient,
+):
+    # Test with non-existent vaccine name
+    params = {"vaccine_name": "wrongvaccine"}
+
+    res: Response = await authorized_client_for_scheduling.get(
+        "/bookings/available", params=params
+    )
+    assert res.status_code == 404
+    assert (
+        res.json().get("detail") == f"No available slots for {params['vaccine_name']}."
+    )
+
+
+# ============================================================================
+# unauthorized user get all slots
+# ============================================================================
+@pytest.mark.asyncio
+async def test_unauthorized_user_get_all_available_booking_slots(
+    async_client: AsyncClient,
 ):
     params = {"vaccine_name": "Influenza (INF)"}
-    res: Response = await authorized_client.get("/bookings/available", params=params)
-
-    assert res.status_code == 200
+    res: Response = await async_client.get("/bookings/available", params=params)
+    assert res.status_code == 401
+    assert res.json().get("detail") == "Not authenticated"
 
 
 # ============================================================================
