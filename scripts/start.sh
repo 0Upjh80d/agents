@@ -11,4 +11,5 @@ echo "Syncing dependencies..."
 uv sync
 
 cd app/backend/app
-uvicorn main:app --reload
+python main.py
+# uvicorn main:app --reload
