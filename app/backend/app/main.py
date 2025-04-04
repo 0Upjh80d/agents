@@ -78,10 +78,10 @@ agent_app = create_agent_app()
 
 async def run_apps():
     config_main = uvicorn.Config(
-        "main:main_app", host="0.0.0.0", port=8000, reload=True
+        "main:main_app", host="127.0.0.1", port=8000, reload=True
     )
     config_agent = uvicorn.Config(
-        "main:agent_app", host="0.0.0.0", port=8001, reload=True
+        "main:agent_app", host="127.0.0.1", port=8001, reload=True
     )
 
     server_main = uvicorn.Server(config_main)
