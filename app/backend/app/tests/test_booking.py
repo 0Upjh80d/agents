@@ -89,7 +89,7 @@ async def test_unauthorized_user_get_all_available_booking_slots(
 
 
 # ============================================================================
-# Get 1 valid slot
+# get 1 valid slot
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -128,7 +128,7 @@ async def test_valid_booking_slot(
 
 
 # ============================================================================
-# Get 1 invalid slot
+# get 1 invalid slot
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -147,7 +147,7 @@ async def test_invalid_booking_slot(async_client: AsyncClient, slot_id: str):
 
 
 # ============================================================================
-# TODO: authorised user valid schedule
+# authorised user valid schedule
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -177,7 +177,7 @@ async def test_authorized_user_valid_schedule(
 
 
 # ============================================================================
-# TODO: authorised user invalid schedule (booked alr or invalid id)
+# authorised user invalid schedule (booked alr or invalid id)
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -226,7 +226,7 @@ async def test_authorized_user_invalid_schedule(
 
 
 # ============================================================================
-# TODO: unauthorised user schedule
+# unauthorised user schedule
 # ============================================================================
 @pytest.mark.asyncio
 async def test_unauthorized_user_schedule(async_client: AsyncClient):
@@ -240,7 +240,7 @@ async def test_unauthorized_user_schedule(async_client: AsyncClient):
 
 
 # ============================================================================
-# TODO: authorised user valid cancel
+# authorised user valid cancel
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -261,7 +261,7 @@ async def test_authorized_user_valid_cancel(
 
 
 # ============================================================================
-# TODO: authorised user invalid cancel
+# authorised user invalid cancel
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -299,7 +299,7 @@ async def test_authorized_user_invalid_record_cancel(
 
 
 # ============================================================================
-# TODO: unauthorised user cancel
+# unauthorised user cancel
 # ============================================================================
 @pytest.mark.asyncio
 async def test_unauthorized_user_cancel(async_client: AsyncClient):
@@ -313,7 +313,7 @@ async def test_unauthorized_user_cancel(async_client: AsyncClient):
 
 
 # ============================================================================
-# TODO: authorised user valid reschedule
+# authorised user valid reschedule
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -348,7 +348,7 @@ async def test_authorized_user_valid_reschedule(
 
 
 # ============================================================================
-# TODO: authorised user invalid reschedule (reschule slot or new slot invalid)
+# authorised user invalid reschedule (reschule slot or new slot invalid)
 # ============================================================================
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
@@ -385,7 +385,7 @@ async def test_authorized_user_valid_reschedule(
     ],
 )
 async def test_authorized_user_invalid_reschedule(
-    authorized_client_for_scheduling: AsyncClient,  # TODO: CHANGE CLEINT
+    authorized_client_for_scheduling: AsyncClient,
     record_id: str,
     new_slot_id: str,
     expected_status: int,
@@ -407,7 +407,7 @@ async def test_authorized_user_invalid_reschedule(
 
 
 # ============================================================================
-# TODO: unauthorised user reschedule
+# unauthorised user reschedule
 # ============================================================================
 @pytest.mark.asyncio
 async def test_unauthorized_user_reschedule(async_client: AsyncClient):
