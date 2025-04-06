@@ -8,7 +8,7 @@ if ! command -v uv >/dev/null 2>&1; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
 fi
 
-echo "Creaing python virtual environment..."
+echo "Creating python virtual environment..."
 uv venv
 source .venv/bin/activate
 
