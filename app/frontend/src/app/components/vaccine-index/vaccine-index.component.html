@@ -5,23 +5,9 @@
       <div #scrollableTextContent id="scrollableTextContent" class="tw-flex-1 tw-flex tw-overflow-y-auto tw-flex-col tw-items-stretch tw-gap-2 tw-pt-4 tw-px-4">
         <app-text-system [message]="greeting[0]"></app-text-system>
         <div class="tw-flex tw-flex-wrap tw-gap-4 tw-justify-center tw-my-4">
-          <ng-template #questionTemplate let-question let-i="index">
+          <ng-container *ngFor="let question of suggestedQns; let i = index">
             <ng-container [ngTemplateOutlet]="questionBtn" [ngTemplateOutletContext]="{ question: question, index: i }"></ng-container>
-          </ng-template>
-          <ng-container>
-            <ng-container *ngFor="let question of suggestedQns; let i = index">
-              <ng-container [ngTemplateOutlet]="questionBtn" [ngTemplateOutletContext]="{ question: question, index: i }"></ng-container>
-            </ng-container>
           </ng-container>
-          <ng-template #questionBtn let-question="question" let-i="index">
-            <button
-              type="button"
-              class="suggestion-card tw-bg-white tw-px-4 tw-py-2 tw-shadow-md tw-rounded-lg tw-w-full sm:tw-w-[40%] tw-flex-grow-0 tw-flex-shrink-0"
-              (click)="suggestedQn(question)"
-            >
-              <p class="tw-text-left">{{ question }}</p>
-            </button>
-          </ng-template>
         </div>
         @for (message of messages; track message) {
           @if (message.message.trim()) {
@@ -31,39 +17,64 @@
               }
               @case (system) {
                 <app-text-system [message]="message"></app-text-system>
-                <div
-                  class="tw-pr-[0px] tw-w-full tw-flex tw-flex-row tw-justify-start tw-items-start"
-                  [ngClass]="{
-                    'tw-pr-[0px]': true,
-                    'tw-w-full': true,
-                    'tw-flex': true,
-                    'tw-flex-row': true,
-                    'tw-justify-start': true,
-                    'tw-items-start': true
-                  }"
-                  tabindex="-1"
-                >
-                  <button
-                    class=""
-                    [class]="'tw-overflow-auto tw-font-bold tw-px-3 tw-py-2 tw-rounded-2xl ' + (isLoggedIn ? 'content-card' : 'tw-bg-red-500 tw-text-white')"
-                    (click)="SingpassLogin()"
+                @if (message === lastSystemMessage()) {
+                  <div
+                    class="tw-pr-[0px] tw-w-full tw-flex tw-flex-row tw-justify-start tw-items-start"
+                    [ngClass]="{
+                      'tw-pr-[0px]': true,
+                      'tw-w-full': true,
+                      'tw-flex': true,
+                      'tw-flex-row': true,
+                      'tw-justify-start': true,
+                      'tw-items-start': true
+                    }"
+                    tabindex="-1"
                   >
-                    {{ isLoggedIn ? "Login successfully." : "Log in with Singpass" }}
-                  </button>
-                </div>
+                    <button
+                      *ngIf="!isVaccineSelected"
+                      [class]="
+                        'tw-overflow-auto tw-font-bold tw-px-3 tw-py-2 tw-rounded-2xl ' +
+                        (isLoggedIn ? 'content-card tw-cursor-default ' : 'tw-bg-red-500 tw-text-white')
+                      "
+                      (click)="isLoggedIn ? '' : SingpassLogin()"
+                    >
+                      {{ isLoggedIn ? (isBookVaccine ? "Please select one vaccine" : "Login successfully.") : "Log in with Singpass" }}
+                    </button>
+                  </div>
+                  <div *ngIf="isBookVaccine && isLoggedIn && !isVaccineSelected" class="tw-mt-4">
+                    <div class="tw-overflow-x-auto tw-whitespace-nowrap">
+                      <div class="tw-inline-flex tw-gap-2 tw-p-2 tw-rounded-lg">
+                        @for (v of vaccines; track vaccines) {
+                          <button (click)="selectVaccine(v.toString())" class="tw-bg-gray-100 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">
+                            {{ v }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                  <div *ngIf="isConfirming" class="tw-inline-flex tw-gap-2 tw-p-2 tw-rounded-lg">
+                    <button (click)="processUserInput('Confirm')" class="tw-bg-gray-100 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">Confirm</button>
+                  </div>
+                }
               }
             }
           }
         }
       </div>
       <div class="tw-mt-auto tw-w-full tw-max-w-[860px]">
-        <app-text-input></app-text-input>
+        <app-text-input (sendMessage)="handleUserInput($event)"></app-text-input>
       </div>
     </div>
   </div>
   <div class="tw-w-1/2 tw-h-full tw-p-4 tw-flex tw-justify-center tw-items-center">
     <div class="tw-bg-white tw-shadow-md tw-rounded-lg tw-w-full tw-h-full tw-p-6 tw-flex tw-flex-col">
-      <h1 class="tw-flex tw-justify-center tw-font-bold tw-text-2xl">Data Preview</h1>
+      <div class="tw-flex tw-items-center tw-justify-between">
+        <img src="assets/robot.png" alt="Robot icon" width="40" height="52" class="mr-4" />
+        <div *ngIf="agentUsed !== ''" class="tw-inline-flex tw-gap-2 tw-p-2 tw-rounded-lg">
+          <p class="tw-bg-gray-300 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">{{ agentUsed }}</p>
+        </div>
+        <h1 [class]="'tw-flex-1 tw-font-bold tw-text-2xl tw-text-center ' + (agentUsed !== '' ? 'tw-mr-[100px]' : null)">Preview</h1>
+      </div>
       <div *ngIf="isSinpassLogin" class="tw-flex tw-flex-col tw-h-full tw-overflow-hidden">
         <!-- Header with logo -->
         <div class="tw-mb-6">
@@ -186,29 +197,114 @@
             <p class="tw-text-gray-700"><span class="tw-font-medium">Address: </span> <b>544756</b></p>
           </div>
         </div>
-        <div class="tw-overflow-y-auto tw-flex-1 tw-px-6">
-          <div class="tw-bg-gray-100 tw-rounded-lg tw-p-6 tw-mb-6">
+        <div class="tw-flex-1 tw-px-6">
+          <!-- Current Vaccination Section -->
+          <div *ngIf="!isVaccineSelected || showConfirmed" class="tw-bg-gray-100 tw-rounded-lg tw-p-6 tw-mb-6">
             <h3 class="tw-text-xl tw-font-bold tw-mb-6">Current Vaccination</h3>
-            <div class="tw-overflow-y-auto">
-              @for (v of vaccinations; track vaccinations) {
+            <div [class]="'tw-overflow-y-auto ' + (showConfirmed ? 'tw-max-h-[130px]' : 'tw-max-h-[350px]')">
+              @for (v of vaccinationRecords; track vaccinationRecords) {
                 <div class="tw-border-b tw-border-gray-500 tw-pb-4 tw-mb-4 tw-max-w-md">
                   <div class="tw-flex tw-items-center tw-justify-between">
                     <span class="tw-font-medium">{{ v }}</span>
-                    <span class="tw-text-green-500 tw-font-medium tw-mr-[150px]">Vaccinated</span>
+                    <span class="tw-text-green-500 tw-font-medium tw-mr-[50px]">Vaccinated</span>
                   </div>
                 </div>
               }
             </div>
           </div>
+
+          <!-- Booking Details Section -->
+          <div *ngIf="isVaccineSelected || showConfirmed" class="tw-bg-gray-100 tw-rounded-lg tw-p-6 tw-mb-6">
+            <h3 class="tw-text-xl tw-font-bold tw-mb-6">Booking Details</h3>
+            <div [class]="'tw-overflow-y-auto ' + (showConfirmed ? 'tw-max-h-[130px]' : 'tw-max-h-[350px]')">
+              <div *ngIf="!showConfirmed" class="tw-p-6">
+                <div class="tw-space-y-4">
+                  <div class="tw-flex tw-items-start">
+                    <span class="tw-w-28 tw-font-medium">Clinic:</span>
+                    <span class="tw-font-bold">Sengkang Polyclinic</span>
+                  </div>
+                  <div class="tw-flex tw-items-start">
+                    <span class="tw-w-28 tw-font-medium">Vaccine:</span>
+                    <span class="tw-font-bold">{{ vaccineSelected }}</span>
+                  </div>
+                  <div class="tw-flex tw-items-start">
+                    <span class="tw-w-28 tw-font-medium">Date:</span>
+                    <span class="tw-font-bold">{{ bookingDate }}</span>
+                  </div>
+                  <div class="tw-flex tw-items-start">
+                    <span class="tw-w-28 tw-font-medium">Time:</span>
+                    <span class="tw-font-bold">{{ bookingTime }}</span>
+                  </div>
+                  <div *ngIf="isConfirming || isBookingConfirmed" class="tw-flex tw-items-start tw-mt-4">
+                    <span class="tw-w-28 tw-font-medium">Status:</span>
+                    <span>
+                      <div
+                        [class]="
+                          'tw-flex tw-items-center tw-justify-center tw-rounded-full tw-px-8 tw-py-3 tw-w-[230px] tw-h-[29px] ' +
+                          (isBookingConfirmed ? 'tw-bg-green-300 ' : 'tw-bg-yellow-300')
+                        "
+                      >
+                        <p class="tw-text-center tw-font-bold tw-text-[13px]">{{ isBookingConfirmed ? "Successful" : "Pending Confirmation" }}</p>
+                      </div>
+                    </span>
+                  </div>
+                </div>
+                <div *ngIf="!hideSlotTable" class="tw-mt-6 tw-max-h-[200px] tw-overflow-y-auto">
+                  <table class="tw-w-full tw-border-collapse tw-border tw-border-gray-800">
+                    <thead>
+                      <tr>
+                        <th class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">Date</th>
+                        <th class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">Available Slots</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">28 Mar</td>
+                        <td class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">10</td>
+                      </tr>
+                      <tr>
+                        <td class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">29 Mar</td>
+                        <td class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">15</td>
+                      </tr>
+                      <tr>
+                        <td class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">30 Mar</td>
+                        <td class="tw-border tw-border-gray-800 tw-p-3 tw-text-center">20</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div *ngIf="showConfirmed" class="tw-border-b tw-border-gray-500 tw-pb-4 tw-mb-4 tw-max-w-md">
+                <div class="tw-flex tw-items-center tw-justify-between">
+                  <div class="tw-flex tw-flex-col">
+                    <span class="tw-font-[10px] tw-font-bold">{{ vaccineSelected }}</span>
+                    <span class="tw-font-[10px] tw-ml-5"> Sengkang Polyclinic</span>
+                    <span class="tw-font-[10px] tw-ml-5"> {{ bookingDate + ", " + bookingTime }}</span>
+                  </div>
+                  <span class="tw-text-green-500 tw-font-medium tw-mr-[50px]">Confirmed</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="tw-flex tw-justify-end tw-font-bold tw-mt-auto tw-p-6 tw-flex-shrink-0">
-        <div class="tw-flex tw-justify-center tw-items-center">
-          <div class="tw-bg-gradient-to-r tw-from-red-400 tw-via-pink-500 tw-to-purple-500 tw-rounded-full tw-px-8 tw-py-3 tw-w-full tw-max-w-md">
-            <p class="tw-text-white tw-text-center tw-font-bold tw-text-2xl">Powered by AI</p>
-          </div>
+      <div class="tw-flex tw-justify-end tw-font-bold tw-mt-auto tw-flex-shrink-0">
+        <div
+          class="tw-flex tw-items-center tw-justify-center tw-bg-gradient-to-r tw-from-red-400 tw-via-pink-500 tw-to-purple-500 tw-rounded-full tw-px-8 tw-py-3 tw-w-[180px] tw-h-[28px]"
+        >
+          <p class="tw-text-white tw-text-center tw-font-bold tw-text-[13px]">Powered by AI</p>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<ng-template #questionBtn let-question="question" let-i="index">
+  <button
+    type="button"
+    class="suggestion-card tw-bg-white tw-px-4 tw-py-2 tw-shadow-md tw-rounded-lg tw-w-full sm:tw-w-[48%] tw-flex-grow-0 tw-flex-shrink-0"
+    (click)="suggestedQn(question)"
+  >
+    <p class="tw-text-left">{{ question }}</p>
+  </button>
+</ng-template>

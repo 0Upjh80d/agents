@@ -43,20 +43,11 @@ export class EndpointService {
       );
   }
 
-  dummyRecord() {
-    const data = {
-      text: 'dummyRecord'
-    };
-    return this.httpClient
-      .post(`${this.baseUrl}/dummy_record`, data, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+  dummyOrchestrator(): Observable<any> {
+    return this.httpClient.get(`${this.baseUrl}/dummy_orchestrator`).pipe(
+      catchError(error => {
+        return throwError(() => new Error(error.error.detail));
       })
-      .pipe(
-        catchError(error => {
-          return throwError(() => new Error(error.error.detail));
-        })
-      );
+    );
   }
 }

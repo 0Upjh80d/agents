@@ -14,6 +14,7 @@ import { InputTextModule } from 'primeng/inputtext';
 })
 export class TextInputComponent {
   @Output() heightChange = new EventEmitter<number>();
+  @Output() sendMessage = new EventEmitter<string>();
 
   @ViewChild('inputTextarea') inputTextarea!: ElementRef<HTMLTextAreaElement>;
   @ViewChild('inputTextContainer') inputTextContainer!: ElementRef<HTMLTextAreaElement>;
@@ -42,5 +43,14 @@ export class TextInputComponent {
       const height = this.inputTextContainer.nativeElement.getBoundingClientRect().height;
       this.heightChange.emit(height);
     }, 0);
+  }
+
+  onSendMessage(): void {
+    const message = this.inputTextarea.nativeElement.value.trim();
+    if (message) {
+      this.sendMessage.emit(message);
+      this.inputTextarea.nativeElement.value = '';
+      this.adjustTextareaRows();
+    }
   }
 }
