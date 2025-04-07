@@ -52,23 +52,6 @@ jobs:
           # Ensure we have the actual PR commit
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Detect Relevant Changes
-        id: detect
-        run: |
-          git fetch --no-tags --prune --depth=1 origin ${{ github.base_ref }}
-          CHANGED_FILES="$(git diff --name-only --diff-filter=AM HEAD origin/${{ github.base_ref }})"
-
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-
-          # If any changed files match app/backend/app/ or scripts/test_api.sh, run tests;
-          # otherwise skip them.
-          if echo "$CHANGED_FILES" | grep -qE '^app/backend/app/|^scripts/test_api.sh$'; then
-            echo "should_skip=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_skip=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Set Up Python
         uses: actions/setup-python@v5
         with:
