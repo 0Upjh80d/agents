@@ -27,4 +27,4 @@ jobs:
             test
             chore
           validateSingleCommit: false # set to true if you want single-commit validation
-          subjectPattern: "^(feat|fix|docs|styles|refactor|test|chore): [a-z].+"
+          subjectPattern: "^(feat|fix|docs|styles|refactor|test|chore): [a-z].*$"
