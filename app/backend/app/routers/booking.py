@@ -153,7 +153,7 @@ async def get_booking_slot(
         select(BookingSlot)
         .options(
             selectinload(BookingSlot.polyclinic).selectinload(Clinic.address),
-            selectinload(BookingSlot.vaccine),
+            selectinload(BookingSlot.vaccine).selectinload(Vaccine.vaccine_criterias),
         )
         .filter_by(id=id)
     )
