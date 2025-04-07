@@ -1,0 +1,77 @@
+@import "primeicons/primeicons.css";
+
+@layer tailwind-base, primeng, tailwind-utilities;
+
+@layer tailwind-base {
+  @tailwind base;
+}
+
+@layer tailwind-utilities {
+  @tailwind components;
+  @tailwind utilities;
+}
+
+@layer utilities {
+  /* Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* Adding list-style back to ul and ol */
+@layer base {
+  ul,
+  ol {
+    padding-left: 2.5em;
+    list-style: revert;
+  }
+
+  table,
+  th,
+  td {
+    border: 1px solid black;
+  }
+}
+
+body,
+html {
+  position: fixed;
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  touch-action: none;
+  -webkit-overflow-scrolling: none;
+  overscroll-behavior: none;
+}
+
+.background-colour {
+  background-color: #dbe5e4;
+}
+
+.content-card {
+  background: #ffffff;
+  border: 1px solid #d5f0f7;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+}
+
+.suggestion-card {
+  background: #ffffff;
+  border: 1px solid #d5f0f7;
+}

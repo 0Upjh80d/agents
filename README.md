@@ -132,9 +132,16 @@ For more information on development, you may find the following documentations u
 
    ![Starting the Server](./media/start-server.png)
 
-3. Navigate to URL shown in terminal, e.g. `http://127.0.0.1:8000`
+3. The application consists of two separate FastAPI instances, naviage to the URL shown in terminal
 
-4. To access the API endpoints, add `/docs` to the URL, e.g. `http://127.0.0.1:8000/docs`
+   - Main Server at `http://127.0.0.1:8000` - Handles core application functionality
+   - Agent Server at `http://127.0.0.1:8001` - Dedicated to chat functionality
+
+4. To access the API endpoints, add `/docs` to the URL
+
+   - Main API Docs: `http://127.0.0.1:8000/docs`
+
+   - Agent API Docs: `http://127.0.0.1:8001/docs`
 
    ![FastAPI Endpoints](./media/swagger.png)
 

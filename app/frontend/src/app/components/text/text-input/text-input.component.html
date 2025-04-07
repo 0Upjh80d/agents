@@ -1,0 +1,29 @@
+<small *ngIf="remainingChars === 0" class="tw-text-red-500">1000 characters limit reached</small>
+
+<div #inputTextContainer class="textinput tw-px-3 tw-py-2 tw-rounded-[12px] tw-border tw-border-solid tw-border-gray-200 tw-bg-white">
+  <form class="tw-flex tw-flex-row tw-items-end tw-w-full tw-gap-1">
+    <textarea
+      #inputTextarea
+      id="text-input"
+      pInputText
+      [placeholder]="'Ask me a health-related question...'"
+      class="tw-w-full tw-flex-1 custom-textarea tw-overflow-y-auto tw-max-h-[90px]"
+      maxlength="1000"
+      [ngClass]="{ 'tw-shadow-[0_0_0_0.2rem_rgba(255,0,0,1)]': remainingChars === 0 }"
+      rows="1"
+      (input)="adjustTextareaRows()"
+    ></textarea>
+    <p-button
+      id="text-input-form-submission"
+      type="button"
+      icon="pi pi-send"
+      [outlined]="false"
+      severity="primary"
+      [ngClass]="{
+        'tw-opacity-50 tw-cursor-not-allowed': false,
+        'tw-text-white': true
+      }"
+      (click)="onSendMessage()"
+    />
+  </form>
+</div>
