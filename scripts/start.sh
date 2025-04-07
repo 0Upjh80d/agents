@@ -106,7 +106,7 @@ echo "${MAIN_COLOR}Starting main server on port 8000...${RESET_COLOR}"
 echo "${AGENT_COLOR}Starting agent server on port 8001...${RESET_COLOR}"
 
 # Start both servers in the background
-run_server "main_app" 8000 "$MAIN_COLOR" "MAIN" &
+run_server "app" 8000 "$MAIN_COLOR" "MAIN" &
 main_pid=$!
 
 run_server "agent_app" 8001 "$AGENT_COLOR" "AGENT" &
