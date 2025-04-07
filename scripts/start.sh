@@ -1,20 +1,37 @@
 #!/bin/bash
+# Define colors
+MAIN_COLOR="\033[1;36m"  # Cyan
+AGENT_COLOR="\033[1;33m" # Yellow
+RESET_COLOR="\033[0m"    # Reset to default
 
-# --- Function to clean up background processes on exit ---
+# --- Function to clean up all background processes on exit ---
 cleanup() {
-    echo "Received exit signal. Stopping background processes..."
-    # Check if FRONTEND_PID is set and the process exists
+    echo "Received exit signal. Stopping all background processes..."
+
+    # Stop frontend server
     if [[ ! -z "$FRONTEND_PID" && -e /proc/$FRONTEND_PID ]]; then
         echo "Stopping frontend server (PID: $FRONTEND_PID)..."
-        # Send TERM signal, wait a bit, then KILL if needed
         kill $FRONTEND_PID
         sleep 2
         if [[ -e /proc/$FRONTEND_PID ]]; then
-           kill -9 $FRONTEND_PID
+            kill -9 $FRONTEND_PID
         fi
     else
-         echo "Frontend process not found or already stopped."
+        echo "Frontend process not found or already stopped."
     fi
+
+    # Stop backend servers
+    if [[ ! -z "$main_pid" ]]; then
+        echo "Stopping main server (PID: $main_pid)..."
+        kill $main_pid 2>/dev/null
+    fi
+
+    if [[ ! -z "$agent_pid" ]]; then
+        echo "Stopping agent server (PID: $agent_pid)..."
+        kill $agent_pid 2>/dev/null
+    fi
+
+    echo "All processes stopped."
     exit 0
 }
 
@@ -22,25 +39,22 @@ cleanup() {
 # Call the cleanup function when the script receives SIGINT (Ctrl+C) or SIGTERM
 trap cleanup INT TERM
 
-# --- Initial Setup ---
+# ----- Initial Setup -----
 # Check if uv is installed
 if ! command -v uv >/dev/null 2>&1; then
     echo "uv not installed. Installing..."
-    # Use -E for sudo if needed, handle potential errors
     curl -LsSf https://astral.sh/uv/install.sh | sh || { echo "Failed to install uv"; exit 1; }
-    # Ensure uv is in PATH for the current script session
     source "$HOME/.cargo/env" # Common location, adjust if uv installs elsewhere
 fi
 
 echo "Creating/updating python virtual environment..."
-uv venv || { echo "Failed to create venv"; exit 1; } # Ensure venv exists
-
-# Activate - important for subsequent uv/python commands
+uv venv || { echo "Failed to create venv"; exit 1; }
 source .venv/bin/activate || { echo "Failed to activate venv"; exit 1; }
 
 echo "Syncing Python dependencies..."
 uv sync || { echo "Failed to sync Python dependencies"; exit 1; }
 
+# ----- Run frontend server -----
 echo ""
 echo "--- Frontend Setup ---"
 echo "Changing to frontend directory..."
@@ -65,18 +79,38 @@ echo "Frontend server started in background with PID: $FRONTEND_PID"
 # Give it a few seconds to start up (optional, helps avoid log mingling initially)
 sleep 5
 
+# ----- Run backend main and agent servers -----
 echo ""
 echo "--- Backend Setup ---"
 echo "Changing to backend directory..."
 # Navigate relative to the current frontend directory
-cd ../../app/backend/app || { echo "Failed to change directory to app/backend/app"; exit 1; }
+cd ../backend/app || { echo "Failed to change directory to app/backend/app"; exit 1; }
 
-# --- Start Backend Server in Foreground ---
-echo "Starting backend server (uvicorn)... (Press CTRL+C to stop both servers)"
-# Uvicorn runs in the foreground. When you press Ctrl+C, the trap will trigger.
-uvicorn main:app --reload --host 0.0.0.0
+# Function to run server with colored output
+run_server() {
+    local app_name=$1
+    local port=$2
+    local color=$3
+    local label=$4
 
-# --- Script waits here until uvicorn stops ---
+    # Run uvicorn with colored output
+    uvicorn "main:$app_name" --reload --host 127.0.0.1 --port "$port" 2>&1 | \
 
-echo "Backend server stopped."
-cleanup # Call cleanup explicitly in case uvicorn exited without a signal
+        while IFS= read -r line; do
+            printf "${color}[${label}]%s${RESET_COLOR}\n" "$line"
+        done
+}
+
+# Run both servers in parallel
+echo "${MAIN_COLOR}Starting main server on port 8000...${RESET_COLOR}"
+echo "${AGENT_COLOR}Starting agent server on port 8001...${RESET_COLOR}"
+
+# Start both servers in the background
+run_server "main_app" 8000 "$MAIN_COLOR" "MAIN" &
+main_pid=$!
+
+run_server "agent_app" 8001 "$AGENT_COLOR" "AGENT" &
+agent_pid=$!
+
+# Wait for both processes to exit
+wait $main_pid $agent_pid $FRONTEND_PID
