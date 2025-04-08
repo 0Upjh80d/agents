@@ -13,7 +13,7 @@ import { MessageService } from 'primeng/api';
 import { EndpointService } from '../../services/endpoint.service';
 import { Signup } from '../../types/signup.type';
 import { Login } from '../../types/login.type';
-import { timeout } from 'rxjs';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-vaccine-index',
@@ -45,9 +45,10 @@ export class VaccineIndexComponent {
   agentUsed: string = '';
   dataType: string = '';
   agentMessage: string = '';
+  link: SafeResourceUrl = '';
 
   isSignUp = false;
-  isSinpassLogin = false;
+  isSingpassLogin = false;
   isLoggedIn = false;
   isVaccineSelected = false;
   isBookVaccine: boolean = false;
@@ -55,6 +56,10 @@ export class VaccineIndexComponent {
   isConfirming: boolean = false;
   hideSlotTable: boolean = false;
   showConfirmed: boolean = false;
+  showBookingSlots: boolean = false;
+  showVaccinationRecords: boolean = false;
+  showBookingDetails: boolean = false;
+  showLinkPreview: boolean = false;
 
   greeting: Message[] = [
     {
@@ -68,9 +73,11 @@ export class VaccineIndexComponent {
   vaccines: String[] = [];
   messages: Message[] = [];
   vaccinationRecords: String[] = [];
+  bookingSlots: string[] = [];
   constructor(
     private toastService: MessageService,
-    private endpointService: EndpointService
+    private endpointService: EndpointService,
+    private sanitizer: DomSanitizer
   ) {}
 
   loginForm: FormGroup = new FormGroup({
@@ -116,30 +123,9 @@ export class VaccineIndexComponent {
             summary: 'Welcome!',
             detail: 'You have logged in'
           });
-          this.isSinpassLogin = false;
+          this.isSingpassLogin = false;
           this.isLoggedIn = true;
-
-          this.endpointService.dummyOrchestrator().subscribe(
-            response => {
-              // Extract fields from the response
-              this.agentUsed = response.agent_name;
-              this.dataType = response.data_type;
-              this.vaccinationRecords = response.data.vaccines;
-              this.vaccines = response.data.vaccines;
-              this.agentMessage = response.message;
-
-              setTimeout(() => {
-                this.agentUsed = 'Record agent';
-              }, 1000);
-
-              console.log('response.data.vaccines', response.data.vaccines);
-            },
-            error => {
-              console.error('Error calling dummy orchestrator:', error);
-            }
-          );
-
-          this.scrollToBottom();
+          this.handleUserInput('history');
         },
         error: error => {
           this.toastService.add({
@@ -174,19 +160,7 @@ export class VaccineIndexComponent {
         password_confirm: this.signupForm.value.cfm_password
       };
 
-      const dummySignupData: Signup = {
-        nric: this.generateRandomNRIC(),
-        first_name: 'first_name',
-        last_name: 'last_name',
-        email: this.generateRandomEmail(),
-        date_of_birth: '2025-03-27',
-        gender: 'F',
-        postal_code: '111111',
-        password: '1',
-        password_confirm: '1'
-      };
-
-      this.endpointService.signup(dummySignupData).subscribe({
+      this.endpointService.signup(signupData).subscribe({
         next: () => {
           this.toastService.add({
             severity: 'success',
@@ -206,42 +180,13 @@ export class VaccineIndexComponent {
     }
   }
 
-  generateRandomNRIC = (): string => {
-    const prefix = ['S', 'T', 'F', 'G'][Math.floor(Math.random() * 4)]; // Random prefix
-    const digits = Math.floor(1000000 + Math.random() * 9000000).toString(); // Random 7-digit number
-    const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random letter (A-Z)
-    return `${prefix}${digits}${suffix}`;
-  };
-
-  generateRandomEmail = (): string => {
-    const timestamp = Date.now(); // Use timestamp for uniqueness
-    return `user${timestamp}@example.com`;
-  };
-
   suggestedQn(question: string) {
-    // Add the selected question as a user message
-    this.messages.push({
-      role: MessageRole.User,
-      message: question
-    });
-
-    let dummyResponse = 'Sure, please sign in to your Singpass';
-
-    if (this.isLoggedIn) dummyResponse = 'Sure';
-
-    this.isBookVaccine = question.trim() === this.suggestedQns[0].trim();
-
-    // Generate a dummy system response
-    this.messages.push({
-      role: MessageRole.Assistant,
-      message: dummyResponse
-    });
-    this.scrollToBottom();
+    this.handleUserInput(question); // pass the question text to chat input
   }
 
   SingpassLogin() {
     this.agentUsed = 'Login agent';
-    this.isSinpassLogin = true;
+    this.isSingpassLogin = true;
   }
 
   lastSystemMessage(): Message | null {
@@ -253,7 +198,6 @@ export class VaccineIndexComponent {
     return null;
   }
 
-  // Scroll to the bottom of the message container
   scrollToBottom() {
     setTimeout(() => {
       this.scrollableTextContent.nativeElement.scrollTop = this.scrollableTextContent.nativeElement.scrollHeight;
@@ -262,22 +206,20 @@ export class VaccineIndexComponent {
 
   selectVaccine(v: string) {
     this.isVaccineSelected = true;
-    this.hideSlotTable = false;
-
     this.vaccineSelected = v;
+    this.handleUserInput(v); // pass the vaccine text to chat input
+  }
 
-    this.agentUsed = 'Booking agent';
-
-    this.messages.push({
-      role: MessageRole.User,
-      message: v
-    });
-
-    this.messages.push({
-      role: MessageRole.Assistant,
-      message: 'Please tell me the date and time you wanted to book the vaccine?'
-    });
-    this.scrollToBottom();
+  clearState() {
+    this.isBookVaccine = false;
+    this.isConfirming = false;
+    this.showBookingSlots = false;
+    this.showVaccinationRecords = false;
+    this.isBookingConfirmed = false;
+    this.showConfirmed = false;
+    this.showBookingDetails = false;
+    this.isVaccineSelected = false;
+    this.showLinkPreview = false;
   }
 
   handleUserInput(message: string): void {
@@ -287,116 +229,63 @@ export class VaccineIndexComponent {
       message: message
     });
 
-    // Process the message to generate a response
-    this.processUserInput(message);
-    this.scrollToBottom();
-  }
+    this.endpointService.Orchestrator(message).subscribe({
+      next: response => {
+        this.agentUsed = response.agent_name;
+        this.clearState();
 
-  processUserInput(message: string): void {
-    if (message === 'Confirm') {
-      this.isConfirming = false;
-      this.isBookingConfirmed = true;
+        // Based on data_type, handle the display of components differently
+        switch (response.data_type) {
+          case 'vaccine_record':
+            this.vaccinationRecords = response.data.vaccines;
+            this.showVaccinationRecords = true;
+            break;
+          case 'vaccine_list':
+            this.vaccines = response.data.vaccines;
+            this.isBookVaccine = true;
+            break;
+          case 'booking_slots':
+            this.bookingSlots = response.data.slots;
+            console.log(this.isBookingConfirmed);
+            this.showBookingSlots = true;
+            this.showBookingDetails = true;
+            break;
+          case 'booking_details':
+            this.vaccineSelected = response.data.vaccine;
+            this.bookingDate = response.data.date;
+            this.bookingTime = response.data.time;
+            this.isConfirming = true;
+            this.showBookingDetails = true;
+            break;
+          case 'booking_success':
+            this.vaccineSelected = response.data.vaccine;
+            this.bookingDate = response.data.date;
+            this.bookingTime = response.data.time;
+            this.isBookingConfirmed = true;
+            this.showConfirmed = true;
+            this.showBookingDetails = true;
+            break;
+          case 'general_query_response':
+            this.link = this.sanitizer.bypassSecurityTrustResourceUrl(response.data.link);
+            this.showLinkPreview = true;
+            break;
+          case 'vaccine_list':
+          // TODO: display message, and display hardcoded list of vaccines
+          default:
+            // just display response.message
+            break;
+        }
 
-      this.messages.push({
-        role: MessageRole.User,
-        message: message
-      });
-
-      this.messages.push({
-        role: MessageRole.Assistant,
-        message: `Your appointment for ${this.vaccineSelected} has been booked for ${this.bookingTime} at ${this.bookingDate}. Please arrive 15 minutes before your appointment.`
-      });
-      this.scrollToBottom();
-      this.isBookVaccine = false;
-      setTimeout(() => {
-        this.showConfirmed = true;
-      }, 2000);
-      return;
-    }
-    // Check if the message contains date and time information (for vaccine booking)
-    if (this.isBookVaccine) {
-      const dateTimeInfo = this.extractDateAndTime(message);
-      // Generate a response based on the date and time
-      if (dateTimeInfo.dateString && dateTimeInfo.timeString) {
-        this.hideSlotTable = true;
-
-        this.bookingDate = dateTimeInfo.dateString;
-        this.bookingTime = dateTimeInfo.timeString;
-        this.isConfirming = true;
         this.messages.push({
           role: MessageRole.Assistant,
-          message: 'Do you want to confirm your booking?'
+          message: response.message
         });
-        this.isBookVaccine = false;
-      } else {
-        this.messages.push({
-          role: MessageRole.Assistant,
-          message: `I couldn't recognize the date and time in your message. Please specify a date (e.g., "28 Mar") and time (e.g., "2pm") for your appointment.`
-        });
+
+        this.scrollToBottom();
+      },
+      error: err => {
+        // TODO: handle error
       }
-    } else {
-      // Generic response for other queries
-      this.messages.push({
-        role: MessageRole.Assistant,
-        message: 'I understand you asked about: "' + message + '". How else can I assist you with your health information today?'
-      });
-    }
-  }
-
-  // Extract date and time from user input
-  extractDateAndTime(input: string): { dateString: string; timeString: string } {
-    // Initialize result
-    let dateString = '';
-    let timeString = '';
-
-    // Convert to lowercase and remove extra spaces
-    const text = input.toLowerCase().trim().replace(/\s+/g, ' ');
-
-    // Regular expressions for date patterns
-    const datePattern = /\b(\d{1,2})(?:\s*)(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/;
-
-    // Regular expressions for time patterns
-    const timePattern = /\b(\d{1,2})(?::(\d{2}))?(?:\s*)?(am|pm)?\b/;
-
-    // Extract date
-    const dateMatch = text.match(datePattern);
-    if (dateMatch) {
-      const day = parseInt(dateMatch[1]);
-      const month = dateMatch[2];
-
-      // Map month abbreviation to full month name
-      const monthMap: { [key: string]: string } = {
-        jan: 'January',
-        feb: 'February',
-        mar: 'March',
-        apr: 'April',
-        may: 'May',
-        jun: 'June',
-        jul: 'July',
-        aug: 'August',
-        sep: 'September',
-        oct: 'October',
-        nov: 'November',
-        dec: 'December'
-      };
-
-      const fullMonth = monthMap[month];
-      dateString = `${day} ${fullMonth} 2025`;
-    }
-
-    // Extract time
-    const timeMatch = text.match(timePattern);
-    if (timeMatch) {
-      let hours = parseInt(timeMatch[1]);
-      const minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
-      const period = timeMatch[3] ? timeMatch[3].toLowerCase() : hours < 12 ? 'am' : 'pm'; // Default to am/pm based on hour
-
-      // Format time string
-      const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
-      const ampm = period === 'pm' || (period !== 'am' && hours >= 12) ? 'PM' : 'AM';
-      timeString = `${formattedHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-    }
-
-    return { dateString, timeString };
+    });
   }
 }
