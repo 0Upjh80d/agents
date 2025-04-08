@@ -42,10 +42,6 @@ def create_main_app():
     app.include_router(vaccine.router)
     app.include_router(dummy_orchestrator.router)
 
-    @app.get("/")
-    async def root():
-        return JSONResponse(content={"detail": "Hello World!"})
-
     return app
 
 
@@ -64,15 +60,21 @@ def create_agent_app():
     )
     app.include_router(chat.router)
 
-    @app.get("/")
-    async def agent_root():
-        return {"detail": "Hello world from agent!"}
-
     return app
 
 
 app = create_main_app()
 agent_app = create_agent_app()
+
+
+@app.get("/")
+async def root():
+    return JSONResponse(content={"detail": "Hello World!"})
+
+
+@agent_app.get("/")
+async def agent_root():
+    return JSONResponse(content={"detail": "Hello Agent!"})
 
 
 async def run_apps():
