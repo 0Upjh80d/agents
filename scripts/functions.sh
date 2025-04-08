@@ -15,18 +15,18 @@ cleanup_process() {
     local color=$3
 
     if [[ ! -z "$pid" && -e /proc/$pid ]]; then
-        echo -e "${color}Stopping $name server (PID: $pid)...${RESET_COLOR}"
+        echo -e "${color}✋ Stopping $name server (PID: $pid)...${RESET_COLOR}"
         kill $pid
         # sleep 1
     else
-        echo -e "${color}$name process not found or already stopped.${RESET_COLOR}"
+        echo -e "${color}✅ $name process not found or already stopped.${RESET_COLOR}"
     fi
 }
 
 # --- Set up and Run Frontend Server ---
 setup_and_run_frontend() {
     npm install
-    ng serve --open 2>&1 | \
+    npx ng serve --open 2>&1 | \
         while IFS= read -r line; do
             printf "${FRONTEND_COLOR}[FRONTEND] %s${RESET_COLOR}\n" "$line"
         done
@@ -50,25 +50,25 @@ run_server() {
 setup_backend_env() {
     # Check if uv is installed
     if ! command -v uv >/dev/null 2>&1; then
-        echo -e "${MAIN_COLOR}uv not installed. Installing...${RESET_COLOR}"
+        echo -e "${MAIN_COLOR}📦 uv not installed. Installing...${RESET_COLOR}"
         curl -LsSf https://astral.sh/uv/install.sh | sh || {
-            echo -e "${ERROR_COLOR}Failed to install uv${RESET_COLOR}"
+            echo -e "${ERROR_COLOR}❌ Failed to install uv.${RESET_COLOR}"
             return 1
         }
         source "$HOME/.cargo/env"
     fi
-    echo -e "${MAIN_COLOR}Creating/updating python virtual environment...${RESET_COLOR}"
+    echo -e "${MAIN_COLOR}🛠️ Creating virtual environment...${RESET_COLOR}"
     uv venv || {
-        echo -e "${ERROR_COLOR}Failed to create venv${RESET_COLOR}"
+        echo -e "${ERROR_COLOR}❌ Failed to create virtual environment.${RESET_COLOR}"
         return 1
     }
     source .venv/bin/activate || {
-        echo -e "${ERROR_COLOR}Failed to activate venv${RESET_COLOR}"
+        echo -e "${ERROR_COLOR}❌ Failed to activate virtual environment.${RESET_COLOR}"
         return 1
     }
-    echo -e "${MAIN_COLOR}Syncing Python dependencies...${RESET_COLOR}"
+    echo -e "${MAIN_COLOR}🔄 Syncing dependencies...${RESET_COLOR}"
     uv sync || {
-        echo -e "${ERROR_COLOR}Failed to sync Python dependencies${RESET_COLOR}"
+        echo -e "${ERROR_COLOR}❌ Failed to sync dependencies.${RESET_COLOR}"
         return 1
     }
     return 0

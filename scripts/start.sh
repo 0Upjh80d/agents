@@ -11,11 +11,11 @@ cleanup() {
     cleanup_process "$frontend_pid" "frontend" "$FRONTEND_COLOR"
     cleanup_process "$main_pid" "main" "$MAIN_COLOR"
     cleanup_process "$agent_pid" "agent" "$AGENT_COLOR"
-    echo -e "${MAIN_COLOR}All processes stopped.${RESET_COLOR}"
+    echo -e "${MAIN_COLOR}✅ All processes stopped.${RESET_COLOR}"
 
     # Fallback to check if any processes are still using the ports
     if lsof -t -i:8000,8001 &>/dev/null; then
-        echo -e "${MAIN_COLOR}Detected services still running on ports 8000/8001. Performing forced cleanup...{RESET_COLOR}"
+        echo -e "${MAIN_COLOR}🗑️ Detected services still running on ports 8000/8001. Performing forced cleanup...{RESET_COLOR}"
         kill -9 $(lsof -t -i:8000,8001) 2>/dev/null || true
     fi
     exit 0
@@ -27,18 +27,18 @@ trap cleanup INT TERM
 # Set backend environment
 echo -e "${INFO_COLOR}======== Setting up Backend ========${RESET_COLOR}"
 setup_backend_env || {
-    echo -e "${ERROR_COLOR}Failed to set up environment${RESET_COLOR}"
+    echo -e "${ERROR_COLOR}❌ Failed to set up environment.${RESET_COLOR}"
     exit 1
 }
 
 # Run backend server
 cd app/backend/app || {
-    echo -e "${ERROR_COLOR}Failed to change directory to app/backend/app${RESET_COLOR}"
+    echo -e "${ERROR_COLOR}❌ Failed to change directory to app/backend/app.${RESET_COLOR}"
     exit 1
 }
 
-echo -e "${MAIN_COLOR}Starting main server on port 8000...${RESET_COLOR}"
-echo -e "${AGENT_COLOR}Starting agent server on port 8001...${RESET_COLOR}"
+echo -e "${MAIN_COLOR}🚀 Starting main server on port 8000...${RESET_COLOR}"
+echo -e "${AGENT_COLOR}🚀 Starting agent server on port 8001...${RESET_COLOR}"
 
 run_server "app" 8000 "$MAIN_COLOR" "MAIN" &
 main_pid=$!
@@ -51,13 +51,13 @@ sleep 2
 echo -e "${INFO_COLOR}======== Setting up Frontend ========${RESET_COLOR}"
 
 cd ./../../frontend || {
-    echo -e "${ERROR_COLOR}Failed to change directory to app/frontend${RESET_COLOR}"
+    echo -e "${ERROR_COLOR}❌ Failed to change directory to app/frontend.${RESET_COLOR}"
 }
 
 setup_and_run_frontend &
 frontend_pid=$!
 
-echo -e "${FRONTEND_COLOR}Frontend server running with PID: $frontend_pid${RESET_COLOR}"
+echo -e "${FRONTEND_COLOR}✅ Frontend server running with PID: $frontend_pid.${RESET_COLOR}"
 
 # Wait for all processes to exit
 wait $main_pid $agent_pid $frontend_pid

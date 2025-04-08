@@ -5,32 +5,32 @@ chcp 65001 > $null  # Set console to UTF-8 codepage
 
 # --- Function to clean up background processes on exit ---
 function Cleanup {
-    Write-Output "Received exit signal. Stopping background processes..."
+    Write-Output "📡 Received exit signal. Stopping background processes..."
 
     # Stop frontend job if it exists
     if (Get-Variable -Name frontendJob -ErrorAction SilentlyContinue) {
-        Write-Output "Stopping frontend server job..."
+        Write-Output "✋ Stopping frontend server job..."
         Stop-Job -Job $frontendJob -ErrorAction SilentlyContinue
         Remove-Job -Job $frontendJob -Force -ErrorAction SilentlyContinue
     }
 
     # Stop main backend job if it exists
     if (Get-Variable -Name mainJob -ErrorAction SilentlyContinue) {
-        Write-Output "Stopping main server job..."
+        Write-Output "✋ Stopping main server job..."
         Stop-Job -Job $mainJob -ErrorAction SilentlyContinue
         Remove-Job -Job $mainJob -Force -ErrorAction SilentlyContinue
     }
 
     # Stop agent backend job if it exists
     if (Get-Variable -Name agentJob -ErrorAction SilentlyContinue) {
-        Write-Output "Stopping agent server job..."
+        Write-Output "✋ Stopping agent server job..."
         Stop-Job -Job $agentJob -ErrorAction SilentlyContinue
         Remove-Job -Job $agentJob -Force -ErrorAction SilentlyContinue
     }
 
     Set-Location ../../..
 
-    Write-Output "All processes stopped."
+    Write-Output "✅ All processes stopped."
     exit 0
 }
 
@@ -44,38 +44,36 @@ $event = Register-ObjectEvent -InputObject ([System.Console]) -EventName "Cancel
 # --- Initial Setup ---
 # Check if uv is installed
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-    Write-Output "uv not installed. Installing..."
+    Write-Output "📦 uv not installed. Installing..."
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://astral.sh/uv/install.ps1'))
     $env:Path += ";C:\Users\$env:USERNAME\.local\bin"
 }
 
-Write-Output "Creating/updating Python virtual environment..."
+Write-Output "🛠️ Creating virtual environment..."
 uv venv
-if ($LASTEXITCODE -ne 0) { Write-Error "Failed to create venv"; exit 1 }
+if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to create virtual environment."; exit 1 }
 
 # Activate virtual environment
-& .\.venv\Scripts\Activate
-if ($LASTEXITCODE -ne 0) { Write-Error "Failed to activate venv"; exit 1 }
+& ./.venv/Scripts/Activate
+if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to activate virtual environment."; exit 1 }
 
-Write-Output "Syncing Python dependencies..."
+Write-Output "🔄 Syncing dependencies..."
 uv sync
-if ($LASTEXITCODE -ne 0) { Write-Error "Failed to sync Python dependencies"; exit 1 }
+if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to sync dependencies."; exit 1 }
 
-Write-Output ""
 Write-Output "--- Frontend Setup ---"
-Write-Output "Changing to frontend directory..."
-$frontendPath = Join-Path -Path $PSScriptRoot -ChildPath "..\app\frontend"
+$frontendPath = Join-Path -Path $PSScriptRoot -ChildPath "../app/frontend"
 Set-Location $frontendPath
-if ($LASTEXITCODE -ne 0) { Write-Error "Failed to create venv"; Cleanup }
+if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to create virtual environment."; Cleanup }
 
-Write-Output "Restoring frontend npm packages..."
+Write-Output "🔄 Restoring frontend npm packages..."
 npm install
-if ($LASTEXITCODE -ne 0) { Write-Error "Failed to restore frontend npm packages"; exit $LASTEXITCODE }
+if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to restore frontend npm packages."; exit $LASTEXITCODE }
 
 Write-Output ""
 
 # --- Start Frontend Dev Server in Background ---
-Write-Output "Starting frontend development server (ng serve) in background..."
+Write-Output "🚀 Starting frontend development server (ng serve) in background..."
 
 # Remember current PATH with activated environment:
 # This is required because when we use Start-Job, the new Powershell session
@@ -94,19 +92,17 @@ $frontendJob = Start-Job -ScriptBlock {
     npx ng serve --open
 } -ArgumentList $frontendPath, $activatedPath
 
-Write-Output ""
 Write-Output "--- Backend Setup ---"
-Write-Output "Changing to backend directory..."
-$backendPath = Join-Path -Path $PSScriptRoot -ChildPath "..\app\backend\app"
+$backendPath = Join-Path -Path $PSScriptRoot -ChildPath "../app/backend/app"
 Set-Location $backendPath
-if ($LASTEXITCODE -ne 0) { Write-Error "Failed to change directory to app/backend/app"; Cleanup }
+if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to change directory to app/backend/app."; Cleanup }
 
 # Start backend servers in background jobs:
 # $workdir will be your Present Working Directory (PWD)
 # $envPath will be the PATH variable from the parent shell
 
 # main server
-Write-Host "Starting main server on port 8000..." -ForegroundColor Cyan
+Write-Host "🚀 Starting main server on port 8000..." -ForegroundColor Cyan
 $mainJob = Start-Job -ScriptBlock {
     param($workDir, $envPath)
 
@@ -119,7 +115,7 @@ $mainJob = Start-Job -ScriptBlock {
 } -ArgumentList $PWD, $activatedPath
 
 # agent server
-Write-Host "Starting agent server on port 8001..." -ForegroundColor Yellow
+Write-Host "🚀 Starting agent server on port 8001..." -ForegroundColor Yellow
 $agentJob = Start-Job -ScriptBlock {
     param($workDir, $envPath)
 
