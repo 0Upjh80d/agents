@@ -43,10 +43,12 @@ export class EndpointService {
       );
   }
 
-  dummyOrchestrator(): Observable<any> {
-    return this.httpClient.get(`${this.baseUrl}/dummy_orchestrator`).pipe(
+  Orchestrator(userMessage: String): Observable<any> {
+    const body = { message: userMessage };
+
+    return this.httpClient.post(`${this.baseUrl}/dummy_orchestrator`, body).pipe(
       catchError(error => {
-        return throwError(() => new Error(error.error.detail));
+        return throwError(() => new Error(error.error?.detail ?? 'Error calling orchestrator'));
       })
     );
   }
