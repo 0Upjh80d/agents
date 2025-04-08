@@ -35,7 +35,7 @@ from agents import (
     set_tracing_disabled,
 )
 
-load_dotenv(dotenv_path=r"..\.env")
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../../../../.env"))
 
 OPENAI_HOST = os.getenv("OPENAI_HOST", "azure")
 OPENAI_CHATGPT_MODEL = os.getenv("AZURE_OPENAI_CHATGPT_MODEL")
