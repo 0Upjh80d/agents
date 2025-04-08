@@ -21,6 +21,8 @@ dependencies = [
     "pydantic-settings>=2.8.1",
     "python-multipart>=0.0.20",
     "geopy>=2.4.1",
+    "openai-agents>=0.0.4",
+    "openai-messages-token-helper>=0.1.11",
 ]
 
 [dependency-groups]

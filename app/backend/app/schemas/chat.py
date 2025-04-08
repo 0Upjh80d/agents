@@ -1,9 +1,16 @@
+from typing import Any, Optional
+
 from pydantic import BaseModel
 
 
 class ChatRequest(BaseModel):
-    text: str
+    message: str
+    history: Optional[list] = None
+    agent_name: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
-    text: str
+    agent_name: str
+    history: Optional[list] = None
+    data: Optional[Any] = None
+    message: str
