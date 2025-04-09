@@ -1,18 +1,15 @@
 import json
 import os
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import asdict
 
 import httpx
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
 from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI
 from openai.types.responses import ResponseContentPartDoneEvent, ResponseTextDeltaEvent
-from schemas.chat import ChatResponse
+from schemas.chat import ChatResponse, UserInfo
 from services.openai.tools import (
     cancel_appointment_tool,
-    clarify_vaccination_type_tool,
-    clinic_type_response_helper_tool,
     fetch_vaccination_history_tool,
     get_available_slots_tool,
     get_clinic_name_response_helper_tool,
@@ -61,15 +58,6 @@ client = AsyncAzureOpenAI(
     azure_ad_token_provider=token_provider,
     azure_deployment=AZURE_OPENAI_CHATGPT_DEPLOYMENT,
 )
-
-
-@dataclass
-class UserInfo:
-    auth_header: Optional[dict] = None
-    enrolled_type: Optional[str] = None
-    enrolled_name: Optional[str] = None
-    date: str = "2025-03-01"  # str(date.today())
-    restart: bool = False
 
 
 general_questions_agent = Agent(
@@ -136,49 +124,45 @@ identify_clinic_agent = Agent(
     name="identify_clinic_agent",
     instructions=(
         """
+        You are part of a team of agents handling vaccination booking.
+        Your task in this team is to only look at chat history and extract from chat history the name of clinic user would like to get.
         Follow the steps in order:
-        1. Do not ask user anything. Look at the chat history and find the type of clinic the user wants to visit. You have three options: 'GP', 'Polyclinic' or 'Not mentioned'.
-        2. Use the clinic_type_response_helper_tool with your answer as input.
-        3. If the tool output asks user to specify which clinic type, ask the user to specify and stop.
-        4. If the tool asks you to tell user something, relay the message word for word and stop. Else continue.
-        5. Do not ask the user anything. Look at the chat history and find the name of polyclinic the user wants to visit.
-        6. Use the get_clinic_name_response_helper_tool, give either the name you found or 'Not found' as input.
-        7. If the tool output asks user to specify which polyclinic, relay question and tool recommendation to user. Else continue.
-        8. Handoff to the check_available_slots_agent.
+        1. Give the clinic_name you found, or 'Not found' if no clinic name was specified as input to the get_clinic_name_response_helper_tool.
+        3. If the tool output asks user to specify which clinic, ask the question from tool output to user and stop.
+        4. Handoff to the check_available_slots_agent.
         """
     ),
     handoffs=[check_available_slots_agent],
-    tools=[clinic_type_response_helper_tool, get_clinic_name_response_helper_tool],
+    tools=[get_clinic_name_response_helper_tool],
     model=OpenAIChatCompletionsModel(model="chat", openai_client=client),
 )
 
-# TODO: Move this to after polyclinic check to save token usage?
 handle_vaccine_names_agent = Agent(
     name="handle_vaccine_names_agent",
     instructions=(
+        "You are part of a team of agents handling vaccination booking."
+        "Your task in this team is to only look at chat history and extract from chat history the vaccine type user would like to get."
         "Follow these steps in order:"
-        "1. Look at chat history to see if the user is replying to any of your questions previously, do not ask user."
-        "- If the user has selected a vaccine type as a reply to you, output the official name for the selected vaccine and handoff to the identify_clinic_agent and stop."
-        "2. If the user is not replying to any question previously, your task is then to extract from chat history the vaccine type user would like to get, and use the standardise_vaccine_name_tool to get official name of the requested vaccine."
-        "3. If the tool output is a vaccine name, use its output and handoff to the identify_clinic_agent and stop."
-        "4. If the tool output is None, then call the clarify_vaccination_type_tool, return its output and stop."
+        "1. Find the vaccine name mentioned and Use the standardise_vaccine_name_tool to convert it to the official name."
+        "2. If the tool output is a vaccine name, use its output and handoff to the identify_clinic_agent."
+        "3. If the tool output asks to handoff to recommender_agent, handoff to the recommender_agent."
     ),
-    handoffs=[identify_clinic_agent],
-    tools=[standardise_vaccine_name_tool, clarify_vaccination_type_tool],
+    handoffs=[identify_clinic_agent, recommender_agent],
+    tools=[standardise_vaccine_name_tool],
     model=OpenAIChatCompletionsModel(model="chat", openai_client=client),
 )
 
+# TODO: Handle reschedule and cancellation
 manage_appointment_agent = Agent(
     name="manage_appointment_agent",
     instructions=(
         "Your task is to complete actions the user would like regarding vaccination appointments."
         "For new bookings, use the new_appointment_tool. For cancellations, use the cancel_appointment_tool."
         "For rescheduling existing appointments, use the reschedule_appointment_tool."
-        "If the user did not specify slots, handoff to the check_available_slots_agent."
-        "If you have completed the user's desired action, output that you have successfully done it."
+        "Return the output from any toolcall."
     ),
     tools=[new_appointment_tool, cancel_appointment_tool, reschedule_appointment_tool],
-    handoffs=[check_available_slots_agent],
+    # handoffs=[check_available_slots_agent],
     model=OpenAIChatCompletionsModel(model="chat", openai_client=client),
 )
 
@@ -187,32 +171,31 @@ appointments_agent = Agent[UserInfo](
     name="appointments_agent",
     instructions=(
         """
-    Here is a list of intents a user may approach you for, and what you should do to handle the request:
-    1. If the user is asking about rescheduling or cancelling an existing booking: Handoff to the manage_appointment_agent to handle.
-    2. User wants to get a specific vaccination, did not specify date and time: Handoff to handle_vaccine_names_agent to start the flow of gathering information from user for booking.
-    3. If the user did not specify the type of vacccine they want: Ask them to specify, and ask if they would like to vaccination recommendations.
-    4. If the user wants vaccine recommendations, handoff to the recommender_agent.
-    5. User has selected a specific booking slot from the avaiable slots, and wants to proceed with booking: Handoff to manage_appointment_agent to make booking.
+    # System context\nYou are part of a multi-agent system called the Agents SDK, designed to make agent coordination and execution easy. Agents uses two primary abstraction: **Agents** and **Handoffs**. An agent encompasses instructions and tools and can hand off a conversation to another agent when appropriate. Handoffs are achieved by calling a handoff function, generally named `transfer_to_<agent_name>`. Transfers between agents are handled seamlessly in the background; do not mention or draw attention to these transfers in your conversation with the user.\n
+
+    Your task is to decide which agent to handoff to. Use tools to handoff to other agents. Do not output any text to user.
+    If the user wants to book a new slot, handoff to handle_vaccine_names_agent.
+    If the user is asking about rescheduling or cancelling an existing booking: Handoff to the manage_appointment_agent to handle.
     """
     ),
     handoffs=[
         handle_vaccine_names_agent,  # starts flow to get location and vaccine name.
         manage_appointment_agent,
-        recommender_agent,
     ],
     model=OpenAIChatCompletionsModel(model="chat", openai_client=client),
 )
 
 # Add backlinks from sub-agents under 'bookings team'
-check_available_slots_agent.handoffs.append(appointments_agent)
-manage_appointment_agent.handoffs.append(appointments_agent)
+check_available_slots_agent.handoffs.append(manage_appointment_agent)
+# manage_appointment_agent.handoffs.append(appointments_agent)
 
 orchestrator_agent = Agent(
     name="orchestrator_agent",
     instructions=(
         "You are a helpful assistant that directs user queries to the appropriate agents."
         "Take the conversation history as context when deciding who to handoff to next."
-        "If they ask requests regarding vaccination appointments, handoff to appointments_agent."
+        "If they want to book vaccination appointments, but did not mention which vaccine they want, handoff to the recommender_agent."
+        "If they mentioned their desired vaccine and would like to book an appointment, handoff to appointments_agent."
         "If they ask for vaccination reccomendations, handoff to recommender_agent."
         "If they ask about vaccination records, like asking about their past vaccinations, handoff to vaccination_records_agent."
         "Otherwise, handoff to general_questions_agent."
@@ -228,56 +211,52 @@ orchestrator_agent = Agent(
 
 
 async def main(
-    user_msg: str, history: list | None, current_agent: str | None
+    user_msg: str,
+    history: list | None,
+    current_agent: str | None,
+    user_info: dict | None,
 ) -> ChatResponse:
-    user_data = {
-        "username": "mark.johnson@example.net",
-        "password": "password123",
-    }  # No enrollment. Auth-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZjI5NjdjMGEtNTEyMS00YzQ2LWE0ZGMtMmI3OTc5Y2ZiNDIxIiwicmVmcmVzaCI6ZmFsc2UsImV4cCI6MTc1MTYxMzI1MH0.ofK7WchfCkzxMnKpOGTQSUiaIH9NKviXhD6OtQns8Xk
-    # user_data = {"username": "kimberly.garza@example.net", "password": "abc123"} # Enrolled in Polyclinic
-    # user_data = {"username": "gabrielle.davis@example.com", "password": "guest"} # Enrolled in GP
 
-    login_data = {
-        "grant_type": "password",  # Required
-        "username": user_data["username"],  # Email used for login
-        "password": user_data["password"],  # Password used for login
-        "scope": "",  # Optional (empty value sent)
-        "client_id": "",  # Optional (empty value sent)
-        "client_secret": "",  # Optional (empty value sent)
-    }
+    # If received user_info context, init new wrapper with it for next run. Else create new.
+    if user_info:
+        user_info = UserInfo(**user_info)
+        wrapper = RunContextWrapper(context=user_info)
+    else:
+        # Mock login
+        user_data = {
+            "username": "mark.johnson@example.net",
+            "password": "password123",
+        }  # No enrollment. Auth-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZjI5NjdjMGEtNTEyMS00YzQ2LWE0ZGMtMmI3OTc5Y2ZiNDIxIiwicmVmcmVzaCI6ZmFsc2UsImV4cCI6MTc1MTYxMzI1MH0.ofK7WchfCkzxMnKpOGTQSUiaIH9NKviXhD6OtQns8Xk
+        # user_data = {"username": "kimberly.garza@example.net", "password": "abc123"} # Enrolled in Polyclinic
+        # user_data = {"username": "gabrielle.davis@example.com", "password": "guest"} # Enrolled in GP
 
-    async with httpx.AsyncClient(timeout=10.0) as httpclient:
-        try:
-            login = await httpclient.post(
-                "http://127.0.0.1:8000/login", data=login_data
+        login_data = {
+            "grant_type": "password",  # Required
+            "username": user_data["username"],  # Email used for login
+            "password": user_data["password"],  # Password used for login
+            "scope": "",  # Optional (empty value sent)
+            "client_id": "",  # Optional (empty value sent)
+            "client_secret": "",  # Optional (empty value sent)
+        }
+
+        async with httpx.AsyncClient(timeout=10.0) as httpclient:
+            try:
+                login = await httpclient.post(
+                    "http://127.0.0.1:8000/login", data=login_data
+                )
+            except Exception as e:
+                print(f"Error making request: {e}")
+
+        response = json.loads(login.text)
+        auth_token = response["access_token"]
+        wrapper = RunContextWrapper(
+            context=UserInfo(
+                auth_header={
+                    "Authorization": f"Bearer {auth_token}",
+                    "Content-Type": "application/json",
+                }
             )
-        except Exception as e:
-            print(f"Error making request: {e}")
-
-    response = json.loads(login.text)
-    auth_token = response["access_token"]
-    user_info = RunContextWrapper(
-        context=UserInfo(
-            auth_header={
-                "Authorization": f"Bearer {auth_token}",
-                "Content-Type": "application/json",
-            }
         )
-    )
-
-    # Get enrollment
-    async with httpx.AsyncClient(timeout=10.0) as httpclient:
-        try:
-            user_response = await httpclient.get(
-                "http://127.0.0.1:8000/users", headers=user_info.context.auth_header
-            )
-        except Exception as e:
-            print(f"Error making request: {e}")
-
-    enrollment_type = json.loads(user_response.text)["enrolled_clinic"]
-    if enrollment_type:
-        user_info.context.enrolled_type = enrollment_type["type"]
-        user_info.context.enrolled_name = enrollment_type["name"]
 
     # Init entry point agent
     if current_agent:
@@ -286,6 +265,7 @@ async def main(
             "appointments_agent": appointments_agent,
             "handle_vaccine_names_agent": handle_vaccine_names_agent,
             "identify_clinic_agent": identify_clinic_agent,
+            "check_available_slots_agent": check_available_slots_agent,
         }
         agent = current_agent_mapping[current_agent]
     else:
@@ -303,16 +283,15 @@ async def main(
         "general_questions_agent",
         "vaccination_records_agent",
         "recommender_agent",
+        "manage_appointment_agent",
     }
     message = ""
 
     # Iterate through runner events
-    result = Runner.run_streamed(agent, input=history, context=user_info, max_turns=20)
+    result = Runner.run_streamed(agent, input=history, context=wrapper, max_turns=20)
     async for event in result.stream_events():
-        print(f"Received event: {event}")
         if isinstance(event, RawResponsesStreamEvent):
             data = event.data
-            print(f"Processing RawResponsesStreamEvent: {data}")
             if isinstance(data, ResponseTextDeltaEvent):
                 message += data.delta
             elif isinstance(data, ResponseContentPartDoneEvent):
@@ -324,7 +303,10 @@ async def main(
                 if event.item.agent.name in {
                     "recommender_agent",
                     "vaccination_records_agent",
+                    "handle_vaccine_names_agent",
+                    "identify_clinic_agent",
                     "check_available_slots_agent",
+                    "manage_appointment_agent",
                 }:
                     tool_output = event.item.output
     print(message)
@@ -334,15 +316,19 @@ async def main(
 
     current_agent = result.current_agent.name
     # If current agent is one of the final_agents, or restart flag set to True, change current agent to orchestrator
-    if current_agent in final_agents or user_info.context.restart:
+    if current_agent in final_agents or wrapper.context.restart:
         current_agent = "orchestrator_agent"
-        user_info.context.restart = False
+        wrapper.context.restart = False
+
+    # TODO: handle cases where halfmade booking cache should be removed
 
     response_dict = {
         "message": message,
         "data": tool_output,
         "history": history,
         "agent_name": current_agent,
+        "data_type": wrapper.context.data_type,
+        "user_info": asdict(wrapper.context),
     }
 
     response = ChatResponse(**response_dict)

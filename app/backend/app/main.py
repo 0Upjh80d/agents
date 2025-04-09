@@ -82,7 +82,11 @@ async def run_apps():
         "main:app", host="127.0.0.1", port=8000, reload=True, reload_dirs=["."]
     )
     config_agent = uvicorn.Config(
-        "main:agent_app", host="127.0.0.1", port=8001, reload=True, reload_dirs=["."]
+        "main:agent_app --log-level debug",
+        host="127.0.0.1",
+        port=8001,
+        reload=True,
+        reload_dirs=["."],
     )
 
     server_main = uvicorn.Server(config_main)

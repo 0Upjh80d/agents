@@ -1,8 +1,7 @@
 import json
 import os
-from dataclasses import dataclass
-from datetime import date
-from typing import Dict, List, Optional
+from datetime import date, datetime
+from typing import Dict, List
 
 import httpx
 from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
@@ -10,6 +9,7 @@ from dotenv import load_dotenv
 from openai import AsyncAzureOpenAI
 from openai.types.chat import ChatCompletion
 from openai_messages_token_helper import build_messages
+from schemas.chat import BookingDetails, UserInfo
 
 from agents import (
     RunContextWrapper,
@@ -17,7 +17,7 @@ from agents import (
 )
 
 # TODO: change this
-load_dotenv(dotenv_path=r"..\..\..\..\..\.env")
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../../../../.env"))
 OPENAI_HOST = os.getenv("OPENAI_HOST", "azure")
 OPENAI_CHATGPT_MODEL = os.getenv("AZURE_OPENAI_CHATGPT_MODEL")
 AZURE_OPENAI_SERVICE = os.getenv("AZURE_OPENAI_SERVICE")
@@ -41,15 +41,6 @@ client = AsyncAzureOpenAI(
     azure_ad_token_provider=token_provider,
     azure_deployment=AZURE_OPENAI_CHATGPT_DEPLOYMENT,
 )
-
-
-@dataclass
-class UserInfo:
-    auth_header: Optional[dict] = None
-    enrolled_type: Optional[str] = None
-    enrolled_name: Optional[str] = None
-    date: str = "2025-03-01"  # str(date.today())
-    restart: bool = False
 
 
 # Tools
@@ -92,14 +83,13 @@ async def recommend_vaccines_tool(wrapper: RunContextWrapper[UserInfo]) -> str:
 @function_tool
 async def standardise_vaccine_name_tool(
     wrapper: RunContextWrapper[UserInfo], requested_vaccine: str
-) -> str:
+) -> BookingDetails | str:
     """
-    Always call this tool.
+    Always use this tool when the step requires it.
 
     Args:
-        requested_vaccine: Raw user input of vaccine type found from chat history (if any)
+        requested_vaccine: User input of vaccine type found from chat history.
     """
-
     standard_name_prompt = f"""
     Find the closest match of {requested_vaccine} to the list below:
     - Influenza (INF)
@@ -111,7 +101,9 @@ async def standardise_vaccine_name_tool(
     - Varicella (VAR)
 
     If there is a match, return the value in the list exactly.
-    Else, return "None"
+    Else, return "Handoff to recommender_agent"
+
+    Official vaccine name:
     """
 
     messages = build_messages(
@@ -130,93 +122,90 @@ async def standardise_vaccine_name_tool(
         seed=SEED,
     )
 
-    return chat_completion.choices[0].message.content
+    llm_output = chat_completion.choices[0].message.content
+    if llm_output != "None":
+        wrapper.context.context.vaccine = llm_output
+        wrapper.context.context.data_type = "booking_details"
+
+        response_dict = {
+            "vaccine": wrapper.context.context.vaccine,
+        }
+        response = BookingDetails(**response_dict)
+        return response
+    else:
+        wrapper.context.context.data_type = "vaccine_list"
+        return llm_output
 
 
-# TODO: In future change tool to get frontend to display vaccines list
-@function_tool
-async def clarify_vaccination_type_tool(wrapper: RunContextWrapper[UserInfo]) -> str:
-    """
-    Use this tool when the output from standardise_vaccine_name_tool is None.
-    """
-    return """
-    "Please clarify which vaccine type you would like to take, choose from this list:
-            - Influenza (INF)
-            - Pneumococcal Conjugate (PCV13)
-            - Human Papillomavirus (HPV)
-            - Tetanus, Diphtheria, Pertussis (Tdap)
-            - Hepatitis B (HepB)
-            - Measles, Mumps, Rubella (MMR)
-            - Varicella (VAR)"
-    """
+# @function_tool
+# async def clarify_vaccination_type_tool(wrapper: RunContextWrapper[UserInfo]) -> str:
+#     """
+#     Use this tool when the output from standardise_vaccine_name_tool is None.
+#     """
+#     context: UserInfo = wrapper.context.context
+#     context.data_type = "vaccine_list"
+#     return """
+#     Please clarify which vaccine type you would like to take.
+#     """
 
 
-@function_tool
-async def clinic_type_response_helper_tool(
-    wrapper: RunContextWrapper[UserInfo], clinic_type_option: str
-) -> str:
+# @function_tool
+# async def clinic_type_response_helper_tool(
+#     wrapper: RunContextWrapper[UserInfo], clinic_type_option: str
+# ) -> str:
 
-    # Decides response depending on whether clinic type could be extracted from chat history,
-    # and what extracted type it is.
-    """
-    Always use this tool when the step requires it. This tool must be called first.
+#     # Decides response depending on whether clinic type could be extracted from chat history,
+#     # and what extracted type it is.
+#     """
+#     Always use this tool when the step requires it. This tool must be called first.
 
-    Args:
-        clinic_type_option: Takes either 'GP', 'Polyclinic' or 'Not mentioned'
-    """
-    context: UserInfo = wrapper.context.context
-    if clinic_type_option == "Not mentioned":
-        if context.enrolled_type:
-            return context.enrolled_type
-        return "Ask user to specify which type of clinic they want to visit, either GP or Polyclinic."
-    return clinic_type_option
+#     Args:
+#         clinic_type_option: Takes either 'GP', 'Polyclinic' or 'Not mentioned'
+#     """
+#     context: UserInfo = wrapper.context.context
+#     if clinic_type_option == "Not mentioned":
+#         if context.enrolled_type:
+#             return context.enrolled_type
+#         return "Ask user to specify which type of clinic they want to visit, either GP or Polyclinic."
+#     return clinic_type_option
 
 
 @function_tool
 async def get_clinic_name_response_helper_tool(
-    wrapper: RunContextWrapper[UserInfo], polyclinic_name: str, clinic_type_option: str
-):
+    wrapper: RunContextWrapper[UserInfo], clinic_name: str
+) -> BookingDetails | str:
 
     # Decides response depending on whether polyclinic name could be extracted from chat history.
     """
     Always use this tool when the step requires it.
 
     Args:
-        polyclinic_name: Takes either the polyclinic name or 'Not found'
+        clinic_name: Takes either the clinic name or 'Not found'
     """
-    context: UserInfo = wrapper.context.context
-    enrolled_name = context.enrolled_name
-
     # If GP clinic, tell user to book from website instead. Recommend GP clinics near home if not enrolled in any. Go back to orchestrator agent.
-    if clinic_type_option == "GP":
-        context.restart = True
+    # if clinic_type_option == "GP":
+    #     context.restart = True
+    #     try:
+    #         async with httpx.AsyncClient(timeout=10.0) as httpclient:
+    #             get_recommended_gp = await httpclient.get(
+    #                 url="http://127.0.0.1:8000/clinic/nearest",
+    #                 headers=wrapper.context.context.auth_header,
+    #                 params={
+    #                     "clinic_type": "gp",
+    #                     "clinic_limit": 3,
+    #                 },
+    #             )
+    #     except Exception as e:
+    #         print(f"Error making request: {e}")
+    #     recommended_clinics = json.loads(get_recommended_gp.text)
+    #     return f"Tell user: 'Here are your GP clinics near your home: {recommended_clinics}. Please proceed to book slots at: https://book.health.gov.sg/'"
 
-        if context.enrolled_name:
-            return f"Tell user: 'You are enrolled under the GP clinic: {context.enrolled_name}. Please proceed to book slots there at: https://book.health.gov.sg/'"
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as httpclient:
-                get_recommended_gp = await httpclient.get(
-                    url="http://127.0.0.1:8000/clinic/nearest",
-                    headers=wrapper.context.context.auth_header,
-                    params={
-                        "clinic_type": "gp",
-                        "clinic_limit": 3,
-                    },
-                )
-        except Exception as e:
-            print(f"Error making request: {e}")
-        recommended_clinics = json.loads(get_recommended_gp.text)
-        return f"Tell user: 'Here are your GP clinics near your home: {recommended_clinics}. Please proceed to book slots at: https://book.health.gov.sg/'"
-
-    # If type is polyclinic but name not found in chat history, use enrolled polyclinic, if not enrolled then recommend polyclinics near home
-    if polyclinic_name == "Not found":
-        if enrolled_name:
-            return f"Find slots at {enrolled_name}"
-
+    # Find polyclinic name not found in chat history, if not found then recommend polyclinics near home
+    if clinic_name == "Not found":
         try:
             async with httpx.AsyncClient(timeout=10.0) as httpclient:
                 get_recommended_polyclinic = await httpclient.get(
-                    url="http://127.0.0.1:8000/clinic/nearest",
+                    url="http://127.0.0.1:8000/clinics/nearest",
                     headers=wrapper.context.context.auth_header,
                     params={
                         "clinic_type": "polyclinic",
@@ -226,24 +215,35 @@ async def get_clinic_name_response_helper_tool(
         except Exception as e:
             print(f"Error making request: {e}")
         recommended_polyclinics = json.loads(get_recommended_polyclinic.text)
-        return f"Please specify the polyclinic you want to book at. Here are some polyclinics nearer your home: {recommended_polyclinics}"
-    return f"Find slots at {polyclinic_name}"
+        wrapper.context.context.data_type = "clinic_list"
+        return f"Please specify the polyclinic you want to book at. Here are some polyclinics near your home: {recommended_polyclinics}"
+
+    wrapper.context.context.data_type = "booking_details"
+    wrapper.context.context.clinic = clinic_name
+
+    response_dict = {
+        "vaccine": wrapper.context.context.vaccine,
+        "clinic": wrapper.context.context.clinic,
+    }
+    response = BookingDetails(**response_dict)
+
+    return response
 
 
 @function_tool
 async def get_available_slots_tool(
     wrapper: RunContextWrapper[UserInfo],
     vaccine_name: str,
-    polyclinic: str,
+    clinic: str,
     start_date: date,
     end_date: date,
 ) -> List[Dict]:
     """
-    Get available slots for a vaccine at a specific polyclinic, over a date ranges.
+    Get available slots for a vaccine at a specific clinic, over a date ranges.
 
     Args:
         vaccine_name: Official name of vaccine type
-        polyclinic: The name of polyclinic
+        clinic: The name of clinic
         start_date: Start date of date range to search
         end_date: End date of date range to search
     """
@@ -254,7 +254,7 @@ async def get_available_slots_tool(
                 headers=wrapper.context.context.auth_header,
                 params={
                     "vaccine_name": vaccine_name,
-                    "polyclinic_name": polyclinic,
+                    "polyclinic_name": clinic,
                     "start_date": start_date,
                     "end_date": end_date,
                     "timeslot_limit": 6,
@@ -262,6 +262,7 @@ async def get_available_slots_tool(
             )
     except Exception as e:
         print(f"Error making request: {e}")
+    wrapper.context.context.data_type = "booking_slots"
     result = json.loads(get_slots.text)
     return result
 
@@ -269,26 +270,48 @@ async def get_available_slots_tool(
 @function_tool
 async def new_appointment_tool(
     wrapper: RunContextWrapper[UserInfo], slot_id: str
-) -> str:
+) -> BookingDetails:
     """
     Handles booking of a new appointment.
 
     Args:
         slot_id: The 'id' field for slot to be booked
     """
-    booking = {"booking_slot_id": slot_id}
     try:
         async with httpx.AsyncClient(timeout=10.0) as httpclient:
-            book = await httpclient.post(
-                url="http://127.0.0.1:8000/bookings/schedule",
-                json=booking,
-                headers=wrapper.context.context.auth_header,
+            slot = await httpclient.get(
+                url=f"http://127.0.0.1:8000/bookings/{slot_id}",
             )
-        status = book.status_code
-        if status == 201:
-            return "Successfully booked!"
     except Exception as e:
-        print(f"Error making request: {e}")
+        return f"Error making request: {e}"
+
+    slot = json.loads(slot.text)
+    dt_object = datetime.fromisoformat(slot["datetime"].replace("Z", "+00:00"))
+
+    wrapper.context.context.data_type = "booking_details"
+    response_dict = {
+        "vaccine": wrapper.context.context.vaccine,
+        "clinic": wrapper.context.context.clinic,
+        "date": str(dt_object.date()),
+        "time": str(dt_object.time()),
+    }
+    response = BookingDetails(**response_dict)
+
+    return response
+
+    # booking = {"booking_slot_id": slot_id}
+    # try:
+    #     async with httpx.AsyncClient(timeout=10.0) as httpclient:
+    #         book = await httpclient.post(
+    #             url="http://127.0.0.1:8000/bookings/schedule",
+    #             json=booking,
+    #             headers=wrapper.context.context.auth_header,
+    #         )
+    #     status = book.status_code
+    #     if status == 201:
+    #         return "Successfully booked!"
+    # except Exception as e:
+    #     print(f"Error making request: {e}")
 
 
 @function_tool
