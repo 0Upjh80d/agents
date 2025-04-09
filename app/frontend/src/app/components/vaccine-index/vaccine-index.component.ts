@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -13,6 +13,7 @@ import { MessageService } from 'primeng/api';
 import { EndpointService } from '../../services/endpoint.service';
 import { Signup } from '../../types/signup.type';
 import { Login } from '../../types/login.type';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-vaccine-index',
@@ -38,9 +39,27 @@ export class VaccineIndexComponent {
   user: string = MessageRole.User;
   system: string = MessageRole.Assistant;
 
+  vaccineSelected: string = '';
+  bookingDate: string = '-';
+  bookingTime: string = '-';
+  agentUsed: string = '';
+  dataType: string = '';
+  agentMessage: string = '';
+  link: SafeResourceUrl = '';
+
   isSignUp = false;
-  isSinpassLogin = false;
+  isSingpassLogin = false;
   isLoggedIn = false;
+  isVaccineSelected = false;
+  isBookVaccine: boolean = false;
+  isBookingConfirmed: boolean = false;
+  isConfirming: boolean = false;
+  hideSlotTable: boolean = false;
+  showConfirmed: boolean = false;
+  showBookingSlots: boolean = false;
+  showVaccinationRecords: boolean = false;
+  showBookingDetails: boolean = false;
+  showLinkPreview: boolean = false;
 
   greeting: Message[] = [
     {
@@ -51,28 +70,31 @@ export class VaccineIndexComponent {
   ];
 
   suggestedQns: String[] = ['Can you help me book my Vaccination?', 'Please show me my Vaccination history'];
+  vaccines: String[] = [];
   messages: Message[] = [];
-  vaccinations: String[] = [];
+  vaccinationRecords: String[] = [];
+  bookingSlots: string[] = [];
   constructor(
     private toastService: MessageService,
-    private endpointService: EndpointService
+    private endpointService: EndpointService,
+    private sanitizer: DomSanitizer
   ) {}
 
   loginForm: FormGroup = new FormGroup({
-    username: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
+    username: new FormControl<string>(''),
+    password: new FormControl<string>('')
   });
 
   signupForm: FormGroup = new FormGroup({
-    nric: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    first_name: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    last_name: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    email: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    date_of_birth: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    gender: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    postal_code: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
-    cfm_password: new FormControl<string>('', [Validators.required, Validators.maxLength(15)])
+    nric: new FormControl<string>(''),
+    first_name: new FormControl<string>(''),
+    last_name: new FormControl<string>(''),
+    email: new FormControl<string>(''),
+    date_of_birth: new FormControl<string>(''),
+    gender: new FormControl<string>(''),
+    postal_code: new FormControl<string>(''),
+    password: new FormControl<string>(''),
+    cfm_password: new FormControl<string>('')
   });
 
   toggleForm() {
@@ -101,25 +123,9 @@ export class VaccineIndexComponent {
             summary: 'Welcome!',
             detail: 'You have logged in'
           });
-          this.isSinpassLogin = false;
+          this.isSingpassLogin = false;
           this.isLoggedIn = true;
-
-          this.endpointService.dummyRecord().subscribe({
-            next: response => {
-              let vaccineString = (response as any).text;
-
-              const regex: RegExp = /\s*([^,(]+)\s*(?:\([^)]+\))?/g;
-              let match: RegExpExecArray | null;
-
-              // Iterate through all matches and push them to the vaccinations array
-              while ((match = regex.exec(vaccineString)) !== null) {
-                const vaccineName = match[1].trim();
-                if (vaccineName) {
-                  this.vaccinations.push(vaccineName);
-                }
-              }
-            }
-          });
+          this.handleUserInput('history');
         },
         error: error => {
           this.toastService.add({
@@ -154,19 +160,7 @@ export class VaccineIndexComponent {
         password_confirm: this.signupForm.value.cfm_password
       };
 
-      const dummySignupData: Signup = {
-        nric: this.generateRandomNRIC(),
-        first_name: 'first_name',
-        last_name: 'last_name',
-        email: this.generateRandomEmail(),
-        date_of_birth: '2025-03-27',
-        gender: 'F',
-        postal_code: '111111',
-        password: '1',
-        password_confirm: '1'
-      };
-
-      this.endpointService.signup(dummySignupData).subscribe({
+      this.endpointService.signup(signupData).subscribe({
         next: () => {
           this.toastService.add({
             severity: 'success',
@@ -186,39 +180,110 @@ export class VaccineIndexComponent {
     }
   }
 
-  generateRandomNRIC = (): string => {
-    const prefix = ['S', 'T', 'F', 'G'][Math.floor(Math.random() * 4)]; // Random prefix
-    const digits = Math.floor(1000000 + Math.random() * 9000000).toString(); // Random 7-digit number
-    const suffix = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random letter (A-Z)
-    return `${prefix}${digits}${suffix}`;
-  };
-
-  generateRandomEmail = (): string => {
-    const timestamp = Date.now(); // Use timestamp for uniqueness
-    return `user${timestamp}@example.com`;
-  };
-
   suggestedQn(question: string) {
-    // Add the selected question as a user message
-    this.messages.push({
-      role: MessageRole.User,
-      message: question
-    });
+    this.handleUserInput(question); // pass the question text to chat input
+  }
 
-    // Generate a dummy system response
-    const dummyResponse = 'Sure, please sign in to your Singpass';
-    this.messages.push({
-      role: MessageRole.Assistant,
-      message: dummyResponse
-    });
+  SingpassLogin() {
+    this.agentUsed = 'Login agent';
+    this.isSingpassLogin = true;
+  }
 
-    // Scroll to the bottom of the message container
+  lastSystemMessage(): Message | null {
+    for (let i = this.messages.length - 1; i >= 0; i--) {
+      if (this.messages[i].role === MessageRole.Assistant) {
+        return this.messages[i];
+      }
+    }
+    return null;
+  }
+
+  scrollToBottom() {
     setTimeout(() => {
       this.scrollableTextContent.nativeElement.scrollTop = this.scrollableTextContent.nativeElement.scrollHeight;
     }, 0);
   }
 
-  SingpassLogin() {
-    this.isSinpassLogin = true;
+  selectVaccine(v: string) {
+    this.isVaccineSelected = true;
+    this.vaccineSelected = v;
+    this.handleUserInput(v); // pass the vaccine text to chat input
+  }
+
+  clearState() {
+    this.isBookVaccine = false;
+    this.isConfirming = false;
+    this.showBookingSlots = false;
+    this.showVaccinationRecords = false;
+    this.isBookingConfirmed = false;
+    this.showConfirmed = false;
+    this.showBookingDetails = false;
+    this.isVaccineSelected = false;
+    this.showLinkPreview = false;
+  }
+
+  handleUserInput(message: string): void {
+    // Add the user message to the messages array
+    this.messages.push({
+      role: MessageRole.User,
+      message: message
+    });
+
+    this.endpointService.Orchestrator(message).subscribe({
+      next: response => {
+        this.agentUsed = response.agent_name;
+        this.clearState();
+
+        // Based on data_type, handle the display of components differently
+        switch (response.data_type) {
+          case 'vaccine_record':
+            this.vaccinationRecords = response.data.vaccines;
+            this.showVaccinationRecords = true;
+            break;
+          case 'vaccine_list':
+            this.vaccines = response.data.vaccines;
+            this.isBookVaccine = true;
+            break;
+          case 'booking_slots':
+            this.bookingSlots = response.data.slots;
+            console.log(this.isBookingConfirmed);
+            this.showBookingSlots = true;
+            this.showBookingDetails = true;
+            break;
+          case 'booking_details':
+            this.vaccineSelected = response.data.vaccine;
+            this.bookingDate = response.data.date;
+            this.bookingTime = response.data.time;
+            this.isConfirming = true;
+            this.showBookingDetails = true;
+            break;
+          case 'booking_success':
+            this.vaccineSelected = response.data.vaccine;
+            this.bookingDate = response.data.date;
+            this.bookingTime = response.data.time;
+            this.isBookingConfirmed = true;
+            this.showConfirmed = true;
+            this.showBookingDetails = true;
+            break;
+          case 'general_query_response':
+            this.link = this.sanitizer.bypassSecurityTrustResourceUrl(response.data.link);
+            this.showLinkPreview = true;
+            break;
+          default:
+            // just display response.message
+            break;
+        }
+
+        this.messages.push({
+          role: MessageRole.Assistant,
+          message: response.message
+        });
+
+        this.scrollToBottom();
+      },
+      error: err => {
+        // TODO: handle error
+      }
+    });
   }
 }

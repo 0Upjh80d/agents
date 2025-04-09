@@ -43,20 +43,13 @@ export class EndpointService {
       );
   }
 
-  dummyRecord() {
-    const data = {
-      text: 'dummyRecord'
-    };
-    return this.httpClient
-      .post(`${this.baseUrl}/dummy_record`, data, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+  Orchestrator(userMessage: String): Observable<any> {
+    const body = { message: userMessage };
+
+    return this.httpClient.post(`${this.baseUrl}/dummy_orchestrator`, body).pipe(
+      catchError(error => {
+        return throwError(() => new Error(error.error?.detail ?? 'Error calling orchestrator'));
       })
-      .pipe(
-        catchError(error => {
-          return throwError(() => new Error(error.error.detail));
-        })
-      );
+    );
   }
 }
