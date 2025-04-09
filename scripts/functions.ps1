@@ -25,7 +25,7 @@ function Initialize-PythonEnv {
 
 function Start-BackendServer {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$false)]
         [string]$AppName,
 
         [Parameter(Mandatory=$true)]
@@ -90,28 +90,28 @@ function Show-NewJobOutput {
 
 function Stop-AllJobs {
     param(
-        [Parameter(Mandatory=$true)]
-        [System.Management.Automation.Job]$mainBackendJob,
+        [Parameter(Mandatory=$false)]
+        [System.Management.Automation.Job]$mainBackendJob = $null,
 
-        [Parameter(Mandatory=$true)]
-        [System.Management.Automation.Job]$agentBackendJob,
+        [Parameter(Mandatory=$false)]
+        [System.Management.Automation.Job]$agentBackendJob = $null,
 
-        [Parameter(Mandatory=$true)]
-        [System.Management.Automation.Job]$frontendJob
+        [Parameter(Mandatory=$false)]
+        [System.Management.Automation.Job]$frontendJob = $null
     )
 
     Write-Host "✋ Cleaning up" -ForegroundColor Red
 
-    if ($MainBackendJob) {
-        $stoppedMain = Stop-SingleJob -Job $MainBackendJob
+    if ($mainBackendJob) {
+        $stoppedMain = Stop-SingleJob -Job $mainBackendJob
     }
 
-    if ($AgentBackendJob) {
-        $stoppedAgent = Stop-SingleJob -Job $AgentBackendJob
+    if ($agentBackendJob) {
+        $stoppedAgent = Stop-SingleJob -Job $agentBackendJob
     }
 
-    if ($FrontendJob) {
-        $stoppedFrontend = Stop-SingleJob -Job $FrontendJob
+    if ($frontendJob) {
+        $stoppedFrontend = Stop-SingleJob -Job $frontendJob
     }
 
     Write-Host "✅ All jobs stopped and removed." -ForegroundColor Green

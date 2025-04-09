@@ -24,8 +24,6 @@ try {
 
     $frontendJob = Start-FrontendServer
 
-    $allJobs = @($mainBackendJob, $agentBackendJob, $frontendJob)
-
     while($true) {
         # Show output from all servers
         Show-NewJobOutput -Job $mainBackendJob -Label "MAIN" -Color Cyan
