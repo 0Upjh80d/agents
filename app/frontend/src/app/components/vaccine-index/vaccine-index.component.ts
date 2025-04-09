@@ -269,8 +269,6 @@ export class VaccineIndexComponent {
             this.link = this.sanitizer.bypassSecurityTrustResourceUrl(response.data.link);
             this.showLinkPreview = true;
             break;
-          case 'vaccine_list':
-          // TODO: display message, and display hardcoded list of vaccines
           default:
             // just display response.message
             break;
