@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-router = APIRouter(prefix="/clinic", tags=["Clinic"])
+router = APIRouter(prefix="/clinics", tags=["Clinic"])
 
 
 @router.get(
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/clinic", tags=["Clinic"])
 async def get_nearest_clinic(
     clinic_limit: int = 3,
     current_user: User = Depends(get_current_user),
-    clinic_type: ClinicType = ClinicType.POLYCLINIC,
+    clinic_type: ClinicType | None = None,
     db: AsyncSession = Depends(get_db),
 ):
 
@@ -37,23 +37,18 @@ async def get_nearest_clinic(
         func.radians(Address.latitude - user_latitude), 2
     ) + func.pow(func.radians(Address.longitude - user_longitude), 2)
 
-    print(
-        "type",
-        clinic_type,
-        type(clinic_type),
-        clinic_type.value,
-        type(clinic_type.value),
-    )
     # Query to fetch clinics ordered by distance
     stmt = (
         select(Clinic)
         .join(Clinic.address)
         .options(selectinload(Clinic.address))
         .add_columns(haversine_distance.label("distance"))
-        .where(Clinic.type == clinic_type.value)
         .order_by("distance")
         .limit(clinic_limit)
     )
+
+    if clinic_type:
+        stmt = stmt.where(Clinic.type == clinic_type.value)
 
     result = await db.execute(stmt)
     polyclinics = result.scalars().all()

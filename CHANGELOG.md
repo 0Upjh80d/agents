@@ -1,6 +1,80 @@
 # Changelog
 
-## March 27, 2025
+## Apr 9, 2025 (`v0.2.0`)
+
+- Refactored PowerShell [start](./scripts/start.ps1) script to improve maintainability
+- Updated [GitHub Action workflow](./.github/workflows/run-checks.yml) to run checks only when relevant file changes were detected
+
+## Apr 8, 2025
+
+- Updated [GitHub Action workflow](./.github/workflows/validate-pr.yml) for validating PR titles (i.e., first letter after type **must** be lowercased)
+- Updated [GitHub Action workflow](./.github/workflows/run-tests.yml) for running unit tests by adding initial job to detect changes in certain files
+- Refactored [scripts](./scripts/start.sh)
+- Overhauled frontend to use dummy backend endpoint instead of mocking on the frontend
+- Added change booking details flow for date/time only
+- Added functionality to display responses to general user queries that include links
+
+## Apr 7, 2025
+
+- Implemented a dummy booking flow for vaccination with a dummy orchestrator agent
+- Updated the [start](./scripts/start.sh) scripts to simplify the development environment setup and launch process
+- Updated Running Locally section in [`README.md`](./README.md#running-locally)
+
+## Apr 2, 2025
+
+- Update GitHub Action workflow for link checker to only look at links in Markdown files
+- Updated `Vaccines` table structure. Created new `VaccineCriteria` table.
+  - Updated `generate_database.ipynb` to structure and populate `Vaccines` and `VaccineCriteria`
+  - Updated `query_database.ipynb` to view updated tables
+- Reflect changes to structures of `Vaccines` and `VaccineCriteria` in:
+  - [`schema.sql`](./data/schema.sql)
+  - [`models.py`](./app/backend/app/models/models.py)
+  - [`DATABASE_MODELS.md`](./docs/DATABASE_MODELS.md) and [`erd.png`](./media/erd.png)
+- Pushed latest database, with new `VaccineCriteria` table to DVC
+
+## Apr 1, 2025
+
+- Sorted available booking slots based distance if user’s address information is available; otherwise sorted based on date time only.
+- Allowed `/clinics/nearest` endpoint to return either Polyclinics or General Practitioners if not specified
+  - Updated API Endpoints documentation
+
+## Mar 30, 2025
+
+- Added [documentation](./docs/REVIEWERS_STEP_BY_STEP.md) on reviewer’s step-by-step guide
+
+## March 28, 2025
+
+- Frontend setup
+  - Sets up the frontend application with the following key features:
+    1. **Login and Sign Up Endpoints Integration** - integrated the backend login and sign up endpoints.
+    2. **Dummy Login UI** - implemented a basic user interface for the login & sign up process.
+    3. **Dummy Chat UI** - created a placeholder chat interface.
+- Backend API unit tests setup
+  - Added unit tests for the following APIs:
+    - `root`
+    - `authentication`
+    - `user`
+    - `record`
+    - `vaccine`
+    - `booking`
+    - `clinic`
+  - Added [scripts](./scripts/test_api.sh) to run the unit tests
+  - Added [GitHub Actions Workflow file](./.github/workflows/run-tests.yml) to run the unit tests as required checks
+- Documentation
+  - Updated [documentation](./docs/API_ENDPOINTS.md) on backend API test cases
+  - Added [documentation](./docs/DEBUGGING_GITHUB_ACTIONS_LOCALLY.md) on how to use `act` to test GitHub Actions workflow locally
+
+## March 27, 2025 (`v0.1.0`)
+
+- Added documentation for backend, guides to current API endpoints, database models and Postman testing guide
+- Minor fixes to `Users` table — ensured `nric` and `email` columns are unique
+- Removed user dependency injection for `get_available_booking_slots` and `get_booking_slot` endpoints
+- Modified `get_user_vaccination_record` endpoint to ensure user can only get their own vaccination record
+- Added optional arguments `polyclinic_name`, `start_datetime` and `end_datetime` to `get_available_booking_slots`
+- Implemented new endpoints:
+
+  - **Booking**: `reschedule_vaccination_slot`
+  - **Clinic**: `get_nearest_clinic`
 
 - Added documentation for backend, guides to current API endpoints, database models and Postman testing guide
 - Minor fixes to `Users` table — ensured `nric` and `email` columns are unique
@@ -64,7 +138,7 @@
   - **User**: `delete_user` (meant only for development purposes — **not** to be integrated as tools for agents)
   - **Vaccine**: `get_vaccine_recommendations_for_user`
 
-## March 21, 2025 (Release v0.1.0)
+## March 21, 2025
 
 - Integrated SQLAlchemy as the ORM framework for the project
 - Implemented FastAPI endpoints:

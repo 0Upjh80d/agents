@@ -90,4 +90,5 @@ jobs:
         id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
+          args: --verbose --no-progress './**/*.md'
           fail: true

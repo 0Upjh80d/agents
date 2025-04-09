@@ -1,4 +1,5 @@
 .DS_Store
+.secrets
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -306,6 +307,9 @@ dist
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+
+# VSCode settings
+.vscode/
 
 # yarn v2
 .yarn/cache
