@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewChecked, Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -48,13 +48,14 @@ export class VaccineIndexComponent {
   link: SafeResourceUrl = '';
 
   isSignUp = false;
-  isSingpassLogin = false;
   isLoggedIn = false;
   isVaccineSelected = false;
   isBookVaccine: boolean = false;
   isBookingConfirmed: boolean = false;
   isConfirming: boolean = false;
   hideSlotTable: boolean = false;
+  showLogin: boolean = false;
+  showLoginButton: boolean = true;
   showConfirmed: boolean = false;
   showBookingSlots: boolean = false;
   showVaccinationRecords: boolean = false;
@@ -100,8 +101,17 @@ export class VaccineIndexComponent {
     cfm_password: new FormControl<string>('')
   });
 
-  toggleForm() {
-    this.isSignUp = !this.isSignUp;
+  toggleLogin() {
+    this.isSignUp = false;
+  }
+
+  toggleSignUp() {
+    this.isSignUp = true;
+  }
+
+  showLoginUI() {
+    this.agentUsed = 'Login agent';
+    this.showLogin = true;
   }
 
   login() {
@@ -126,9 +136,14 @@ export class VaccineIndexComponent {
             summary: 'Welcome!',
             detail: 'You have logged in'
           });
-          this.isSingpassLogin = false;
+          this.showLogin = false;
           this.isLoggedIn = true;
-          this.handleUserInput('history');
+          if (this.isBookVaccine) {
+            this.dummyOrchestrator('book');
+          }
+          if (this.showVaccinationRecords) {
+            this.dummyOrchestrator('history');
+          }
         },
         error: error => {
           this.toastService.add({
@@ -183,15 +198,6 @@ export class VaccineIndexComponent {
     }
   }
 
-  suggestedQn(question: string) {
-    this.handleUserInput(question); // pass the question text to chat input
-  }
-
-  SingpassLogin() {
-    this.agentUsed = 'Login agent';
-    this.isSingpassLogin = true;
-  }
-
   lastSystemMessage(): Message | null {
     for (let i = this.messages.length - 1; i >= 0; i--) {
       if (this.messages[i].role === MessageRole.Assistant) {
@@ -214,6 +220,7 @@ export class VaccineIndexComponent {
   }
 
   clearState() {
+    this.showLoginButton = false;
     this.isBookVaccine = false;
     this.isConfirming = false;
     this.showBookingSlots = false;
@@ -231,7 +238,21 @@ export class VaccineIndexComponent {
       role: MessageRole.User,
       message: message
     });
+    if (!this.isLoggedIn && this.suggestedQns.includes(message)) {
+      this.messages.push({
+        role: MessageRole.Assistant,
+        message: 'To proceed, please log in to your account'
+      });
+      this.isBookVaccine = message.trim() === this.suggestedQns[0];
+      this.showVaccinationRecords = message.trim() === this.suggestedQns[1];
+      this.showLoginButton = this.isBookVaccine || this.showVaccinationRecords;
+      this.scrollToBottom();
+    } else {
+      this.dummyOrchestrator(message);
+    }
+  }
 
+  dummyOrchestrator(message: string) {
     this.endpointService.Orchestrator(message, this.history, this.agentUsed, this.userInfo).subscribe({
       next: response => {
         this.agentUsed = response.agent_name;
