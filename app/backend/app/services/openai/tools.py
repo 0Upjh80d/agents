@@ -77,6 +77,7 @@ async def recommend_vaccines_tool(wrapper: RunContextWrapper[UserInfo]) -> str:
         except Exception as e:
             print(f"Error making request: {e}")
     recommendations = json.loads(recommendations.text)
+    wrapper.context.context.data_type = "vaccine_list"
     return recommendations
 
 
@@ -130,7 +131,7 @@ async def standardise_vaccine_name_tool(
         response_dict = {
             "vaccine": wrapper.context.context.vaccine,
         }
-        response = BookingDetails(**response_dict)
+        response = BookingDetails(**response_dict).model_dump()
         return response
     else:
         wrapper.context.context.data_type = "vaccine_list"
@@ -225,7 +226,7 @@ async def get_clinic_name_response_helper_tool(
         "vaccine": wrapper.context.context.vaccine,
         "clinic": wrapper.context.context.clinic,
     }
-    response = BookingDetails(**response_dict)
+    response = BookingDetails(**response_dict).model_dump()
 
     return response
 
@@ -295,7 +296,7 @@ async def new_appointment_tool(
         "date": str(dt_object.date()),
         "time": str(dt_object.time()),
     }
-    response = BookingDetails(**response_dict)
+    response = BookingDetails(**response_dict).model_dump()
 
     return response
 
