@@ -74,6 +74,9 @@ export class VaccineIndexComponent {
   messages: Message[] = [];
   vaccinationRecords: String[] = [];
   bookingSlots: string[] = [];
+  history: string[] = [];
+  userInfo: object = {};
+
   constructor(
     private toastService: MessageService,
     private endpointService: EndpointService,
@@ -229,7 +232,7 @@ export class VaccineIndexComponent {
       message: message
     });
 
-    this.endpointService.Orchestrator(message).subscribe({
+    this.endpointService.Orchestrator(message, this.history, this.agentUsed, this.userInfo).subscribe({
       next: response => {
         this.agentUsed = response.agent_name;
         this.clearState();
@@ -269,12 +272,13 @@ export class VaccineIndexComponent {
             this.link = this.sanitizer.bypassSecurityTrustResourceUrl(response.data.link);
             this.showLinkPreview = true;
             break;
-          case 'vaccine_list':
-          // TODO: display message, and display hardcoded list of vaccines
           default:
             // just display response.message
             break;
         }
+
+        this.history = response.history;
+        this.userInfo = response.user_info;
 
         this.messages.push({
           role: MessageRole.Assistant,

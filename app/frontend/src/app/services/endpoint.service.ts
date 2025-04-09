@@ -9,7 +9,7 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class EndpointService {
-  private baseUrl = 'http://localhost:8000';
+  private baseUrl = 'http://localhost:8001';
 
   constructor(private httpClient: HttpClient) {}
 
@@ -43,10 +43,15 @@ export class EndpointService {
       );
   }
 
-  Orchestrator(userMessage: String): Observable<any> {
-    const body = { message: userMessage };
+  Orchestrator(userMessage: string, history: string[], agentName: string, userInfo: object): Observable<any> {
+    const body = {
+      message: userMessage,
+      history: history,
+      agent_name: agentName,
+      user_info: userInfo
+    };
 
-    return this.httpClient.post(`${this.baseUrl}/dummy_orchestrator`, body).pipe(
+    return this.httpClient.post(`${this.baseUrl}/chat`, body).pipe(
       catchError(error => {
         return throwError(() => new Error(error.error?.detail ?? 'Error calling orchestrator'));
       })
