@@ -11,10 +11,7 @@ from openai.types.chat import ChatCompletion
 from openai_messages_token_helper import build_messages
 from schemas.chat import BookingDetails, UserInfo
 
-from agents import (
-    RunContextWrapper,
-    function_tool,
-)
+from agents import RunContextWrapper, function_tool
 
 # TODO: change this
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../../../../.env"))
