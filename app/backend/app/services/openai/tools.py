@@ -78,7 +78,7 @@ async def recommend_vaccines_tool(wrapper: RunContextWrapper[UserInfo]) -> str:
             print(f"Error making request: {e}")
     recommendations = json.loads(recommendations.text)
     wrapper.context.context.data_type = "vaccine_list"
-    return recommendations
+    return json.dumps(recommendations)
 
 
 @function_tool
@@ -217,7 +217,7 @@ async def get_clinic_name_response_helper_tool(
             print(f"Error making request: {e}")
         recommended_polyclinics = json.loads(get_recommended_polyclinic.text)
         wrapper.context.context.data_type = "clinic_list"
-        return f"Please specify the polyclinic you want to book at. Here are some polyclinics near your home: {recommended_polyclinics}"
+        return json.dumps(recommended_polyclinics)
 
     wrapper.context.context.data_type = "booking_details"
     wrapper.context.context.clinic = clinic_name
@@ -258,14 +258,15 @@ async def get_available_slots_tool(
                     "polyclinic_name": clinic,
                     "start_date": start_date,
                     "end_date": end_date,
-                    "timeslot_limit": 6,
+                    "timeslot_limit": 3,
                 },
             )
     except Exception as e:
         print(f"Error making request: {e}")
+    wrapper.context.context.clinic = clinic
     wrapper.context.context.data_type = "booking_slots"
     result = json.loads(get_slots.text)
-    return result
+    return json.dumps(result)
 
 
 @function_tool
@@ -298,7 +299,7 @@ async def new_appointment_tool(
     }
     response = BookingDetails(**response_dict).model_dump()
 
-    return response
+    return json.dumps(response)
 
     # booking = {"booking_slot_id": slot_id}
     # try:
