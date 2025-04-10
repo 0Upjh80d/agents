@@ -8,7 +8,6 @@ from routers import (
     booking,
     chat,
     clinic,
-    dummy_orchestrator,
     record,
     user,
     vaccine,
@@ -40,7 +39,6 @@ def create_main_app():
     app.include_router(record.router)
     app.include_router(user.router)
     app.include_router(vaccine.router)
-    app.include_router(dummy_orchestrator.router)
 
     return app
 
