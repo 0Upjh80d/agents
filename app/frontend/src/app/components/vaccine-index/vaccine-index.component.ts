@@ -40,6 +40,9 @@ export class VaccineIndexComponent {
   system: string = MessageRole.Assistant;
 
   vaccineSelected: string = '';
+  clinicSelected: string = '';
+  slotSelected: string = '';
+
   bookingDate: string = '-';
   bookingTime: string = '-';
   agentUsed: string = '';
@@ -50,9 +53,11 @@ export class VaccineIndexComponent {
   isSignUp = false;
   isLoggedIn = false;
   isVaccineSelected = false;
+  isClinicSelected = false;
   isBookVaccine: boolean = false;
   isBookingConfirmed: boolean = false;
   isConfirming: boolean = false;
+  isLoading: boolean = false;
   hideSlotTable: boolean = false;
   showLogin: boolean = false;
   showLoginButton: boolean = true;
@@ -61,6 +66,7 @@ export class VaccineIndexComponent {
   showVaccinationRecords: boolean = false;
   showBookingDetails: boolean = false;
   showLinkPreview: boolean = false;
+  showClinics: boolean = false;
 
   greeting: Message[] = [
     {
@@ -72,6 +78,7 @@ export class VaccineIndexComponent {
 
   suggestedQns: String[] = ['Can you help me book my Vaccination?', 'Please show me my Vaccination history'];
   vaccines: String[] = [];
+  clinics: String[] = [];
   messages: Message[] = [];
   vaccinationRecords: String[] = [];
   bookingSlots: string[] = [];
@@ -110,7 +117,6 @@ export class VaccineIndexComponent {
   }
 
   showLoginUI() {
-    this.agentUsed = 'Login agent';
     this.showLogin = true;
   }
 
@@ -138,11 +144,13 @@ export class VaccineIndexComponent {
           });
           this.showLogin = false;
           this.isLoggedIn = true;
+          this.isLoading = true;
+          this.scrollToBottom();
           if (this.isBookVaccine) {
-            this.dummyOrchestrator('book');
+            this.dummyOrchestrator('Can you help me book my Vaccination?');
           }
           if (this.showVaccinationRecords) {
-            this.dummyOrchestrator('history');
+            this.dummyOrchestrator('Please show me my Vaccination history');
           }
         },
         error: error => {
@@ -213,10 +221,34 @@ export class VaccineIndexComponent {
     }, 0);
   }
 
-  selectVaccine(v: string) {
+  selectVaccine(vaccine: string) {
     this.isVaccineSelected = true;
-    this.vaccineSelected = v;
-    this.handleUserInput(v); // pass the vaccine text to chat input
+    this.vaccineSelected = vaccine;
+    this.handleUserInput(vaccine); // pass the vaccine text to chat input
+  }
+
+  selectClinic(clinic: string) {
+    this.clinicSelected = clinic;
+    this.showClinics = false;
+    this.handleUserInput(clinic); // pass the clinic text to chat input
+  }
+
+  selectSlot(slot: string) {
+    this.slotSelected = slot;
+    this.bookingDate = slot.substring(0, slot.indexOf(','));
+    this.bookingTime = slot.substring(slot.indexOf(',') + 2);
+    this.isConfirming = true;
+    this.showBookingDetails = true;
+    this.showBookingSlots = false;
+    this.messages.push({
+      role: MessageRole.Assistant,
+      message: 'Please confirm your booking date and time: ' + this.bookingDate + ' ' + this.bookingTime
+    });
+  }
+
+  confirmSelectedSlot() {
+    this.dummyOrchestrator(this.slotSelected);
+    this.isConfirming = false;
   }
 
   clearState() {
@@ -229,11 +261,14 @@ export class VaccineIndexComponent {
     this.showConfirmed = false;
     this.showBookingDetails = false;
     this.isVaccineSelected = false;
+    this.isClinicSelected = false;
     this.showLinkPreview = false;
+    this.showClinics = false;
   }
 
   handleUserInput(message: string): void {
     // Add the user message to the messages array
+    this.isLoading = true;
     this.messages.push({
       role: MessageRole.User,
       message: message
@@ -243,6 +278,7 @@ export class VaccineIndexComponent {
         role: MessageRole.Assistant,
         message: 'To proceed, please log in to your account'
       });
+      this.isLoading = false;
       this.isBookVaccine = message.trim() === this.suggestedQns[0];
       this.showVaccinationRecords = message.trim() === this.suggestedQns[1];
       this.showLoginButton = this.isBookVaccine || this.showVaccinationRecords;
@@ -255,6 +291,16 @@ export class VaccineIndexComponent {
   dummyOrchestrator(message: string) {
     this.endpointService.Orchestrator(message, this.history, this.agentUsed, this.userInfo).subscribe({
       next: response => {
+        this.isLoading = false;
+        if (!response) {
+          this.toastService.add({
+            severity: 'error',
+            summary: 'Server Error',
+            detail: 'No response received from the server'
+          });
+          return;
+        }
+
         this.agentUsed = response.agent_name;
         this.clearState();
 
@@ -265,24 +311,50 @@ export class VaccineIndexComponent {
             this.showVaccinationRecords = true;
             break;
           case 'vaccine_list':
-            this.vaccines = response.data.vaccines;
+            let vaccineList: any[];
+            vaccineList = JSON.parse(response.data);
+            this.showBookingDetails = true;
+            this.vaccines = vaccineList.map((vaccine: any) => vaccine.name);
             this.isBookVaccine = true;
             break;
+          case 'clinic_list':
+            let clinicList: any[];
+            clinicList = JSON.parse(response.data);
+            this.showBookingDetails = true;
+            this.clinics = clinicList.map((clinic: any) => clinic.name);
+            this.showClinics = true;
+            break;
           case 'booking_slots':
-            this.bookingSlots = response.data.slots;
-            console.log(this.isBookingConfirmed);
+            let slots: any[];
+            slots = JSON.parse(response.data);
+            this.bookingSlots = slots.map((slot: any) => {
+              const date = new Date(slot.datetime);
+              const options: Intl.DateTimeFormatOptions = {
+                year: 'numeric', // e.g., 2025
+                month: 'long', // e.g., March
+                day: 'numeric', // e.g., 3
+                hour: '2-digit', // e.g., 09
+                minute: '2-digit', // e.g., 00
+                hour12: true // e.g., AM/PM format
+              };
+              return date.toLocaleString('en-US', options);
+            });
             this.showBookingSlots = true;
             this.showBookingDetails = true;
             break;
           case 'booking_details':
-            this.vaccineSelected = response.data.vaccine;
-            this.bookingDate = response.data.date;
-            this.bookingTime = response.data.time;
-            this.isConfirming = true;
+            let bookingDetails: any;
+            bookingDetails = JSON.parse(response.data);
+            this.vaccineSelected = bookingDetails.vaccine;
+            this.clinicSelected = bookingDetails.clinic;
+            this.bookingDate = bookingDetails.date;
+            this.bookingTime = bookingDetails.time;
+            this.isBookingConfirmed = true;
             this.showBookingDetails = true;
             break;
           case 'booking_success':
             this.vaccineSelected = response.data.vaccine;
+            this.clinicSelected = response.data.clinic;
             this.bookingDate = response.data.date;
             this.bookingTime = response.data.time;
             this.isBookingConfirmed = true;
@@ -308,9 +380,7 @@ export class VaccineIndexComponent {
 
         this.scrollToBottom();
       },
-      error: err => {
-        // TODO: handle error
-      }
+      error: err => {}
     });
   }
 }

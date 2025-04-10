@@ -45,21 +45,36 @@
                       </div>
                     </div>
                   </div>
+                  <!-- Clinics Section -->
+                  <div *ngIf="showClinics" class="tw-mt-4">
+                    <div class="tw-overflow-x-auto tw-whitespace-nowrap tw-inline-flex tw-gap-2 tw-p-2 tw-rounded-lg">
+                      @for (c of clinics; track clinics) {
+                        <button (click)="selectClinic(c.toString())" class="tw-bg-gray-100 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">
+                          {{ c }}
+                        </button>
+                      }
+                    </div>
+                  </div>
                   <!-- Booking Slots Section -->
                   <div *ngIf="showBookingSlots" class="tw-my-4 tw-flex tw-gap-2 tw-flex-wrap tw-items-center">
                     <!-- Display each slot as a button -->
-                    <button *ngFor="let slot of bookingSlots" (click)="handleUserInput(slot)" class="tw-bg-gray-100 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">
+                    <button *ngFor="let slot of bookingSlots" (click)="selectSlot(slot)" class="tw-bg-gray-100 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">
                       {{ slot }}
                     </button>
                   </div>
                   <div *ngIf="isConfirming" class="tw-inline-flex tw-gap-2 tw-p-2 tw-rounded-lg">
-                    <button (click)="handleUserInput('Confirm')" class="tw-bg-gray-100 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">Confirm</button>
+                    <button (click)="confirmSelectedSlot()" class="tw-bg-gray-100 tw-shadow-sm tw-rounded-lg tw-px-4 tw-py-2">Confirm</button>
                   </div>
                 }
               }
             }
           }
         }
+        <div *ngIf="isLoading">
+          <!-- new code -->
+          <p>Loading...</p>
+          <!-- new code -->
+        </div>
       </div>
       <div class="tw-mt-auto tw-w-full tw-max-w-[860px]">
         <app-text-input (sendMessage)="handleUserInput($event)"></app-text-input>
@@ -194,7 +209,7 @@
                   </div>
                   <div class="tw-flex tw-items-start">
                     <span class="tw-w-28 tw-font-medium">Clinic:</span>
-                    <span class="tw-font-bold">Sengkang Polyclinic</span>
+                    <span class="tw-font-bold">{{ clinicSelected }}</span>
                   </div>
                   <div class="tw-flex tw-items-start">
                     <span class="tw-w-28 tw-font-medium">Date:</span>
@@ -223,7 +238,7 @@
                 <div class="tw-flex tw-items-center tw-justify-between">
                   <div class="tw-flex tw-flex-col">
                     <span class="tw-font-[10px] tw-font-bold">{{ vaccineSelected }}</span>
-                    <span class="tw-font-[10px] tw-ml-5"> Sengkang Polyclinic</span>
+                    <span class="tw-font-[10px] tw-ml-5"> {{ clinicSelected }}</span>
                     <span class="tw-font-[10px] tw-ml-5"> {{ bookingDate + ", " + bookingTime }}</span>
                   </div>
                   <span class="tw-text-green-500 tw-font-medium tw-mr-[50px]">Confirmed</span>
