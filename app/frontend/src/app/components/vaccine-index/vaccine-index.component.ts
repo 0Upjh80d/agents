@@ -147,10 +147,10 @@ export class VaccineIndexComponent {
           this.isLoading = true;
           this.scrollToBottom();
           if (this.isBookVaccine) {
-            this.dummyOrchestrator('Can you help me book my Vaccination?');
+            this.sendUserRequest('Can you help me book my Vaccination?');
           }
           if (this.showVaccinationRecords) {
-            this.dummyOrchestrator('Please show me my Vaccination history');
+            this.sendUserRequest('Please show me my Vaccination history');
           }
         },
         error: error => {
@@ -247,7 +247,7 @@ export class VaccineIndexComponent {
   }
 
   confirmSelectedSlot() {
-    this.dummyOrchestrator(this.slotSelected);
+    this.sendUserRequest(this.slotSelected);
     this.isConfirming = false;
   }
 
@@ -284,11 +284,11 @@ export class VaccineIndexComponent {
       this.showLoginButton = this.isBookVaccine || this.showVaccinationRecords;
       this.scrollToBottom();
     } else {
-      this.dummyOrchestrator(message);
+      this.sendUserRequest(message);
     }
   }
 
-  dummyOrchestrator(message: string) {
+  sendUserRequest(message: string) {
     this.endpointService.Orchestrator(message, this.history, this.agentUsed, this.userInfo).subscribe({
       next: response => {
         this.isLoading = false;
