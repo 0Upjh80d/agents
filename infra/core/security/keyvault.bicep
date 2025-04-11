@@ -5,7 +5,7 @@ param tags object = {}
 
 param principalId string = ''
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2024-12-01-preview' = {
   name: name
   location: location
   tags: tags
@@ -21,7 +21,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
             objectId: principalId
             tenantId: subscription().tenantId
             permissions: {
-              secrets: ['get', 'list']
+              secrets: ['get', 'list', 'set']
             }
           }
         ]

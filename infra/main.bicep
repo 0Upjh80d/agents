@@ -32,13 +32,13 @@ param aiHubName string = ''
 @description('Name of the AI project')
 param aiProjectName string = ''
 
-@description('Name of the key vault')
+@description('Name of the Azure Key Vault')
 param keyVaultName string = ''
 
-@description('Name of the storage account')
+@description('Name of the Azure Storage Account')
 param storageAccountName string = ''
 
-@description('Name of the OpenAI service')
+@description('Name of the Azure OpenAI service')
 param openAiServiceName string = ''
 
 @description('Name of the OpenAI connection name')
@@ -61,7 +61,7 @@ param openAiConnectionName string = ''
     type: 'location'
   }
 })
-@description('Location of the OpenAI service')
+@description('Location of the Azure OpenAI service')
 param openAiServiceLocation string // Set in main.parameters.json
 
 @description('Version of the OpenAI API')
@@ -72,16 +72,25 @@ var aiConfig = loadYamlContent('ai.yaml')
 // List of models we know how to deploy
 var allDeployments = array(aiConfig.?deployments ?? [])
 
-@description('Name of the log analytics workspace')
+@description('Name of the Azure Cosmos DB Account')
+param cosmosDbAccountName string = ''
+
+@description('Name of the Azure Cosmos DB database for audit logs')
+param auditDatabaseName string = 'audit_events'
+
+@description('Name of the Azure Cosmos DB collection for audit logs')
+param auditCollectionName string = 'audit_events'
+
+@description('Name of the Log Analytics Workspace')
 param logAnalyticsName string = ''
 
-@description('Name of the application insights')
+@description('Name of the Application Insights')
 param applicationInsightsName string = ''
 
-@description('Name of the container registry')
+@description('Name of the Azure Container Registry')
 param containerRegistryName string = ''
 
-@description('Name of the managed identity')
+@description('Name of the Managed Identity')
 param identityName string = ''
 
 @description('Use Application Insights')
@@ -89,6 +98,9 @@ param useApplicationInsights bool // Set in main.parameters.json
 
 @description('Use Container Registry')
 param useContainerRegistry bool // Set in main.parameters.json
+
+@description('Whether to deploy an Azure Cosmos DB Account')
+param deployCosmosDb bool // Set in main.parameters.json
 
 @description('Whether the deployment is running on GitHub Actions')
 param runningOnGh string = ''
@@ -192,6 +204,31 @@ module aiEnvironment './core/ai/ai-environment.bicep' = {
   }
 }
 
+module mongoDbAudit './core/database/cosmos/mongo/cosmos-mongo-db.bicep' = {
+  name: 'mongo-db-audit'
+  scope: resourceGroup
+  params: {
+    name: !empty(cosmosDbAccountName) ? cosmosDbAccountName : '${abbrs.documentDBMongoDatabaseAccounts}${resourceToken}'
+    location: location
+    tags: tags
+    databaseName: auditDatabaseName
+    collections: [
+      {
+        id: auditCollectionName
+        name: auditCollectionName
+        shardKey: 'id'
+        indexKey: '_id'
+      }
+    ]
+    reuseCosmosDb: true
+    existingCosmosDbResourceGroupName: '${abbrs.resourcesResourceGroups}${environmentName}' // rg-agents
+    existingCosmosDbAccountName: '${abbrs.documentDBMongoDatabaseAccounts}${resourceToken}' // cosmon-zw3uvhgul6x4g
+    deployCosmosDb: deployCosmosDb
+    keyVaultName: keyVaultName
+    secretName: 'cosmosdbConnectionString'
+  }
+}
+
 output AZURE_LOCATION string = location
 output AZURE_PRINCIPAL_ID string = principalId
 output AZURE_GROUP_PRINCIPAL_ID string = groupPrincipalId
@@ -212,8 +249,11 @@ output APPINSIGHTS_CONNECTIONSTRING string = aiEnvironment.outputs.applicationIn
 
 output AZURE_CONTAINERREGISTRY_NAME string = aiEnvironment.outputs.containerRegistryName
 
-output AZURE_USE_APPLICATION_INSIGHTS bool = useApplicationInsights
-output AZURE_USE_CONTAINER_REGISTRY bool = useContainerRegistry
+output AZURE_AUDIT_DATABASE string = mongoDbAudit.outputs.databaseName
+
+output USE_APPLICATION_INSIGHTS bool = useApplicationInsights
+output USE_CONTAINER_REGISTRY bool = useContainerRegistry
+output DEPLOY_COSMOS_DB bool = deployCosmosDb
 
 // Environment variables are exported during post-processing because Bicep cannot conditionally define outputs
 // The names of the outputs for deployments depend on whether the platforn is openai or serverless

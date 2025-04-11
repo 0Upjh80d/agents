@@ -54,10 +54,13 @@
       "value": "${AZURE_CONTAINERREGISTRY_NAME}"
     },
     "useApplicationInsights": {
-      "value": "${AZURE_USE_APPLICATION_INSIGHTS=true}"
+      "value": "${USE_APPLICATION_INSIGHTS=true}"
     },
     "useContainerRegistry": {
-      "value": "${AZURE_USE_CONTAINER_REGISTRY=false}"
+      "value": "${USE_CONTAINER_REGISTRY=false}"
+    },
+    "deployCosmosDb": {
+      "value": "${DEPLOY_COSMOSDB=true}"
     }
   }
 }
