@@ -44,7 +44,7 @@ export class EndpointService {
       );
   }
 
-  Orchestrator(userMessage: string, history: string[], agentName: string, userInfo: object): Observable<any> {
+  sendMessageToOrchestrator(userMessage: string, history: string[], agentName: string, userInfo: object): Observable<any> {
     const body = {
       message: userMessage,
       history: history,

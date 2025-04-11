@@ -289,7 +289,7 @@ export class VaccineIndexComponent {
   }
 
   sendUserRequest(message: string) {
-    this.endpointService.Orchestrator(message, this.history, this.agentUsed, this.userInfo).subscribe({
+    this.endpointService.sendMessageToOrchestrator(message, this.history, this.agentUsed, this.userInfo).subscribe({
       next: response => {
         this.isLoading = false;
         if (!response) {
