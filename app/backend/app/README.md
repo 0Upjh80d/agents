@@ -43,10 +43,8 @@ The project uses environment variables to configure settings such as the databas
 You will find a [`.env.sample`](.env.sample). It should look like this:
 
 ```yaml
-secret_key=
 algorithm=
 access_token_expire_minutes=
-refresh_token_expire_days=
 ```
 
 Create an `.env` file and copy and paste the contents from above into it. Before running the application, make sure to **set the required environment variables**.
