@@ -1,27 +1,29 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
-from auth.password import verify_password
-from core.config import settings
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
-from models.database import get_db
-from models.models import User
-from schemas.oauth2 import TokenData
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.backend.app.auth.password import verify_password
+from app.backend.app.core.config import settings
+from app.backend.app.models.database import get_db
+from app.backend.app.models.models import User
+from app.backend.app.schemas.oauth2 import TokenData
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
-SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
-REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
 
 
 def create_access_token(
-    data: dict, refresh: bool = False, expires_delta: timedelta | None = None
+    request: Request,
+    data: dict,
+    refresh: bool = False,
+    expires_delta: timedelta | None = None,
 ) -> str:
     to_encode = data.copy()
 
@@ -32,13 +34,19 @@ def create_access_token(
 
     to_encode.update({"refresh": refresh})
     to_encode.update({"exp": expire})
+    SECRET_KEY = request.app.state.secret_key
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
     return encoded_jwt
 
 
-def verify_access_token(token: str, credentials_exception: Exception) -> TokenData:
+def verify_access_token(
+    request: Request,
+    token: str,
+    credentials_exception: Exception,
+) -> TokenData:
     try:
+        SECRET_KEY = request.app.state.secret_key
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         id = payload.get("user_id")
         refresh = payload.get("refresh")
@@ -69,7 +77,9 @@ async def authenticate_user(
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,7 +87,7 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    token_data = verify_access_token(token, credentials_exception)
+    token_data = verify_access_token(request, token, credentials_exception)
 
     stmt = select(User).filter_by(id=str(token_data.id))
 

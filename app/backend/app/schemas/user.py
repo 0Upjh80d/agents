@@ -2,9 +2,10 @@ from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
-from schemas.address import AddressResponse
-from schemas.base import UserBase
-from schemas.clinic import ClinicResponse
+
+from app.backend.app.schemas.address import AddressResponse
+from app.backend.app.schemas.base import UserBase
+from app.backend.app.schemas.clinic import ClinicResponse
 
 
 class UserResponse(UserBase):

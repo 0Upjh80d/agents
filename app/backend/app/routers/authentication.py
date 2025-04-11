@@ -1,21 +1,22 @@
 from datetime import timedelta
 
-from auth.oauth2 import (
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
+from app.backend.app.auth.oauth2 import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     authenticate_user,
     create_access_token,
 )
-from auth.password import hash_password, verify_password
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm
-from models.database import get_db
-from models.models import Address, User
-from schemas.oauth2 import Token
-from schemas.user import UserCreate, UserCreateResponse
-from sqlalchemy import or_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from app.backend.app.auth.password import hash_password, verify_password
+from app.backend.app.models.database import get_db
+from app.backend.app.models.models import Address, User
+from app.backend.app.schemas.oauth2 import Token
+from app.backend.app.schemas.user import UserCreate, UserCreateResponse
 
 router = APIRouter(tags=["Authentication"])
 
@@ -23,7 +24,9 @@ router = APIRouter(tags=["Authentication"])
 @router.post(
     "/signup", status_code=status.HTTP_201_CREATED, response_model=UserCreateResponse
 )
-async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
+async def signup(
+    request: Request, user: UserCreate, db: AsyncSession = Depends(get_db)
+):
 
     stmt = select(User).filter(or_(User.email == user.email, User.nric == user.nric))
 
@@ -60,6 +63,9 @@ async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
     new_user = User(**data)
 
+    # If valid, set request.state.user_id
+    request.state.user_id = new_user.id
+
     # Create the user in the database
     db.add(new_user)
     # Flush inserts the object so it gets an ID, etc.
@@ -74,6 +80,7 @@ async def signup(user: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 async def login(
+    request: Request,
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db),
 ):
@@ -93,23 +100,19 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # If valid, set request.state.user_id
+    request.state.user_id = user.id
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    # refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     # Create access token
     access_token = create_access_token(
+        request,
         data={
             "user_id": user.id
         },  # TODO: Add a specific set of permissions to a JWT token
         expires_delta=access_token_expires,
     )
-    # # Create refresh token
-    # refresh_token = create_access_token(
-    #     data={
-    #         "user_id": user.id
-    #     },  # TODO: Add a specific set of permissions to a JWT token
-    #     refresh=True,
-    #     expires_delta=refresh_token_expires,
-    # )
+    # TODO: Create refresh token
 
     # Return access token
     return JSONResponse(

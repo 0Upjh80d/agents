@@ -1,9 +1,19 @@
 import asyncio
+import logging
+import os
+from contextlib import asynccontextmanager
 
 import uvicorn
+from azure.core.exceptions import ResourceNotFoundError
+from azure.identity.aio import AzureCliCredential
+from azure.keyvault.secrets.aio import SecretClient as AsyncSecretClient
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from routers import (
+from starlette.middleware.cors import CORSMiddleware
+
+from app.backend.app.database.cosmos_client import PyMongoCosmosDBClient
+from app.backend.app.middleware.audit import audit_middleware
+from app.backend.app.routers import (
     authentication,
     booking,
     chat,
@@ -13,11 +23,75 @@ from routers import (
     user,
     vaccine,
 )
-from starlette.middleware.cors import CORSMiddleware
+
+logger = logging.getLogger("uvicorn.error")
+logger.setLevel(logging.INFO)
 
 
-def create_main_app():
-    app = FastAPI()
+def create_main_app() -> FastAPI:
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        logger.info("🚀 Starting up...")
+        # Replace these with your own values, either in environment variables or directly here
+
+        # Azure Cosmos DB
+        AUDIT_DATABASE_ID = os.getenv("AZURE_AUDIT_DATABASE")
+        AUDIT_COLLECTION_ID = AUDIT_DATABASE_ID
+
+        # Azure Key Vault
+        AZURE_KEYVAULT_NAME = os.getenv("AZURE_KEYVAULT_NAME")
+
+        # Use AzureCliCredential to bypass using service principal when AZURE_CLIENT_ID
+        # (along with AZURE_TENANT_ID and AZURE_CLIENT_SECRET) is set
+        azure_credential = AzureCliCredential()
+
+        keyvault_client = AsyncSecretClient(
+            vault_url=f"https://{AZURE_KEYVAULT_NAME}.vault.azure.net/",
+            credential=azure_credential,
+        )
+        # Attach it to app.state
+        app.state.keyvault_client = keyvault_client
+
+        async with keyvault_client:
+            # Get secret key from key vault
+            try:
+                retrieved_secret = await keyvault_client.get_secret("secretKey")
+                secret_key = retrieved_secret.value
+            except ResourceNotFoundError:
+                secret_key = os.getenv("SECRET_KEY", None)
+
+            # Store on app.state
+            app.state.secret_key = secret_key
+
+            try:
+                retrieved_secret = await keyvault_client.get_secret(
+                    "cosmosdbConnectionString"
+                )
+                cosmos_connection_string = retrieved_secret.value
+            except ResourceNotFoundError:
+                cosmos_connection_string = os.getenv(
+                    "AZURE_COSMOSDB_CONNECTION_STRING", None
+                )
+
+            finally:
+                logger.info(f"🔑 SECRET_KEY set: {secret_key is not None}.")
+                logger.info(
+                    f"🔑 AZURE_COSMOSDB_CONNECTION_STRING set: {cosmos_connection_string is not None}."
+                )
+
+        app.state.audit_client = PyMongoCosmosDBClient(
+            database_id=AUDIT_DATABASE_ID,
+            collection_id=AUDIT_COLLECTION_ID,
+            connection_string=cosmos_connection_string,
+        )
+
+        # Hand over control to FastAPI
+        yield
+
+    app = FastAPI(lifespan=lifespan)
+
+    app.middleware("http")(audit_middleware)
 
     # Enable CORS
     origins = [

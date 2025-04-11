@@ -1,6 +1,5 @@
 import uuid
 
-from models.database import Base
 from sqlalchemy import (
     Column,
     Date,
@@ -13,6 +12,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import relationship
+
+from app.backend.app.models.database import Base
 
 
 # Define ORM models (existing tables)

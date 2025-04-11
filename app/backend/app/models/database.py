@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import declarative_base
 
 # Database connection (existing SQLite file)
-DATABASE_URL = "sqlite+aiosqlite:///../../../data/vaccination_db.sqlite"
+DATABASE_URL = "sqlite+aiosqlite:///data/vaccination_db.sqlite"
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 

@@ -1,11 +1,12 @@
-from auth.oauth2 import get_current_user
-from fastapi import APIRouter, Depends, HTTPException, status
-from models.database import get_db
-from models.models import BookingSlot, User, VaccineRecord
-from schemas.record import VaccineRecordResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+
+from app.backend.app.auth.oauth2 import get_current_user
+from app.backend.app.models.database import get_db
+from app.backend.app.models.models import BookingSlot, User, VaccineRecord
+from app.backend.app.schemas.record import VaccineRecordResponse
 
 router = APIRouter(prefix="/records", tags=["Record"])
 
@@ -16,8 +17,13 @@ router = APIRouter(prefix="/records", tags=["Record"])
     response_model=list[VaccineRecordResponse],
 )
 async def get_user_vaccination_records(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
+
     stmt = (
         select(VaccineRecord)
         .join(User, onclause=VaccineRecord.user_id == User.id)
@@ -49,10 +55,14 @@ async def get_user_vaccination_records(
     response_model=VaccineRecordResponse,
 )
 async def get_user_vaccination_record(
+    request: Request,
     id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
+
     stmt = (
         select(VaccineRecord)
         .join(BookingSlot)

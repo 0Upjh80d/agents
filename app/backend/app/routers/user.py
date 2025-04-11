@@ -1,14 +1,15 @@
 from datetime import datetime, timezone
 
-from auth.oauth2 import get_current_user
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
-from models.database import get_db
-from models.models import Address, Clinic, User
-from schemas.user import UserResponse, UserUpdate, UserUpdateResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+
+from app.backend.app.auth.oauth2 import get_current_user
+from app.backend.app.models.database import get_db
+from app.backend.app.models.models import Address, Clinic, User
+from app.backend.app.schemas.user import UserResponse, UserUpdate, UserUpdateResponse
 
 router = APIRouter(prefix="/users", tags=["User"])
 
@@ -19,8 +20,13 @@ router = APIRouter(prefix="/users", tags=["User"])
     response_model=UserResponse,
 )
 async def get_user(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
+
     stmt = (
         select(User)
         .outerjoin(Address, onclause=Address.id == User.address_id)
@@ -46,10 +52,14 @@ async def get_user(
 
 @router.put("", status_code=status.HTTP_200_OK, response_model=UserUpdateResponse)
 async def update_user(
+    request: Request,
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
+
     stmt = select(User).filter_by(id=current_user.id)
 
     result = await db.execute(stmt)
