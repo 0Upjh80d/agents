@@ -5,8 +5,10 @@ set -e
 
 echo "🚀 Running infrastructure integration tests..."
 
+uv sync --group test --no-dev
+
 DIR="$( cd "$( dirname "$0" )/../tests" && pwd )"
 
-python -m pytest --rootdir="${DIR}" -v
+python -m pytest -v "${DIR}"
 
 echo "✅ Infrastructure integration tests passed!"
