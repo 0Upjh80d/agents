@@ -1,23 +1,31 @@
 from collections import defaultdict
 from datetime import date, datetime, time
 
-from auth.oauth2 import get_current_user
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from geopy.distance import geodesic
-from models.database import get_db
-from models.models import Address, BookingSlot, Clinic, User, Vaccine, VaccineRecord
-from schemas.booking import (
+from sqlalchemy import func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+
+from app.backend.app.auth.oauth2 import get_current_user
+from app.backend.app.models.database import get_db
+from app.backend.app.models.models import (
+    Address,
+    BookingSlot,
+    Clinic,
+    User,
+    Vaccine,
+    VaccineRecord,
+)
+from app.backend.app.schemas.booking import (
     AvailableSlotResponse,
     BookingSlotResponse,
     RescheduleSlotRequest,
     ScheduleSlotRequest,
 )
-from schemas.record import VaccineRecordResponse
-from sqlalchemy import func
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
+from app.backend.app.schemas.record import VaccineRecordResponse
 
 router = APIRouter(prefix="/bookings", tags=["Booking"])
 
@@ -28,6 +36,7 @@ router = APIRouter(prefix="/bookings", tags=["Booking"])
     response_model=list[AvailableSlotResponse],
 )
 async def get_available_booking_slots(
+    request: Request,
     vaccine_name: str,
     polyclinic_name: str | None = None,
     start_datetime: date | datetime | None = None,
@@ -37,6 +46,8 @@ async def get_available_booking_slots(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
 
     # Convert date objects to datetime if needed
     if isinstance(start_datetime, date) and not isinstance(start_datetime, datetime):
@@ -146,9 +157,14 @@ async def get_available_booking_slots(
     response_model=BookingSlotResponse,
 )
 async def get_booking_slot(
+    request: Request,
     id: str,
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
+
     stmt = (
         select(BookingSlot)
         .options(
@@ -176,26 +192,32 @@ async def get_booking_slot(
     response_model=VaccineRecordResponse,
 )
 async def schedule_vaccination_slot(
-    request: ScheduleSlotRequest,
+    request: Request,
+    schedule_request: ScheduleSlotRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
+
     # Step 1: Check if the booking slot already exists and isn't booked
     booking_slot_query = await db.execute(
-        select(BookingSlot).where(BookingSlot.id == str(request.booking_slot_id))
+        select(BookingSlot).where(
+            BookingSlot.id == str(schedule_request.booking_slot_id)
+        )
     )
     booking_slot = booking_slot_query.scalar_one_or_none()
 
     if not booking_slot:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Booking slot with slot id {str(request.booking_slot_id)} not found.",
+            detail=f"Booking slot with slot id {str(schedule_request.booking_slot_id)} not found.",
         )
 
     # Step 2: Ensure this slot hasn't already been booked
     booked_result = await db.execute(
         select(VaccineRecord).where(
-            VaccineRecord.booking_slot_id == str(request.booking_slot_id)
+            VaccineRecord.booking_slot_id == str(schedule_request.booking_slot_id)
         )
     )
     existing_record = booked_result.scalar_one_or_none()
@@ -208,7 +230,7 @@ async def schedule_vaccination_slot(
     # Step 3: Create new VaccineRecord
     new_vaccine_record = VaccineRecord(
         user_id=current_user.id,
-        booking_slot_id=str(request.booking_slot_id),
+        booking_slot_id=str(schedule_request.booking_slot_id),
         status="booked",
     )
 
@@ -229,10 +251,14 @@ async def schedule_vaccination_slot(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def cancel_vaccination_slot(
+    request: Request,
     record_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
+
     # Step 1: Check if the VaccineRecord exists
     vaccine_record_query = await db.execute(
         select(VaccineRecord).where(VaccineRecord.id == record_id)
@@ -273,21 +299,26 @@ async def cancel_vaccination_slot(
     response_model=VaccineRecordResponse,
 )
 async def reschedule_vaccination_slot(
-    request: RescheduleSlotRequest,
+    request: Request,
+    reschedule_request: RescheduleSlotRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # If valid, set request.state.user_id
+    request.state.user_id = current_user.id
 
     # Step 1: Check if the VaccineRecord exists
     vaccine_record_query = await db.execute(
-        select(VaccineRecord).where(VaccineRecord.id == str(request.vaccine_record_id))
+        select(VaccineRecord).where(
+            VaccineRecord.id == str(reschedule_request.vaccine_record_id)
+        )
     )
     vaccine_record = vaccine_record_query.scalar_one_or_none()
 
     if not vaccine_record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Vaccine record with id {str(request.vaccine_record_id)} not found.",
+            detail=f"Vaccine record with id {str(reschedule_request.vaccine_record_id)} not found.",
         )
 
     # Step 2: Validate that the current user owns this VaccineRecord
@@ -306,20 +337,20 @@ async def reschedule_vaccination_slot(
 
     # Step 4: Check if the desired booking slot is available
     new_slot_query = await db.execute(
-        select(BookingSlot).where(BookingSlot.id == str(request.new_slot_id))
+        select(BookingSlot).where(BookingSlot.id == str(reschedule_request.new_slot_id))
     )
     new_slot = new_slot_query.scalar_one_or_none()
 
     if not new_slot:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Booking slot with ID {str(request.new_slot_id)} not found.",
+            detail=f"Booking slot with ID {str(reschedule_request.new_slot_id)} not found.",
         )
 
     # Step 5: Ensure this slot hasn't already been booked
     booked_result = await db.execute(
         select(VaccineRecord).where(
-            VaccineRecord.booking_slot_id == str(request.new_slot_id)
+            VaccineRecord.booking_slot_id == str(reschedule_request.new_slot_id)
         )
     )
 
@@ -331,7 +362,7 @@ async def reschedule_vaccination_slot(
         )
 
     # Step 6: Update the VaccineRecord with the new booking slot
-    vaccine_record.booking_slot_id = str(request.new_slot_id)
+    vaccine_record.booking_slot_id = str(reschedule_request.new_slot_id)
     await db.flush()
     await db.refresh(vaccine_record)
     await db.commit()

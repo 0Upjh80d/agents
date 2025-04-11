@@ -1,14 +1,15 @@
 from datetime import datetime
 
-from auth.oauth2 import get_current_user
-from fastapi import APIRouter, Depends, HTTPException, status
-from models.database import get_db
-from models.models import User, Vaccine, VaccineCriteria
-from schemas.vaccine import VaccineResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import contains_eager
+
+from app.backend.app.auth.oauth2 import get_current_user
+from app.backend.app.models.database import get_db
+from app.backend.app.models.models import User, Vaccine, VaccineCriteria
+from app.backend.app.schemas.vaccine import VaccineResponse
 
 router = APIRouter(prefix="/vaccines", tags=["Vaccine"])
 
@@ -19,7 +20,9 @@ router = APIRouter(prefix="/vaccines", tags=["Vaccine"])
     response_model=list[VaccineResponse],
 )
 async def get_vaccine_recommendations_for_user(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
 
     user_age_years = (datetime.today().date() - current_user.date_of_birth).days // 365

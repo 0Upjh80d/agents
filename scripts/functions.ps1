@@ -1,24 +1,65 @@
 function Initialize-PythonEnv {
-    # Check if uv is installed
+    Write-Host "⏳ Loading azd .env file from current environment..."
+
+    # 1. Pull environment values from 'azd env get-values'
+    $azdOutput = azd env get-values
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Failed to load environment variables from azd environment."
+        exit $LASTEXITCODE
+    }
+
+    foreach ($line in $azdOutput) {
+        if ($line -match "([^=]+)=(.*)") {
+            $key = $matches[1]
+            $value = $matches[2] -replace '^"|"$'
+            Set-Item -Path "env:\$key" -Value $value
+        }
+    }
+
+    Write-Host "✅ Environment variables set!"
+
+    # Check if 'uv' is installed
         if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-        Write-Output "📦 uv not installed. Installing..."
-        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://astral.sh/uv/install.ps1'))
+        Write-Output "📦 'uv' not installed. Installing..."
+        # Download and install 'uv'
+        $installScript = (New-Object System.Net.WebClient).DownloadString('https://astral.sh/uv/install.ps1')
+        if (-not $?) {
+            Write-Error "❌ Failed to download uv install script."
+            exit 1
+        }
+        Invoke-Expression $installScript
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "❌ Failed to install 'uv'."
+            exit $LASTEXITCODE
+        }
+        # Ensure the newly installed location is in PATH for this session
         $env:Path += ";C:\Users\$env:USERNAME\.local\bin"
     }
 
     # Create virtual environment
     Write-Output "🛠️ Creating virtual environment..."
     uv venv
-    if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to intialize virtual environment."; exit 1 }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "❌ Failed to initialize virtual environment."
+        exit $LASTEXITCODE
+    }
 
     # Activate virtual environment
+    Write-Host "🛠️ Activating virtual environment..."
     & ./.venv/Scripts/Activate
-    if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to activate virtual environment."; exit 1 }
+    # Because 'Activate' is usually a script, we check $?
+    if (-not $?) {
+        Write-Error "❌ Failed to activate virtual environment."
+        exit 1
+    }
 
     # Sync dependencies
-    Write-Output "🔄 Syncing dependencies..."
+    Write-Host "🔄 Syncing Python dependencies with 'uv sync'..."
     uv sync
-    if ($LASTEXITCODE -ne 0) { Write-Error "❌ Failed to sync dependencies."; exit 1 }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "❌ Failed to sync Python dependencies."
+        exit $LASTEXITCODE
+    }
 
     Write-Output "✅ Environment setup complete!"
 }
@@ -37,6 +78,11 @@ function Start-BackendServer {
         [Parameter(Mandatory=$true)]
         [string]$color
     )
+
+    if (-not $AppName) {
+        Write-Warning "No AppName specified. Falling back to 'app:app'..."
+        $AppName = "app:app"
+    }
 
     $uvicornCommand = "uvicorn $AppName --host $HostName --port $Port --reload"
 
@@ -62,8 +108,12 @@ function Start-FrontendServer {
         $OutputEncoding = [System.Text.Encoding]::UTF8
 
         # Install dependencies
-        Write-Output "🔄 Installing npm dependencies"
+        Write-Output "🔄 Installing npm dependencies..."
         npm install
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "❌ npm install failed."
+            exit $LASTEXITCODE
+        }
 
         # Run Angular
         Write-Output "🚀 Starting Angular frontend server on port:4200"
@@ -86,6 +136,19 @@ function Show-NewJobOutput {
             Write-Host "[$Label] $line" -ForegroundColor $Color
         }
     }
+}
+
+Function Stop-SingleJob {
+    param(
+        [Parameter(Mandatory=$true)]
+        [System.Management.Automation.Job]$Job
+    )
+    if ($Job) {
+        Stop-Job -Job $Job -ErrorAction SilentlyContinue
+        Remove-Job -Job $Job -Force -ErrorAction SilentlyContinue
+        return $true
+    }
+    return $false
 }
 
 function Stop-AllJobs {
@@ -115,17 +178,4 @@ function Stop-AllJobs {
     }
 
     Write-Host "✅ All jobs stopped and removed." -ForegroundColor Green
-}
-
-Function Stop-SingleJob {
-    param(
-        [Parameter(Mandatory=$true)]
-        [System.Management.Automation.Job]$Job
-    )
-    if ($Job) {
-        Stop-Job -Job $Job -ErrorAction SilentlyContinue
-        Remove-Job -Job $Job -Force -ErrorAction SilentlyContinue
-        return $true
-    }
-    return $false
 }

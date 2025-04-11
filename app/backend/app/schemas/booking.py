@@ -1,8 +1,9 @@
 from uuid import UUID
 
 from pydantic import BaseModel
-from schemas.base import BookingSlotBase
-from schemas.vaccine import VaccineResponse
+
+from app.backend.app.schemas.base import BookingSlotBase
+from app.backend.app.schemas.vaccine import VaccineResponse
 
 
 class ScheduleSlotRequest(BaseModel):

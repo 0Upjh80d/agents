@@ -2,7 +2,8 @@ from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel
-from schemas.address import AddressResponse
+
+from app.backend.app.schemas.address import AddressResponse
 
 
 class ClinicType(Enum):

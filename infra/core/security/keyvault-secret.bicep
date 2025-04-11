@@ -10,11 +10,11 @@ param nbf int = 0
 @secure()
 param secretValue string
 
-resource keyVault 'Microsoft.KeyVault/vaults@2024-04-01-preview' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2024-12-01-preview' existing = {
   name: keyVaultName
 }
 
-resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = {
+resource keyVaultSecret 'Microsoft.KeyVault/vaults/secrets@2024-12-01-preview' = {
   parent: keyVault
   name: name
   tags: tags

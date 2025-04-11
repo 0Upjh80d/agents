@@ -55,7 +55,7 @@ param skuName string = 'Standard_GRS'
 param supportsHttpsTrafficOnly bool = true
 param tables array = []
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
+resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   name: name
   location: location
   tags: tags
